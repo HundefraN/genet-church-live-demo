@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Genet Church Portal for database management.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Genet Church Portal">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Genet Church Portal</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    body {
+      background-color: #f7f8fc;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    #loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      animation: fade-in 1.5s ease-in-out;
+    }
+
+    /* NEW: The Glass Container */
+    .logo-glass-container {
+      width: 140px;
+      height: 140px;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: pulse 2.5s infinite ease-in-out;
+    }
+
+    #loading-logo {
+      width: 80px;
+      height: 80px;
+    }
+
+    #loading-text {
+        color: #475569;
+        margin-top: 24px;
+        font-size: 18px;
+        font-weight: 300;
+        letter-spacing: 1.5px;
+    }
+
+    .loader-bars {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 60px;
+      margin-top: 10px;
+    }
+
+    .loader-bars div {
+      width: 6px;
+      height: 10px;
+      background-color: #4FADE3;
+      margin: 0 3px;
+      border-radius: 3px;
+      animation: wave 1.2s infinite ease-in-out;
+    }
+
+    .loader-bars div:nth-child(2) { animation-delay: 0.1s; }
+    .loader-bars div:nth-child(3) { animation-delay: 0.2s; }
+    .loader-bars div:nth-child(4) { animation-delay: 0.3s; }
+    .loader-bars div:nth-child(5) { animation-delay: 0.4s; }
+
+    @keyframes wave {
+      0%, 40%, 100% { transform: scaleY(0.4); }
+      20% { transform: scaleY(1.0); }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.98); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1); }
+      50% { transform: scale(1); box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.15); }
+      100% { transform: scale(0.98); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1); }
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loading-container">
+  <!-- The logo is now inside the glass container -->
+  <div class="logo-glass-container">
+    <img id="loading-logo" src="icons/logo_loader.png" alt="Loading Logo" />
+  </div>
+  <p id="loading-text">Initializing Portal...</p>
+  <div class="loader-bars">
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+</div>
+
+<script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
