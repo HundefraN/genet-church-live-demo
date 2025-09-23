@@ -14,25 +14,31 @@ class ReportPastorsScreen extends ConsumerWidget {
 
     return InfoCard(
       title: 'Pastor Reports',
+      description: "Note: Pastor's full name will be displayed here in a future update.",
       padding: EdgeInsets.zero,
       child: StyledDataTable(
-        columns: const ['#', 'Pastor Name', 'Phone No', 'Address', 'Assigned Church', 'Actions'],
+        columns: const [
+          '#',
+          'Full Name',
+          'Email',
+          'Assigned Church ID',
+          'Actions'
+        ],
         rows: pastors.asMap().entries.map((entry) {
           final index = entry.key;
           final pastor = entry.value;
           return DataRow(cells: [
             DataCell(Text((index + 1).toString())),
-            DataCell(Text(pastor.name)),
-            DataCell(Text(pastor.phone)),
-            DataCell(Text(pastor.address)),
-            DataCell(Text(pastor.assignedChurch)),
+            DataCell(Text(pastor.user.fullName)),
+            DataCell(Text(pastor.user.email)),
+            DataCell(Text(pastor.churchId ?? 'N/A')),
             DataCell(Row(
               children: [
                 TableActionButton(
                   label: 'DELETE',
                   color: AppTheme.destructiveRed,
                   onPressed: () {
-                    ref.read(pastorsProvider.notifier).removePastor(pastor.id);
+                    ref.read(pastorsProvider.notifier).removePastor(pastor.userId);
                   },
                 ),
               ],

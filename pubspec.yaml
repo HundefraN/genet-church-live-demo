@@ -1,5 +1,5 @@
 name: genet_church_portal
-description: "EGC database Frontend"
+description: "EGC database front end"
 
 publish_to: 'none'
 version: 1.0.0+1
@@ -12,7 +12,6 @@ dependencies:
     sdk: flutter
 
 
-  cupertino_icons: ^1.0.8
   flutter_riverpod: ^2.6.1
   dio: ^5.9.0
   go_router: ^16.2.0
@@ -23,6 +22,9 @@ dependencies:
   flutter_hooks: ^0.21.3
   hooks_riverpod: ^2.6.1
   iconsax: ^0.0.8
+  image_picker: ^1.2.0
+  intl: ^0.20.2
+  flutter_secure_storage: ^9.2.4
 
 
 dev_dependencies:

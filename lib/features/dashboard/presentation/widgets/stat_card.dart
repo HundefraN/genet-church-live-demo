@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genet_church_portal/state/providers.dart';
 import 'package:go_router/go_router.dart';
-
-import '../../../../core/theme/app_theme.dart';
+import 'package:genet_church_portal/core/theme/app_theme.dart';
 
 class IncomeStatCard extends StatelessWidget {
   const IncomeStatCard({super.key});
@@ -16,11 +15,10 @@ class IncomeStatCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: () {
-          // In a real app, this would navigate to a detailed financial report.
-          // For now, we'll show a snackbar as a placeholder.
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Navigating to detailed financial reports... (Feature coming soon)'),
+              content: Text(
+                  'Navigating to detailed financial reports... (Feature coming soon)'),
               backgroundColor: AppTheme.primaryBlue,
             ),
           );
@@ -42,7 +40,10 @@ class IncomeStatCard extends StatelessWidget {
                   children: const [
                     Text(
                       'ETB 20k',
-                      style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 4),
                     Text(
@@ -61,10 +62,26 @@ class IncomeStatCard extends StatelessWidget {
                     centerSpaceRadius: 25,
                     startDegreeOffset: -90,
                     sections: [
-                      PieChartSectionData(color: const Color(0xFFFF6B6B), value: 35, showTitle: false, radius: 10),
-                      PieChartSectionData(color: const Color(0xFF4ECDC4), value: 25, showTitle: false, radius: 10),
-                      PieChartSectionData(color: const Color(0xFF45B7D1), value: 20, showTitle: false, radius: 10),
-                      PieChartSectionData(color: const Color(0xFFF7DC6F), value: 20, showTitle: false, radius: 10),
+                      PieChartSectionData(
+                          color: const Color(0xFFFF6B6B),
+                          value: 35,
+                          showTitle: false,
+                          radius: 10),
+                      PieChartSectionData(
+                          color: const Color(0xFF4ECDC4),
+                          value: 25,
+                          showTitle: false,
+                          radius: 10),
+                      PieChartSectionData(
+                          color: const Color(0xFF45B7D1),
+                          value: 20,
+                          showTitle: false,
+                          radius: 10),
+                      PieChartSectionData(
+                          color: const Color(0xFFF7DC6F),
+                          value: 20,
+                          showTitle: false,
+                          radius: 10),
                     ],
                   ),
                 ),
@@ -106,12 +123,15 @@ class VolunteersStatCard extends ConsumerWidget {
                   children: [
                     Text(
                       pastorsCount.toString(),
-                      style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
                     const Text(
                       'Pastors & Volunteers',
-                      style: TextStyle(color: Colors.white70, fontSize: 16),
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
                     ),
                   ],
                 ),
@@ -163,7 +183,8 @@ class MembersStatCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final membersCount = ref.watch(membersProvider).length;
+    // FIX: Since membersProvider is removed, we'll show a static number for now.
+    const membersCount = 0;
 
     return Material(
       color: const Color(0xFFFEC53D),
@@ -187,7 +208,10 @@ class MembersStatCard extends ConsumerWidget {
                   children: [
                     Text(
                       membersCount.toString(),
-                      style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
                     const Text(

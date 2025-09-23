@@ -1,16 +1,12 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:genet_church_portal/data/models/pastor_model.dart';
 import 'package:genet_church_portal/state/providers.dart';
-import 'package:genet_church_portal/shared_widgets/custom_dropdown.dart';
 import 'package:genet_church_portal/shared_widgets/custom_text_field.dart';
 import 'package:genet_church_portal/shared_widgets/info_card.dart';
 import 'package:genet_church_portal/shared_widgets/primary_button.dart';
 import 'package:genet_church_portal/shared_widgets/secondary_button.dart';
-import 'package:go_router/go_router.dart';
 
 class AddPastorsScreen extends HookConsumerWidget {
   const AddPastorsScreen({super.key});
@@ -18,36 +14,34 @@ class AddPastorsScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final nameController = useTextEditingController();
-    final phoneController = useTextEditingController();
-    final addressController = useTextEditingController();
+    final emailController = useTextEditingController();
+    final passwordController = useTextEditingController();
     final formKey = useMemoized(() => GlobalKey<FormState>());
 
     void clearForm() {
       nameController.clear();
-      phoneController.clear();
-      addressController.clear();
+      emailController.clear();
+      passwordController.clear();
     }
 
     void addPastor() {
-      final newPastor = Pastor(
-        id: 'pas_${Random().nextInt(999)}',
-        name: nameController.text,
-        phone: phoneController.text,
-        address: addressController.text,
-        assignedChurch: 'Rohbot Guenet', // Default value
-      );
+      if (formKey.currentState?.validate() ?? false) {
+        ref.read(pastorsProvider.notifier).addPastor(
+          fullName: nameController.text,
+          email: emailController.text,
+          password: passwordController.text,
+        );
 
-      ref.read(pastorsProvider.notifier).addPastor(newPastor);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${nameController.text} has been added successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${newPastor.name} has been added successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      clearForm();
-      context.go('/report-pastors');
+        clearForm();
+        context.go('/report-pastors');
+      }
     }
 
     return Form(
@@ -58,26 +52,15 @@ class AddPastorsScreen extends HookConsumerWidget {
           shrinkWrap: true,
           physics: const ClampingScrollPhysics(),
           children: [
-            CustomTextField(controller: nameController, hintText: 'Pastor Name'),
+            CustomTextField(
+                controller: nameController, hintText: 'Pastor Full Name'),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(child: CustomTextField(controller: phoneController, hintText: 'Phone Number')),
-                const SizedBox(width: 16),
-                const Expanded(child: CustomTextField(hintText: 'Office Number')),
-              ],
-            ),
+            CustomTextField(controller: emailController, hintText: 'Email'),
             const SizedBox(height: 16),
-            const CustomTextField(hintText: 'Email'),
-            const SizedBox(height: 16),
-            CustomTextField(controller: addressController, hintText: 'Address'),
-            const SizedBox(height: 16),
-            Row(
-              children: const [
-                Expanded(child: CustomDropdown(hintText: 'Branch Church', items: ['Genet Church - Mekanisa', 'Genet Church - Ayat'])),
-                SizedBox(width: 16),
-                Expanded(child: CustomDropdown(hintText: 'Permission', items: ['Admin', 'Editor'])),
-              ],
+            CustomTextField(
+              controller: passwordController,
+              hintText: 'Password',
+              obscureText: true,
             ),
             const SizedBox(height: 32),
             Row(

@@ -22,45 +22,33 @@ class SideMenu extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentRole = ref.watch(userRoleProvider);
+    final theme = Theme.of(context);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
       curve: Curves.easeInOutCubic,
       width: isCollapsed ? 85 : 320,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: AppTheme.primaryGradient.colors
-              .map((c) => c.withOpacity(0.95))
-              .toList(),
-          begin: AppTheme.primaryGradient.begin,
-          end: AppTheme.primaryGradient.end,
-          stops: AppTheme.primaryGradient.stops,
-        ),
+        gradient: AppTheme.primaryGradient,
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryBlue.withOpacity(0.3),
+            color: theme.primaryColor.withOpacity(0.3),
             blurRadius: 30,
             offset: const Offset(8, 0),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: ClipRRect(
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  AppTheme.surfaceWhite.withOpacity(0.1),
-                  AppTheme.surfaceWhite.withOpacity(0.05),
+                  Colors.white.withOpacity(0.1),
+                  Colors.white.withOpacity(0.05),
                 ],
               ),
             ),
@@ -68,24 +56,21 @@ class SideMenu extends ConsumerWidget {
               children: [
                 Positioned.fill(
                   child: CustomPaint(
-                    painter: _ModernBackgroundPainter(),
+                    painter: _EtherealAuroraPainter(
+                      primary: theme.primaryColor,
+                      secondary: theme.colorScheme.secondary,
+                    ),
                   ),
                 ),
                 Column(
                   children: [
                     _buildModernHeader(isCollapsed),
-                    _UserProfileSection(isCollapsed: isCollapsed),
                     Expanded(
                       child: Container(
-                        margin: EdgeInsets.symmetric(
-                          horizontal: isCollapsed ? 8 : 16,
-                        ),
+                        margin: EdgeInsets.symmetric(horizontal: isCollapsed ? 8 : 16),
                         child: ListView(
                           physics: const BouncingScrollPhysics(),
-                          children: [
-                            ..._buildMenuItemsForRole(
-                                currentRole, context, isCollapsed),
-                          ],
+                          children: [..._buildMenuItemsForRole(currentRole, context, isCollapsed)],
                         ),
                       ),
                     ),
@@ -98,13 +83,10 @@ class SideMenu extends ConsumerWidget {
           ),
         ),
       ),
-    ).animate().slideX(
-      begin: -1,
-      duration: 600.ms,
-      curve: Curves.easeOutCubic,
-    );
+    ).animate().slideX(begin: -1, duration: 600.ms, curve: Curves.easeOutCubic);
   }
 
+  // ... (All other _build methods remain the same as the previous correct version)
   Widget _buildModernHeader(bool collapsed) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
@@ -878,89 +860,79 @@ class SideMenu extends ConsumerWidget {
   }
 }
 
-class _UserProfileSection extends StatelessWidget {
-  final bool isCollapsed;
-  const _UserProfileSection({required this.isCollapsed});
+class _EtherealAuroraPainter extends CustomPainter {
+  final Color primary;
+  final Color secondary;
 
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 400),
-      padding: EdgeInsets.symmetric(
-        horizontal: isCollapsed ? 12 : 24,
-        vertical: 16,
-      ),
-      child: Column(
-        children: [
-          if (!isCollapsed) ...[
-            Container(
-              height: 1,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.transparent,
-                    AppTheme.surfaceWhite.withOpacity(0.3),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
+  _EtherealAuroraPainter({required this.primary, required this.secondary});
 
-class _ModernBackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+
+    final softGlow = Paint()
       ..shader = RadialGradient(
-        center: const Alignment(-0.8, -0.5),
-        radius: 1.5,
-        colors: [
-          AppTheme.surfaceWhite.withOpacity(0.1),
-          AppTheme.surfaceWhite.withOpacity(0.05),
-          Colors.transparent,
-        ],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+        center: const Alignment(-1.5, -0.5),
+        radius: 1.0,
+        colors: [secondary.withOpacity(0.15), Colors.transparent],
+      ).createShader(rect);
+    canvas.drawRect(rect, softGlow);
 
-    final path = Path();
-    path.moveTo(0, size.height * 0.2);
-    path.quadraticBezierTo(
-      size.width * 0.3,
-      size.height * 0.1,
-      size.width * 0.6,
+    final hotspotGlow = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(0.8, -0.8),
+        radius: 0.8,
+        colors: [Colors.white.withOpacity(0.2), Colors.transparent],
+      ).createShader(rect);
+    canvas.drawRect(rect, hotspotGlow);
+
+    final facetPaint = Paint()
+      ..color = Colors.white.withOpacity(0.03)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    final facetPath = Path()
+      ..moveTo(size.width * -0.2, size.height * 0.1)
+      ..lineTo(size.width * 0.7, size.height * 1.1)
+      ..moveTo(size.width * 0.1, size.height * -0.1)
+      ..lineTo(size.width * 1.1, size.height * 0.9);
+    canvas.drawPath(facetPath, facetPaint);
+
+    final auroraPath = Path();
+    auroraPath.moveTo(size.width * 0.2, -50);
+    auroraPath.cubicTo(
+      size.width * 1.2,
       size.height * 0.3,
-    );
-    path.quadraticBezierTo(
+      size.width * -0.2,
+      size.height * 0.6,
       size.width * 0.8,
-      size.height * 0.4,
-      size.width,
-      size.height * 0.2,
-    );
-    path.lineTo(size.width, 0);
-    path.lineTo(0, 0);
-    path.close();
-
-    canvas.drawPath(path, paint);
-
-    final circlePaint = Paint()
-      ..color = AppTheme.surfaceWhite.withOpacity(0.03)
-      ..style = PaintingStyle.fill;
-
-    canvas.drawCircle(
-      Offset(size.width * 0.8, size.height * 0.3),
-      size.width * 0.4,
-      circlePaint,
+      size.height + 50,
     );
 
-    canvas.drawCircle(
-      Offset(size.width * 0.2, size.height * 0.7),
-      size.width * 0.25,
-      circlePaint,
-    );
+    final auroraGradient = LinearGradient(
+      colors: [secondary.withOpacity(0.6), primary.withOpacity(0.6)],
+    ).createShader(rect);
+
+    final auroraGlowPaint = Paint()
+      ..shader = auroraGradient
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 20
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40);
+
+    final auroraCorePaint = Paint()
+      ..shader = auroraGradient
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+
+    final auroraThreadPaint = Paint()
+      ..color = Colors.white.withOpacity(0.7)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8;
+
+    canvas.drawPath(auroraPath, auroraGlowPaint);
+    canvas.drawPath(auroraPath, auroraCorePaint);
+    canvas.drawPath(auroraPath, auroraThreadPaint);
   }
 
   @override

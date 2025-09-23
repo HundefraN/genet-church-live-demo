@@ -12,7 +12,8 @@ class InfoCard extends StatelessWidget {
     super.key,
     required this.child,
     required this.title,
-    this.description = "Manage and view the details for this section. Please ensure all information is accurate and up-to-date.",
+    this.description =
+    "Manage and view the details for this section. Please ensure all information is accurate and up-to-date.",
     this.padding,
   });
 
@@ -31,7 +32,7 @@ class InfoCard extends StatelessWidget {
         ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.min, // Important for Column flexibility
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
@@ -45,17 +46,20 @@ class InfoCard extends StatelessWidget {
                     color: AppTheme.primaryBlue.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Iconsax.document_upload, color: AppTheme.primaryBlue, size: 28),
+                  child: const Icon(Iconsax.document_upload,
+                      color: AppTheme.primaryBlue, size: 28),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: Theme.of(context).textTheme.headlineMedium),
+                      Text(title,
+                          style: Theme.of(context).textTheme.headlineMedium),
                       if (description.isNotEmpty) ...[
                         const SizedBox(height: 4),
-                        Text(description, style: Theme.of(context).textTheme.bodyMedium),
+                        Text(description,
+                            style: Theme.of(context).textTheme.bodyMedium),
                       ]
                     ],
                   ),
@@ -64,10 +68,13 @@ class InfoCard extends StatelessWidget {
             ),
           ),
           const Divider(height: 1),
-          Padding(
-            padding: padding ?? const EdgeInsets.all(24.0),
-            child: child,
-          )
+
+          Flexible(
+            child: Padding(
+              padding: padding ?? const EdgeInsets.all(24.0),
+              child: child,
+            ),
+          ),
         ],
       ),
     );
