@@ -1,9 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/church_model.dart';
-import '../models/pastor_model.dart';
-import '../services/api_service.dart';
-
+import 'package:genet_church_portal/data/models/church_model.dart';
+import 'package:genet_church_portal/data/models/dashboard_model.dart';
+import 'package:genet_church_portal/data/models/department_model.dart';
+import 'package:genet_church_portal/data/models/member_model.dart';
+import 'package:genet_church_portal/data/models/pastor_model.dart';
+import 'package:genet_church_portal/data/models/servant_model.dart';
+import 'package:genet_church_portal/data/services/api_service.dart';
 
 final apiRepositoryProvider = Provider<ApiRepository>((ref) {
   final dio = ref.watch(dioProvider);
@@ -14,72 +17,91 @@ class ApiRepository {
   final Dio _dio;
   ApiRepository(this._dio);
 
-  Future<List<Pastor>> getPastors() async {
-    try {
-      final response =
-      await _dio.get('/pastors', queryParameters: {'limit': 100});
-      final responseData = response.data['data'] as List;
-      return responseData.map((json) => Pastor.fromJson(json)).toList();
-    } on DioException catch (e) {
-      print('Error fetching pastors: $e');
-      throw Exception('Failed to load pastors');
-    }
+  Future<SuperAdminDashboardStats> getSuperAdminDashboardStats() async {
+    final response = await _dio.get('/dashboard/super-admin');
+    return SuperAdminDashboardStats.fromJson(response.data);
   }
 
-  Future<Pastor> addPastor(
-      {required String fullName,
-        required String email,
-        required String password}) async {
-    try {
-      final response = await _dio.post(
-        '/pastors',
-        data: Pastor.creationToJson(
-            fullName: fullName, email: email, password: password),
-      );
-      return Pastor.fromJson(response.data);
-    } on DioException catch (e) {
-      print('Error adding pastor: $e');
-      throw Exception('Failed to add pastor');
-    }
+  Future<void> addMember({required Member member, required String churchId}) async {
+    await _dio.post(
+      '/church-members',
+      queryParameters: {'churchId': churchId},
+      data: member.toJson(),
+    );
+  }
+
+  Future<List<Pastor>> getPastors() async {
+    final response = await _dio.get('/pastors', queryParameters: {'limit': 100});
+    final responseData = response.data['data'] as List;
+    return responseData.map((json) => Pastor.fromJson(json)).toList();
+  }
+
+  Future<Pastor> addPastor({required String fullName, required String email, required String password}) async {
+    final response = await _dio.post('/pastors', data: {'fullName': fullName, 'email': email, 'password': password});
+    return Pastor.fromJson(response.data);
+  }
+
+  Future<Pastor> updatePastor({required String pastorId, required String fullName, required String email}) async {
+    final response = await _dio.patch('/pastors/$pastorId', data: {'fullName': fullName, 'email': email});
+    return Pastor.fromJson(response.data);
   }
 
   Future<void> removePastor(String userId) async {
-    try {
-      await _dio.delete('/pastors/$userId');
-    } on DioException catch (e) {
-      print('Error deleting pastor: $e');
-      throw Exception('Failed to delete pastor');
-    }
+    await _dio.delete('/pastors/$userId');
+  }
+
+  Future<Pastor> assignChurchToPastor({required String pastorId, required String churchId}) async {
+    final response = await _dio.patch('/pastors/$pastorId/assign-church', data: {'churchId': churchId});
+    return Pastor.fromJson(response.data);
   }
 
   Future<List<Church>> getChurches() async {
-    try {
-      final response =
-      await _dio.get('/churches', queryParameters: {'limit': 100});
-      final responseData = response.data['data'] as List;
-      return responseData.map((json) => Church.fromJson(json)).toList();
-    } on DioException catch (e) {
-      print('Error fetching churches: $e');
-      throw Exception('Failed to load churches');
-    }
+    final response = await _dio.get('/churches', queryParameters: {'limit': 100});
+    final responseData = response.data['data'] as List;
+    return responseData.map((json) => Church.fromJson(json)).toList();
   }
 
   Future<Church> addChurch(Church church) async {
-    try {
-      final response = await _dio.post('/churches', data: church.toJson());
-      return Church.fromJson(response.data);
-    } on DioException catch (e) {
-      print('Error adding church: $e');
-      throw Exception('Failed to add church');
-    }
+    final response = await _dio.post('/churches', data: church.toJson());
+    return Church.fromJson(response.data);
+  }
+
+  Future<Church> updateChurch({required String churchId, required Church church}) async {
+    final response = await _dio.patch('/churches/$churchId', data: church.toJson());
+    return Church.fromJson(response.data);
   }
 
   Future<void> removeChurch(String id) async {
-    try {
-      await _dio.delete('/churches/$id');
-    } on DioException catch (e) {
-      print('Error deleting church: $e');
-      throw Exception('Failed to delete church');
-    }
+    await _dio.delete('/churches/$id');
+  }
+
+  Future<List<Department>> getDepartments(String churchId) async {
+    final response = await _dio.get('/departments', queryParameters: {'churchId': churchId});
+    final responseData = response.data as List;
+    return responseData.map((json) => Department.fromJson(json)).toList();
+  }
+
+  Future<Department> addDepartment({required String name, required String churchId}) async {
+    final response = await _dio.post('/departments', data: {'name': name}, queryParameters: {'churchId': churchId});
+    return Department.fromJson(response.data);
+  }
+
+  Future<void> removeDepartment(String id) async {
+    await _dio.delete('/departments/$id');
+  }
+
+  Future<List<Servant>> getServants(String churchId) async {
+    final response = await _dio.get('/servants', queryParameters: {'churchId': churchId});
+    final responseData = response.data['data'] as List;
+    return responseData.map((json) => Servant.fromJson(json)).toList();
+  }
+
+  Future<Servant> addServant({required String fullName, required String email, required String password, required String churchId}) async {
+    final response = await _dio.post('/servants', data: {'fullName': fullName, 'email': email, 'password': password}, queryParameters: {'churchId': churchId});
+    return Servant.fromJson(response.data);
+  }
+
+  Future<void> removeServant(String id) async {
+    await _dio.delete('/servants/$id');
   }
 }

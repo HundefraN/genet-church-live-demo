@@ -1,75 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genet_church_portal/features/dashboard/presentation/widgets/clock_painter.dart';
 import 'dart:math' as math;
 import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:genet_church_portal/core/theme/app_theme.dart';
+import 'package:genet_church_portal/state/providers.dart';
+import 'package:intl/intl.dart';
 
-import '../../../../core/theme/app_theme.dart';
-
-class AnalyticsCard extends StatefulWidget {
+class AnalyticsCard extends HookConsumerWidget {
   const AnalyticsCard({super.key});
 
   @override
-  State<AnalyticsCard> createState() => _AnalyticsCardState();
-}
-
-class _AnalyticsCardState extends State<AnalyticsCard>
-    with TickerProviderStateMixin {
-  late AnimationController _clockController;
-  late AnimationController _chartController;
-  late AnimationController _pulseController;
-  late List<Animation<double>> _barAnimations;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _clockController = AnimationController(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final clockController = useAnimationController(
       duration: const Duration(seconds: 60),
-      vsync: this,
     )..repeat();
 
-    _chartController = AnimationController(
+    final chartController = useAnimationController(
       duration: const Duration(milliseconds: 2000),
-      vsync: this,
     );
 
-    _pulseController = AnimationController(
+    final pulseController = useAnimationController(
       duration: const Duration(seconds: 2),
-      vsync: this,
     )..repeat(reverse: true);
 
-    _barAnimations = List.generate(12, (index) {
-      return Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _chartController,
-          curve: Interval(
-            index * 0.05,
-            0.6 + (index * 0.03),
-            curve: Curves.elasticOut,
+    final barAnimations = useMemoized(() {
+      return List.generate(12, (index) {
+        return Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(
+            parent: chartController,
+            curve: Interval(
+              index * 0.05,
+              0.6 + (index * 0.03),
+              curve: Curves.elasticOut,
+            ),
           ),
-        ),
-      );
-    });
+        );
+      });
+    }, [chartController]);
 
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) _chartController.forward();
-    });
-  }
+    useEffect(() {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (context.mounted) chartController.forward();
+      });
+      return null;
+    }, [chartController]);
 
-  @override
-  void dispose() {
-    _clockController.stop();
-    _clockController.dispose();
-    _chartController.dispose();
-    _pulseController.stop();
-    _pulseController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final statsAsync = ref.watch(dashboardStatsProvider);
 
     return Column(
       children: [
@@ -99,7 +79,7 @@ class _AnalyticsCardState extends State<AnalyticsCard>
             children: [
               Expanded(
                 flex: 3,
-                child: _Calendar(pulseController: _pulseController),
+                child: _Calendar(pulseController: pulseController),
               ),
               const SizedBox(width: 28),
               Expanded(
@@ -128,10 +108,10 @@ class _AnalyticsCardState extends State<AnalyticsCard>
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: AnimatedBuilder(
-                          animation: _clockController,
+                          animation: clockController,
                           builder: (context, child) => CustomPaint(
                             painter: ClockPainter(
-                              animationProgress: _clockController.value,
+                              animationProgress: clockController.value,
                             ),
                           ),
                         ),
@@ -139,11 +119,13 @@ class _AnalyticsCardState extends State<AnalyticsCard>
                     ),
                     const SizedBox(height: 16),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        border:
+                        Border.all(color: Colors.white.withOpacity(0.3)),
                       ),
                       child: const Text(
                         'Next Service',
@@ -188,126 +170,146 @@ class _AnalyticsCardState extends State<AnalyticsCard>
                   ),
                 ],
               ),
-              child: Column(
-                children: [
-                  Wrap(
-                    spacing: 16.0,
-                    runSpacing: 16.0,
-                    alignment: WrapAlignment.spaceBetween,
+              child: statsAsync.when(
+                data: (stats) {
+                  final totalItems = stats.totalChurches +
+                      stats.totalPastors +
+                      stats.totalServants;
+
+                  return Column(
                     children: [
-                      _IconStat(
-                        icon: Iconsax.profile_2user,
-                        value: '432',
-                        label: 'Sunday School',
-                        color:  AppTheme.primaryBlue,
-                        pulseController: _pulseController,
+                      Wrap(
+                        spacing: 16.0,
+                        runSpacing: 16.0,
+                        alignment: WrapAlignment.spaceBetween,
+                        children: [
+                          _IconStat(
+                            icon: Iconsax.building,
+                            value: stats.totalChurches.toString(),
+                            label: 'Churches',
+                            color: AppTheme.primaryBlue,
+                            pulseController: pulseController,
+                          ),
+                          _IconStat(
+                            icon: Iconsax.user_octagon,
+                            value: stats.totalPastors.toString(),
+                            label: 'Pastors',
+                            color: const Color(0xFF16D0A7),
+                            pulseController: pulseController,
+                          ),
+                          _IconStat(
+                            icon: Iconsax.lifebuoy,
+                            value: stats.totalServants.toString(),
+                            label: 'Servants',
+                            color: const Color(0xFF0091FF),
+                            pulseController: pulseController,
+                          ),
+                          const _ComingSoonStat(
+                            icon: Iconsax.wallet_3,
+                            label: 'Donations',
+                          ),
+                        ],
                       ),
-                      _IconStat(
-                        icon: Iconsax.heart,
-                        value: '98',
-                        label: 'Outreach',
-                        color: const Color(0xFF16D0A7),
-                        pulseController: _pulseController,
-                      ),
-                      _IconStat(
-                        icon: Iconsax.music_play,
-                        value: '34',
-                        label: 'Choir Members',
-                        color: const Color(0xFF0091FF),
-                        pulseController: _pulseController,
-                      ),
-                      _IconStat(
-                        icon: Iconsax.receipt_2_1,
-                        value: '1021',
-                        label: 'Donations',
-                        color: const Color(0xFFFEC53D),
-                        pulseController: _pulseController,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 40),
-                  Container(
-                    height: 240,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      const SizedBox(height: 40),
+                      Container(
+                        height: 240,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Column(
                           children: [
-                            Text(
-                              'Monthly Activity',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                              decoration: BoxDecoration(
-                                color:  AppTheme.primaryBlue.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                '2023',
-                                style: TextStyle(
-                                  color:  AppTheme.primaryBlue,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Monthly Activity',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey.shade700,
+                                  ),
                                 ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color:
+                                    AppTheme.primaryBlue.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    DateFormat('yyyy').format(DateTime.now()),
+                                    style: const TextStyle(
+                                      color: AppTheme.primaryBlue,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            Expanded(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisAlignment:
+                                MainAxisAlignment.spaceAround,
+                                children: List.generate(12, (index) {
+                                  final baseHeight =
+                                      (math.sin(index * 0.5) + 1.5) *
+                                          (totalItems > 0
+                                              ? totalItems
+                                              : 5) +
+                                          20.0;
+                                  final isOrange = index % 2 == 0;
+                                  final color = isOrange
+                                      ? const Color(0xFFFEC53D)
+                                      : AppTheme.primaryBlue;
+
+                                  return AnimatedBuilder(
+                                    animation: barAnimations[index],
+                                    builder: (context, child) => Container(
+                                      width: 14,
+                                      height: baseHeight *
+                                          barAnimations[index].value,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.bottomCenter,
+                                          end: Alignment.topCenter,
+                                          colors: [
+                                            color,
+                                            color.withOpacity(0.7),
+                                          ],
+                                        ),
+                                        borderRadius:
+                                        const BorderRadius.vertical(
+                                          top: Radius.circular(6),
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: color.withOpacity(0.3),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 20),
-                        Expanded(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: List.generate(12, (index) {
-                              final baseHeight = (index % 5 + 1) * 25.0 + 30;
-                              final isOrange = index % 2 == 0;
-                              final color = isOrange ? const Color(0xFFFEC53D) :  AppTheme.primaryBlue;
-
-                              return AnimatedBuilder(
-                                animation: _barAnimations[index],
-                                builder: (context, child) => Container(
-                                  width: 14,
-                                  height: baseHeight * _barAnimations[index].value,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.bottomCenter,
-                                      end: Alignment.topCenter,
-                                      colors: [
-                                        color,
-                                        color.withOpacity(0.7),
-                                      ],
-                                    ),
-                                    borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(6),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: color.withOpacity(0.3),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                      ),
+                    ],
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, s) =>
+                const Center(child: Text('Could not load activity data')),
               ),
             ),
           ),
@@ -324,15 +326,19 @@ class _Calendar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final upcomingSunday =
+    now.add(Duration(days: DateTime.sunday - now.weekday));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'October 2023',
-              style: TextStyle(
+            Text(
+              DateFormat('MMMM yyyy').format(now),
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -402,26 +408,31 @@ class _Calendar extends StatelessWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemBuilder: (context, index) {
-              final day = index - 5;
-              bool isCurrent = day == 22;
-              bool isValid = day > 0 && day <= 31;
-              bool isWeekend = (index % 7 == 5 || index % 7 == 6) && isValid;
+              final firstDayOfMonth = DateTime(now.year, now.month, 1);
+              final dayOffset = firstDayOfMonth.weekday - 1;
+              final day = index - dayOffset + 1;
+              final isValid =
+                  day > 0 && day <= DateTime(now.year, now.month + 1, 0).day;
+              final isToday = isValid && day == now.day;
+              final isUpcomingSunday = isValid &&
+                  day == upcomingSunday.day &&
+                  upcomingSunday.month == now.month;
 
               return Container(
                 decoration: BoxDecoration(
-                  gradient: isCurrent
+                  gradient: isToday
                       ? LinearGradient(
                     colors: [Colors.white, Colors.grey.shade100],
                   )
                       : null,
-                  color: isWeekend && !isCurrent
-                      ? Colors.white.withOpacity(0.1)
+                  color: isUpcomingSunday && !isToday
+                      ? Colors.white.withOpacity(0.25)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
-                  border: isCurrent
+                  border: isToday || isUpcomingSunday
                       ? Border.all(color: Colors.white.withOpacity(0.5))
                       : null,
-                  boxShadow: isCurrent
+                  boxShadow: isToday
                       ? [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
@@ -435,11 +446,12 @@ class _Calendar extends StatelessWidget {
                   child: Text(
                     isValid ? day.toString() : '',
                     style: TextStyle(
-                      color: isCurrent
-                          ? const Color(0xFF16D0A7)
-                          : Colors.white,
-                      fontWeight: isCurrent ? FontWeight.bold : FontWeight.w500,
-                      fontSize: isCurrent ? 16 : 14,
+                      color:
+                      isToday ? const Color(0xFF16D0A7) : Colors.white,
+                      fontWeight: isToday || isUpcomingSunday
+                          ? FontWeight.bold
+                          : FontWeight.w500,
+                      fontSize: isToday ? 16 : 14,
                     ),
                   ),
                 ),
@@ -505,9 +517,12 @@ class _IconStatState extends State<_IconStat> with TickerProviderStateMixin {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: _isHovered ? widget.color.withOpacity(0.1) : Colors.transparent,
+          color:
+          _isHovered ? widget.color.withOpacity(0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
-          border: _isHovered ? Border.all(color: widget.color.withOpacity(0.3)) : null,
+          border: _isHovered
+              ? Border.all(color: widget.color.withOpacity(0.3))
+              : null,
         ),
         child: Row(
           children: [
@@ -544,7 +559,8 @@ class _IconStatState extends State<_IconStat> with TickerProviderStateMixin {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: _isHovered ? widget.color : Colors.grey.shade800,
+                      color:
+                      _isHovered ? widget.color : Colors.grey.shade800,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -561,6 +577,57 @@ class _IconStatState extends State<_IconStat> with TickerProviderStateMixin {
             )
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ComingSoonStat extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _ComingSoonStat({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Colors.grey.shade500, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '-',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade400,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade500,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          )
+        ],
       ),
     );
   }

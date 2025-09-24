@@ -1,8 +1,11 @@
+// lib/data/models/church_model.dart
+
 class Church {
   final String id;
   String name;
   String? locationLink;
   String? establishmentDate;
+  String? dateCreated; // Add this field
   String? headOfficeId;
 
   Church({
@@ -10,6 +13,7 @@ class Church {
     required this.name,
     this.locationLink,
     this.establishmentDate,
+    this.dateCreated, // Add to constructor
     this.headOfficeId,
   });
 
@@ -19,6 +23,7 @@ class Church {
       name: json['name'] as String,
       locationLink: json['locationLink'] as String?,
       establishmentDate: json['establishmentDate'] as String?,
+      dateCreated: json['dateCreated'] as String?, // Parse from JSON
       headOfficeId: json['headOfficeId'] as String?,
     );
   }
@@ -28,7 +33,7 @@ class Church {
       'name': name,
       'locationLink': locationLink,
       'establishmentDate': establishmentDate,
-      'Head_office': headOfficeId, // Note the backend uses 'Head_office' for creation
+      'Head_office': headOfficeId,
     };
   }
 }

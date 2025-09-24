@@ -20,29 +20,44 @@ class MainLayout extends HookWidget {
     final isCollapsed = useState(isMobile ? true : false);
     const double headerHeight = 120.0;
 
+    Widget buildBody(bool mobile) {
+      return Column(
+        children: [
+          SizedBox(
+            height: headerHeight,
+            child: CustomScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              slivers: [
+                HeaderBar(
+                  breadcrumbs: breadcrumbs,
+                  isMobile: mobile,
+                  height: headerHeight,
+                  onMenuPressed: () {
+                    if (mobile) {
+                      _scaffoldKey.currentState?.openDrawer();
+                    } else {
+                      isCollapsed.value = !isCollapsed.value;
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(mobile ? 16.0 : 32.0),
+              child: child,
+            ),
+          ),
+        ],
+      );
+    }
+
     if (isMobile) {
       return Scaffold(
         key: _scaffoldKey,
         drawer: const SideMenu(isCollapsed: false),
-        body: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            HeaderBar(
-              breadcrumbs: breadcrumbs,
-              isMobile: true,
-              height: headerHeight,
-              onMenuPressed: () {
-                _scaffoldKey.currentState?.openDrawer();
-              },
-            ),
-            SliverToBoxAdapter(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: child,
-              ),
-            ),
-          ],
-        ),
+        body: buildBody(true),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       );
     }
@@ -52,27 +67,7 @@ class MainLayout extends HookWidget {
       body: Row(
         children: [
           SideMenu(isCollapsed: isCollapsed.value),
-          Expanded(
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                HeaderBar(
-                  breadcrumbs: breadcrumbs,
-                  isMobile: false,
-                  height: headerHeight,
-                  onMenuPressed: () {
-                    isCollapsed.value = !isCollapsed.value;
-                  },
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: child,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          Expanded(child: buildBody(false)),
         ],
       ),
     );

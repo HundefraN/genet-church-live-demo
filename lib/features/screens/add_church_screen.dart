@@ -4,17 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:genet_church_portal/data/models/church_model.dart';
 import 'package:genet_church_portal/state/providers.dart';
-import 'package:genet_church_portal/shared_widgets/custom_dropdown.dart';
-import 'package:genet_church_portal/shared_widgets/custom_text_field.dart';
-import 'package:genet_church_portal/shared_widgets/info_card.dart';
-import '../../shared_widgets/primary_button.dart';
-import '../../shared_widgets/secondary_button.dart';
-
-// Create a new provider that returns the Future directly, which we can use with FutureBuilder.
-// This is a common pattern for handling loading/error states for one-time fetches.
-final churchesFutureProvider = FutureProvider.autoDispose<List<Church>>((ref) {
-  return ref.watch(churchesProvider.notifier).loadChurches();
-});
+import 'package:genet_church_portal/shared_widgets/content_card.dart';
+import 'package:genet_church_portal/shared_widgets/modern_text_field.dart';
+import 'package:genet_church_portal/shared_widgets/page_header.dart';
+import 'package:genet_church_portal/shared_widgets/primary_button.dart';
+import 'package:genet_church_portal/shared_widgets/secondary_button.dart';
+import 'package:iconsax/iconsax.dart';
 
 class AddChurchScreen extends HookConsumerWidget {
   const AddChurchScreen({super.key});
@@ -24,110 +19,107 @@ class AddChurchScreen extends HookConsumerWidget {
     final nameController = useTextEditingController();
     final locationLinkController = useTextEditingController();
     final establishmentDateController = useTextEditingController();
-
-    // State for the selected head office ID from the dropdown
-    final selectedHeadOfficeId = useState<String?>(null);
-
     final formKey = useMemoized(() => GlobalKey<FormState>());
+    final isLoading = useState(false);
 
-    // Use the new future provider to get loading and error states
-    final churchesAsyncValue = ref.watch(churchesFutureProvider);
+    // This is the hardcoded Head Office ID for the Addis Ababa region.
+    const addisAbabaHeadOfficeId = "030fb270-bf4c-431c-aa0c-927c8eafd76d";
 
     void clearForm() {
       nameController.clear();
       locationLinkController.clear();
       establishmentDateController.clear();
-      selectedHeadOfficeId.value = null;
     }
 
-    void addChurch() {
-      if (formKey.currentState?.validate() ?? false) {
-        if (selectedHeadOfficeId.value == null) {
+    void addChurch() async {
+      if (!(formKey.currentState?.validate() ?? false)) return;
+
+      isLoading.value = true;
+      final newChurch = Church(
+        id: '',
+        name: nameController.text,
+        locationLink: locationLinkController.text.isNotEmpty ? locationLinkController.text : null,
+        establishmentDate: establishmentDateController.text.isNotEmpty
+            ? DateTime.tryParse(establishmentDateController.text)?.toIso8601String()
+            : null,
+        headOfficeId: addisAbabaHeadOfficeId, // Use the hardcoded ID
+      );
+
+      try {
+        await ref.read(churchesProvider.notifier).addChurch(newChurch);
+        if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Please select a Head Office.'),
-              backgroundColor: Colors.orange,
+            SnackBar(
+              content: Text('${newChurch.name} has been added successfully!'),
+              backgroundColor: Colors.green,
             ),
           );
-          return;
+          clearForm();
+          context.go('/report-churchs');
         }
-
-        final newChurch = Church(
-          id: '',
-          name: nameController.text,
-          locationLink: locationLinkController.text,
-          establishmentDate: establishmentDateController.text.isNotEmpty
-              ? DateTime.parse(establishmentDateController.text).toIso8601String()
-              : null,
-          headOfficeId: selectedHeadOfficeId.value,
-        );
-
-        ref.read(churchesProvider.notifier).addChurch(newChurch);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${newChurch.name} has been added successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-
-        clearForm();
-        context.go('/report-churchs');
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to add church. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (context.mounted) {
+          isLoading.value = false;
+        }
       }
     }
 
     return Form(
       key: formKey,
-      child: InfoCard(
-        title: 'Add Church\'s Detail',
-        child: churchesAsyncValue.when(
-          data: (churchList) {
-            // Create a list of church names for the dropdown
-            final churchNames = churchList.map((church) => church.name).toList();
-
-            return ListView(
-              shrinkWrap: true,
-              physics: const ClampingScrollPhysics(),
+      child: Column(
+        children: [
+          PageHeader(
+            title: 'New Church Details',
+            description: 'Add a new church branch to the database. It will be automatically assigned to the Addis Ababa Head Office.',
+            action: PrimaryButton(
+              text: 'Save Church',
+              onPressed: addChurch,
+              isLoading: isLoading.value,
+              icon: Iconsax.save_2,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ContentCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CustomTextField(controller: nameController, hintText: 'New Church Name'),
-                const SizedBox(height: 16),
-                CustomDropdown(
-                  hintText: 'Select Head Office',
-                  items: churchNames,
-                  onChanged: (churchName) {
-                    if (churchName != null) {
-                      // Find the church object that matches the selected name
-                      final selectedChurch = churchList.firstWhere((church) => church.name == churchName);
-                      selectedHeadOfficeId.value = selectedChurch.id;
-                    }
-                  },
-                  value: selectedHeadOfficeId.value != null
-                  // Find the name of the church that matches the currently selected ID
-                      ? churchList.firstWhere((church) => church.id == selectedHeadOfficeId.value).name
-                      : null,
+                ModernTextField(
+                  controller: nameController,
+                  hintText: 'New Church Name',
+                  icon: Iconsax.building,
+                  validator: (value) =>
+                  value!.isEmpty ? 'Name cannot be empty' : null,
                 ),
                 const SizedBox(height: 16),
-                CustomTextField(
+                ModernTextField(
                     controller: locationLinkController,
-                    hintText: 'Google Maps Link (Optional)'),
+                    hintText: 'Google Maps Link (Optional)',
+                    icon: Iconsax.map_1),
                 const SizedBox(height: 16),
-                CustomTextField(
+                ModernTextField(
                     controller: establishmentDateController,
-                    hintText: 'Establishment Date (e.g., 2020-02-15) (Optional)'),
+                    hintText: 'Establishment Date (e.g., 2020-02-15) (Optional)',
+                    icon: Iconsax.calendar_1),
                 const SizedBox(height: 32),
                 Row(
                   children: [
-                    PrimaryButton(text: 'ADD CHURCH', onPressed: addChurch),
-                    const SizedBox(width: 16),
-                    SecondaryButton(text: 'CLEAR', onPressed: clearForm),
+                    // The PrimaryButton is now in the PageHeader
+                    SecondaryButton(text: 'CLEAR FORM', onPressed: clearForm),
                   ],
                 )
               ],
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('Error loading churches for dropdown: $err')),
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

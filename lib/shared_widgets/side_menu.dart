@@ -67,10 +67,14 @@ class SideMenu extends ConsumerWidget {
                     _buildModernHeader(isCollapsed),
                     Expanded(
                       child: Container(
-                        margin: EdgeInsets.symmetric(horizontal: isCollapsed ? 8 : 16),
+                        margin: EdgeInsets.symmetric(
+                            horizontal: isCollapsed ? 8 : 16),
                         child: ListView(
                           physics: const BouncingScrollPhysics(),
-                          children: [..._buildMenuItemsForRole(currentRole, context, isCollapsed)],
+                          children: [
+                            ..._buildMenuItemsForRole(
+                                currentRole, context, isCollapsed)
+                          ],
                         ),
                       ),
                     ),
@@ -86,7 +90,6 @@ class SideMenu extends ConsumerWidget {
     ).animate().slideX(begin: -1, duration: 600.ms, curve: Curves.easeOutCubic);
   }
 
-  // ... (All other _build methods remain the same as the previous correct version)
   Widget _buildModernHeader(bool collapsed) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
@@ -242,6 +245,8 @@ class SideMenu extends ConsumerWidget {
           'Add Church': '/add-church',
           'Add Pastors': '/add-pastors',
           'Permissions': '/permissions',
+          'Departments': '/report-departments',
+          'Servants': '/report-servants',
         },
         collapsed,
       ),
@@ -263,14 +268,6 @@ class SideMenu extends ConsumerWidget {
         icon: Iconsax.chart_21,
         isSelected: currentRoute.startsWith('/advanced-reports'),
         onTap: () => context.go('/advanced-reports'),
-        isCollapsed: collapsed,
-      ),
-      const SizedBox(height: 12),
-      _buildModernMenuItem(
-        title: 'Communication',
-        icon: Iconsax.send_1,
-        isSelected: currentRoute.startsWith('/communication-hub'),
-        onTap: () => context.go('/communication-hub'),
         isCollapsed: collapsed,
       ),
     ];
@@ -311,19 +308,11 @@ class SideMenu extends ConsumerWidget {
         },
         collapsed,
       ),
-      const SizedBox(height: 12),
-      _buildModernMenuItem(
-        title: 'Communication',
-        icon: Iconsax.send_1,
-        isSelected: currentRoute.startsWith('/communication-hub'),
-        onTap: () => context.go('/communication-hub'),
-        isCollapsed: collapsed,
-      ),
     ];
   }
 
-  List<Widget> _buildServantMenu(
-      BuildContext context, String currentRoute, UserRole role, bool collapsed) {
+  List<Widget> _buildServantMenu(BuildContext context, String currentRoute,
+      UserRole role, bool collapsed) {
     String title =
     role == UserRole.servant ? 'Servant' : 'Servant Supporter';
     return [
@@ -433,8 +422,9 @@ class SideMenu extends ConsumerWidget {
                           style: TextStyle(
                             color: AppTheme.surfaceWhite,
                             fontSize: 15,
-                            fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w600,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w600,
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -474,6 +464,8 @@ class SideMenu extends ConsumerWidget {
       Map<String, String> children,
       bool collapsed,
       ) {
+    if (children.isEmpty) return const SizedBox.shrink();
+
     final bool isExpanded =
     children.values.any((route) => currentRoute.startsWith(route));
 
@@ -803,7 +795,8 @@ class SideMenu extends ConsumerWidget {
                               Iconsax.arrow_down_1,
                               color: AppTheme.surfaceWhite.withOpacity(0.8),
                             ),
-                            dropdownColor: AppTheme.primaryBlue.withOpacity(0.95),
+                            dropdownColor:
+                            AppTheme.primaryBlue.withOpacity(0.95),
                             items: UserRole.values.map((UserRole role) {
                               return DropdownMenuItem<UserRole>(
                                 value: role,
@@ -833,7 +826,7 @@ class SideMenu extends ConsumerWidget {
                               if (newRole != null) {
                                 ref.read(userRoleProvider.notifier).state =
                                     newRole;
-                                String initialRoute = '/dashboard';
+                                const initialRoute = '/dashboard';
                                 if (GoRouter.of(context)
                                     .routerDelegate
                                     .currentConfiguration
