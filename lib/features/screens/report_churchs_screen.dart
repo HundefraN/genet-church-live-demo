@@ -4,13 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:genet_church_portal/core/theme/app_theme.dart';
 import 'package:genet_church_portal/data/models/church_model.dart';
+import 'package:genet_church_portal/data/services/url_launcher_service.dart'; // Import the new service
 import 'package:genet_church_portal/state/providers.dart';
 import 'package:genet_church_portal/shared_widgets/content_card.dart';
 import 'package:genet_church_portal/shared_widgets/modern_text_field.dart';
 import 'package:genet_church_portal/shared_widgets/page_header.dart';
 import 'package:genet_church_portal/shared_widgets/styled_data_table.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class ReportChurchsScreen extends HookConsumerWidget {
   const ReportChurchsScreen({super.key});
@@ -19,6 +19,7 @@ class ReportChurchsScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final churchesAsync = ref.watch(churchesProvider);
     final searchQuery = useState('');
+    final urlLauncher = UrlLauncherService(); // Create an instance of the service
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,13 +89,14 @@ class ReportChurchsScreen extends HookConsumerWidget {
                                   ?.isAbsolute ==
                                   true
                               ? InkWell(
-                            onTap: () =>
-                                launchUrl(Uri.parse(church.locationLink!)),
+                            onTap: () => urlLauncher
+                                .openInNewTab(church.locationLink!), // Use the new service
                             child: const Text(
                               'View on Map',
                               style: TextStyle(
                                   color: AppTheme.primaryBlue,
-                                  decoration: TextDecoration.underline),
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: AppTheme.primaryBlue),
                             ),
                           )
                               : Text(church.locationLink ?? 'N/A'),
@@ -181,25 +183,28 @@ class ReportChurchsScreen extends HookConsumerWidget {
                   if (formKey.currentState!.validate()) {
                     isSaving.value = true;
                     final updatedChurch = Church(
-                      id: church.id,
-                      name: nameController.text,
-                      locationLink: locationController.text,
-                      establishmentDate: church.establishmentDate,
-                      headOfficeId: church.headOfficeId,
-                      dateCreated: church.dateCreated,
-                    );
+                        id: church.id,
+                        name: nameController.text,
+                        locationLink: locationController.text,
+                        establishmentDate: church.establishmentDate,
+                        headOfficeId: church.headOfficeId,
+                        dateCreated: church.dateCreated);
                     try {
                       await ref
                           .read(churchesProvider.notifier)
                           .updateChurch(
-                          churchId: church.id, church: updatedChurch);
+                          churchId: church.id,
+                          church: updatedChurch);
                       if (context.mounted) Navigator.pop(context);
-                    } catch(e) {
+                    } catch (e) {
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to update church.'), backgroundColor: Colors.red,));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content:
+                                Text('Failed to update church.'),
+                                backgroundColor: Colors.red));
                       }
-                    }
-                    finally {
+                    } finally {
                       if (context.mounted) isSaving.value = false;
                     }
                   }

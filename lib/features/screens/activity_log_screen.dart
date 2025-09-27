@@ -15,22 +15,24 @@ class ActivityLogScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final activitiesAsync = ref.watch(activityLogProvider);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const PageHeader(
-          title: 'Activity Log',
-          description:
-          'A chronological list of all major events and changes in the system.',
-        ),
-        const SizedBox(height: 24),
-        Expanded(
-          child: activitiesAsync.when(
-            data: (activities) {
-              if (activities.isEmpty) {
-                return const Center(child: Text('No activities found.'));
-              }
-              return ListView.builder(
+    return activitiesAsync.when(
+      data: (activities) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const PageHeader(
+              title: 'Activity Log',
+              description:
+              'A chronological list of all major events and changes in the system.',
+            ),
+            const SizedBox(height: 24),
+            if (activities.isEmpty)
+              const Center(child: Text('No activities found.'))
+            else
+            // Use ListView.builder directly for the list content
+              ListView.builder(
+                shrinkWrap: true, // Important when nesting scrolls
+                physics: const NeverScrollableScrollPhysics(), // Parent handles scroll
                 itemCount: activities.length,
                 itemBuilder: (context, index) {
                   final activity = activities[index];
@@ -59,30 +61,32 @@ class ActivityLogScreen extends ConsumerWidget {
                     ),
                   );
                 },
-              );
-            },
-            loading: () => Shimmer.fromColors(
-              baseColor: Colors.grey.shade300,
-              highlightColor: Colors.grey.shade100,
-              child: ListView.builder(
-                itemCount: 10,
-                itemBuilder: (_, __) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0),
-                  child: Card(
-                    child: ListTile(
-                      leading: const CircleAvatar(backgroundColor: Colors.white),
-                      title: Container(height: 16, color: Colors.white),
-                      subtitle: Container(height: 12, width: 100, color: Colors.white),
-                    ),
-                  ),
-                ),
               ),
-            ),
-            error: (err, stack) =>
-                Center(child: Text('Failed to load activities: $err')),
-          ),
+          ],
+        );
+      },
+      loading: () => Shimmer.fromColors(
+        baseColor: Colors.grey.shade300,
+        highlightColor: Colors.grey.shade100,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Shimmer for the PageHeader
+            Container(height: 60, width: 400, color: Colors.white, margin: const EdgeInsets.only(bottom: 24),),
+            // Shimmer for the ListView
+            ...List.generate(10, (index) => Card(
+              margin: const EdgeInsets.only(bottom: 12.0),
+              child: ListTile(
+                leading: const CircleAvatar(backgroundColor: Colors.white),
+                title: Container(height: 16, color: Colors.white, margin: const EdgeInsets.only(right: 50)),
+                subtitle: Container(height: 12, width: 100, color: Colors.white, margin: const EdgeInsets.only(top: 8, right: 100)),
+              ),
+            )),
+          ],
         ),
-      ],
+      ),
+      error: (err, stack) =>
+          Center(child: Text('Failed to load activities: $err')),
     );
   }
 }
