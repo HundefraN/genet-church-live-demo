@@ -67,8 +67,8 @@ class SideMenu extends ConsumerWidget {
                     _buildModernHeader(isCollapsed),
                     Expanded(
                       child: Container(
-                        margin: EdgeInsets.symmetric(
-                            horizontal: isCollapsed ? 8 : 16),
+                        margin:
+                        EdgeInsets.symmetric(horizontal: isCollapsed ? 8 : 16),
                         child: ListView(
                           physics: const BouncingScrollPhysics(),
                           children: [
@@ -213,130 +213,89 @@ class SideMenu extends ConsumerWidget {
     final currentRoute =
     GoRouter.of(context).routerDelegate.currentConfiguration.uri.toString();
 
-    switch (role) {
-      case UserRole.superAdmin:
-        return _buildSuperAdminMenu(context, currentRoute, collapsed);
-      case UserRole.pastor:
-        return _buildPastorMenu(context, currentRoute, collapsed);
-      case UserRole.servant:
-      case UserRole.servantSupporter:
-        return _buildServantMenu(context, currentRoute, role, collapsed);
-    }
-  }
+    List<Widget> menuItems = [];
 
-  List<Widget> _buildSuperAdminMenu(
-      BuildContext context, String currentRoute, bool collapsed) {
-    return [
-      const SizedBox(height: 16),
-      _buildModernMenuItem(
-        title: 'Dashboard',
-        icon: Iconsax.category,
-        isSelected: currentRoute.startsWith('/dashboard'),
-        onTap: () => context.go('/dashboard'),
+    // --- DASHBOARD (Visible to all roles) ---
+    menuItems.add(const SizedBox(height: 16));
+    menuItems.add(_buildModernMenuItem(
+      title: 'Dashboard',
+      icon: Iconsax.category,
+      isSelected: currentRoute.startsWith('/dashboard'),
+      onTap: () => context.go('/dashboard'),
+      isCollapsed: collapsed,
+    ));
+
+    // --- CHURCH ADMIN (Super Admin only) ---
+    if (role == UserRole.superAdmin) {
+      menuItems.add(const SizedBox(height: 12));
+      menuItems.add(_buildModernExpansionTile(
+          context, currentRoute, 'Church Admin', Iconsax.building_4, {
+        'Churches': '/report-churchs',
+        'Pastors': '/report-pastors',
+        'Departments': '/report-departments',
+        'Servants': '/report-servants',
+      }, collapsed));
+    }
+
+    // --- MEMBERS (Super Admin, Pastor, Servant) ---
+    if (role == UserRole.superAdmin || role == UserRole.pastor || role == UserRole.servant) {
+      menuItems.add(const SizedBox(height: 12));
+      menuItems.add(_buildModernExpansionTile(
+          context, currentRoute, 'Members', Iconsax.people, {
+        'Add Member': '/add-members',
+        'Show Members': '/show-members',
+      }, collapsed));
+    }
+
+    // --- SHOW MEMBERS ONLY (Servant Supporter) ---
+    if (role == UserRole.servantSupporter) {
+      menuItems.add(const SizedBox(height: 12));
+      menuItems.add(_buildModernMenuItem(
+        title: 'Show Members',
+        icon: Iconsax.people,
+        isSelected: currentRoute.startsWith('/show-members'),
+        onTap: () => context.go('/show-members'),
         isCollapsed: collapsed,
-      ),
-      const SizedBox(height: 12),
-      _buildModernExpansionTile(
-        context,
-        currentRoute,
-        'Church Admin',
-        Iconsax.building_4,
-        {
-          'Add Church': '/add-church',
-          'Add Pastors': '/add-pastors',
-          'Permissions': '/permissions',
-          'Departments': '/report-departments',
-          'Servants': '/report-servants',
-        },
-        collapsed,
-      ),
-      const SizedBox(height: 12),
-      _buildModernExpansionTile(
-        context,
-        currentRoute,
-        'Reports',
-        Iconsax.status_up,
-        {
-          'Church Reports': '/report-churchs',
-          'Pastor Reports': '/report-pastors',
-        },
-        collapsed,
-      ),
-      const SizedBox(height: 12),
-      _buildModernMenuItem(
+      ));
+    }
+
+    // --- REPORTS & ADVANCED (Super Admin Only) ---
+    if (role == UserRole.superAdmin) {
+      menuItems.add(const SizedBox(height: 12));
+      menuItems.add(_buildModernMenuItem(
         title: 'Analytics',
         icon: Iconsax.chart_21,
         isSelected: currentRoute.startsWith('/advanced-reports'),
         onTap: () => context.go('/advanced-reports'),
         isCollapsed: collapsed,
-      ),
-    ];
-  }
+      ));
+    }
 
-  List<Widget> _buildPastorMenu(
-      BuildContext context, String currentRoute, bool collapsed) {
-    return [
-      const SizedBox(height: 16),
-      _buildModernMenuItem(
-        title: 'Dashboard',
-        icon: Iconsax.category,
-        isSelected: currentRoute.startsWith('/dashboard'),
-        onTap: () => context.go('/dashboard'),
+    // --- PASTOR LEVEL REPORTS (Pastor Only) ---
+    if (role == UserRole.pastor) {
+      menuItems.add(const SizedBox(height: 12));
+      menuItems.add(_buildModernMenuItem(
+        title: 'Categories',
+        icon: Iconsax.folder_2,
+        isSelected: currentRoute.startsWith('/categories'),
+        onTap: () => context.go('/categories'),
         isCollapsed: collapsed,
-      ),
-      const SizedBox(height: 12),
-      _buildModernExpansionTile(
-        context,
-        currentRoute,
-        'Church\'s',
-        Iconsax.people,
-        {
-          'Add Members': '/add-members',
-          'Show Members': '/show-members',
-          'Categories': '/categories',
-        },
-        collapsed,
-      ),
-      const SizedBox(height: 12),
-      _buildModernExpansionTile(
-        context,
-        currentRoute,
-        'Report',
-        Iconsax.document_text,
-        {
-          'Report Members': '/show-members',
-        },
-        collapsed,
-      ),
-    ];
-  }
+      ));
+    }
 
-  List<Widget> _buildServantMenu(BuildContext context, String currentRoute,
-      UserRole role, bool collapsed) {
-    String title =
-    role == UserRole.servant ? 'Servant' : 'Servant Supporter';
-    return [
-      const SizedBox(height: 16),
-      _buildModernMenuItem(
-        title: 'Dashboard',
-        icon: Iconsax.category,
-        isSelected: currentRoute.startsWith('/dashboard'),
-        onTap: () => context.go('/dashboard'),
+    // --- SETTINGS (Super Admin Only) ---
+    if (role == UserRole.superAdmin) {
+      menuItems.add(const SizedBox(height: 12));
+      menuItems.add(_buildModernMenuItem(
+        title: 'Permissions',
+        icon: Iconsax.shield_tick,
+        isSelected: currentRoute.startsWith('/permissions'),
+        onTap: () => context.go('/permissions'),
         isCollapsed: collapsed,
-      ),
-      const SizedBox(height: 12),
-      _buildModernExpansionTile(
-        context,
-        currentRoute,
-        title,
-        Iconsax.lifebuoy,
-        {
-          'Add Members': '/add-members',
-          'Show Members': '/show-members',
-        },
-        collapsed,
-      ),
-    ];
+      ));
+    }
+
+    return menuItems;
   }
 
   Widget _buildModernMenuItem({

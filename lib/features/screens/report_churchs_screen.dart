@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:genet_church_portal/core/theme/app_theme.dart';
 import 'package:genet_church_portal/data/models/church_model.dart';
@@ -8,8 +9,8 @@ import 'package:genet_church_portal/shared_widgets/content_card.dart';
 import 'package:genet_church_portal/shared_widgets/modern_text_field.dart';
 import 'package:genet_church_portal/shared_widgets/page_header.dart';
 import 'package:genet_church_portal/shared_widgets/styled_data_table.dart';
-import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ReportChurchsScreen extends HookConsumerWidget {
   const ReportChurchsScreen({super.key});
@@ -81,7 +82,23 @@ class ReportChurchsScreen extends HookConsumerWidget {
                         DataCell(Text((index + 1).toString())),
                         DataCell(Text(church.name)),
                         DataCell(Text(church.headOfficeId ?? 'N/A')),
-                        DataCell(Text(church.locationLink ?? 'N/A')),
+                        DataCell(
+                          church.locationLink != null &&
+                              Uri.tryParse(church.locationLink!)
+                                  ?.isAbsolute ==
+                                  true
+                              ? InkWell(
+                            onTap: () =>
+                                launchUrl(Uri.parse(church.locationLink!)),
+                            child: const Text(
+                              'View on Map',
+                              style: TextStyle(
+                                  color: AppTheme.primaryBlue,
+                                  decoration: TextDecoration.underline),
+                            ),
+                          )
+                              : Text(church.locationLink ?? 'N/A'),
+                        ),
                         DataCell(Row(
                           children: [
                             TableActionButton(
@@ -123,7 +140,8 @@ class ReportChurchsScreen extends HookConsumerWidget {
   void _showEditChurchDialog(
       BuildContext context, WidgetRef ref, Church church) {
     final nameController = TextEditingController(text: church.name);
-    final locationController = TextEditingController(text: church.locationLink);
+    final locationController =
+    TextEditingController(text: church.locationLink);
     final formKey = GlobalKey<FormState>();
     final isSaving = ValueNotifier<bool>(false);
 
@@ -157,20 +175,31 @@ class ReportChurchsScreen extends HookConsumerWidget {
                   onPressed: loading ? null : () => Navigator.pop(context),
                   child: const Text('Cancel')),
               ElevatedButton(
-                onPressed: loading ? null : () async {
+                onPressed: loading
+                    ? null
+                    : () async {
                   if (formKey.currentState!.validate()) {
                     isSaving.value = true;
                     final updatedChurch = Church(
-                        id: church.id,
-                        name: nameController.text,
-                        locationLink: locationController.text,
-                        establishmentDate: church.establishmentDate,
-                        headOfficeId: church.headOfficeId);
+                      id: church.id,
+                      name: nameController.text,
+                      locationLink: locationController.text,
+                      establishmentDate: church.establishmentDate,
+                      headOfficeId: church.headOfficeId,
+                      dateCreated: church.dateCreated,
+                    );
                     try {
-                      await ref.read(churchesProvider.notifier).updateChurch(
+                      await ref
+                          .read(churchesProvider.notifier)
+                          .updateChurch(
                           churchId: church.id, church: updatedChurch);
                       if (context.mounted) Navigator.pop(context);
-                    } finally {
+                    } catch(e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to update church.'), backgroundColor: Colors.red,));
+                      }
+                    }
+                    finally {
                       if (context.mounted) isSaving.value = false;
                     }
                   }

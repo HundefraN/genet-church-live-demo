@@ -1,4 +1,3 @@
-// lib/features/screens/add_members_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +12,7 @@ import 'package:genet_church_portal/shared_widgets/primary_button.dart';
 import 'package:iconsax/iconsax.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../shared_widgets/modern_date_picker.dart';
 
 class AddMembersScreen extends HookConsumerWidget {
   const AddMembersScreen({super.key});
@@ -24,7 +24,7 @@ class AddMembersScreen extends HookConsumerWidget {
 
     final fullNameController = useTextEditingController();
     final phoneNumberController = useTextEditingController();
-    final birthDateController = useTextEditingController();
+    final birthDate = useState<DateTime?>(null);
     final birthPlaceController = useTextEditingController();
     final motherTongueController = useTextEditingController();
     final cityController = useTextEditingController();
@@ -61,7 +61,7 @@ class AddMembersScreen extends HookConsumerWidget {
       final newMember = Member(
         fullName: fullNameController.text,
         phoneNumber: phoneNumberController.text,
-        birthDate: birthDateController.text,
+        birthDate: birthDate.value!.toIso8601String(),
         birthPlace: birthPlaceController.text,
         motherTongue: motherTongueController.text,
         gender: gender.value!,
@@ -142,11 +142,14 @@ class AddMembersScreen extends HookConsumerWidget {
                 ]),
                 const SizedBox(height: 16),
                 _formRow([
-                  ModernTextField(
-                      controller: birthDateController,
-                      hintText: 'Birth Date (YYYY-MM-DD)',
-                      icon: Iconsax.calendar_1,
-                      validator: (v) => v!.isEmpty ? 'Required' : null),
+                  ModernDatePicker(
+                    hintText: 'Birth Date',
+                    icon: Iconsax.calendar_1,
+                    selectedDate: birthDate.value,
+                    onDateSelected: (date) => birthDate.value = date,
+                    validator: (_) =>
+                    birthDate.value == null ? 'Please select a date' : null,
+                  ),
                   ModernTextField(
                       controller: birthPlaceController,
                       hintText: 'Birth Place',

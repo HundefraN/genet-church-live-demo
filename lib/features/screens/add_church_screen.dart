@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:genet_church_portal/data/models/church_model.dart';
 import 'package:genet_church_portal/state/providers.dart';
+import 'package:genet_church_portal/shared_widgets/custom_dropdown.dart';
 import 'package:genet_church_portal/shared_widgets/content_card.dart';
 import 'package:genet_church_portal/shared_widgets/modern_text_field.dart';
 import 'package:genet_church_portal/shared_widgets/page_header.dart';
@@ -19,10 +20,10 @@ class AddChurchScreen extends HookConsumerWidget {
     final nameController = useTextEditingController();
     final locationLinkController = useTextEditingController();
     final establishmentDateController = useTextEditingController();
+    final selectedHeadOfficeId = useState<String?>(null);
     final formKey = useMemoized(() => GlobalKey<FormState>());
     final isLoading = useState(false);
 
-    // This is the hardcoded Head Office ID for the Addis Ababa region.
     const addisAbabaHeadOfficeId = "030fb270-bf4c-431c-aa0c-927c8eafd76d";
 
     void clearForm() {
@@ -32,7 +33,10 @@ class AddChurchScreen extends HookConsumerWidget {
     }
 
     void addChurch() async {
-      if (!(formKey.currentState?.validate() ?? false)) return;
+      if (!(formKey.currentState?.validate() ?? false)) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please correct the errors in the form.'), backgroundColor: Colors.red));
+        return;
+      }
 
       isLoading.value = true;
       final newChurch = Church(
@@ -42,7 +46,7 @@ class AddChurchScreen extends HookConsumerWidget {
         establishmentDate: establishmentDateController.text.isNotEmpty
             ? DateTime.tryParse(establishmentDateController.text)?.toIso8601String()
             : null,
-        headOfficeId: addisAbabaHeadOfficeId, // Use the hardcoded ID
+        headOfficeId: addisAbabaHeadOfficeId,
       );
 
       try {
@@ -97,7 +101,7 @@ class AddChurchScreen extends HookConsumerWidget {
                   hintText: 'New Church Name',
                   icon: Iconsax.building,
                   validator: (value) =>
-                  value!.isEmpty ? 'Name cannot be empty' : null,
+                  value == null || value.trim().isEmpty ? 'Church name cannot be empty' : null,
                 ),
                 const SizedBox(height: 16),
                 ModernTextField(
@@ -112,7 +116,6 @@ class AddChurchScreen extends HookConsumerWidget {
                 const SizedBox(height: 32),
                 Row(
                   children: [
-                    // The PrimaryButton is now in the PageHeader
                     SecondaryButton(text: 'CLEAR FORM', onPressed: clearForm),
                   ],
                 )

@@ -7,7 +7,7 @@ import 'package:genet_church_portal/data/models/pastor_model.dart';
 import 'package:genet_church_portal/state/providers.dart';
 import 'package:intl/intl.dart';
 
-enum ReportType { pastors, churches }
+enum ReportType { pastors, churches, members }
 
 final reportServiceProvider = Provider((ref) => ReportService(ref));
 
@@ -21,65 +21,38 @@ class ReportService {
     final now = DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
 
     if (reportType == ReportType.pastors) {
-      final pastors = _ref.read(pastorsProvider).valueOrNull ?? [];
-
-      // Define professional, comprehensive headers
+      final pastors = await _ref.read(pastorsProvider.future);
       rows.add([
-        'Pastor ID',
-        'User ID',
-        'Full Name',
-        'Email',
-        'Role',
-        'Is Active',
-        'Created At',
-        'Assigned Church ID'
+        'Pastor ID', 'User ID', 'Full Name', 'Email', 'Role', 'Is Active', 'Created At', 'Assigned Church ID'
       ]);
-
-      // Map every data point from the model to a cell
       for (var pastor in pastors) {
         rows.add([
-          pastor.id,
-          pastor.userId,
-          pastor.user.fullName,
-          pastor.user.email,
-          pastor.user.role,
-          pastor.user.isActive,
-          pastor.user.createdAt,
-          pastor.churchId ?? 'N/A'
+          pastor.id, pastor.userId, pastor.user.fullName, pastor.user.email,
+          pastor.user.role, pastor.user.isActive, pastor.user.createdAt, pastor.churchId ?? 'N/A'
         ]);
       }
       fileName = 'pastors_report_$now.csv';
-
     } else if (reportType == ReportType.churches) {
-      final churches = _ref.read(churchesProvider).valueOrNull ?? [];
-
-      // Define professional, comprehensive headers
+      final churches = await _ref.read(churchesProvider.future);
       rows.add([
-        'Church ID',
-        'Church Name',
-        'Location Link',
-        'Establishment Date',
-        'Date Created',
-        'Head Office ID'
+        'Church ID', 'Church Name', 'Location Link', 'Establishment Date', 'Date Created', 'Head Office ID'
       ]);
-
-      // Map every data point from the model to a cell
       for (var church in churches) {
         rows.add([
-          church.id,
-          church.name,
-          church.locationLink ?? '',
-          church.establishmentDate ?? '',
-          church.dateCreated ?? '',
-
-          church.headOfficeId ?? ''
+          church.id, church.name, church.locationLink ?? '',
+          church.establishmentDate ?? '', church.dateCreated ?? '', church.headOfficeId ?? ''
         ]);
       }
       fileName = 'churches_report_$now.csv';
+    } else if (reportType == ReportType.members) {
+      // This is a placeholder until the backend is ready.
+      rows.add(['Member ID', 'Full Name', 'Phone Number', 'Status']);
+      rows.add(['mem_001', 'Kebede Somebody (Sample)', '555-0101', 'ACTIVE']);
+      rows.add(['mem_002', 'Ayele Somebidy (Sample)', '555-0102', 'INACTIVE']);
+      fileName = 'members_report_$now.csv';
     }
 
-    if (rows.length <= 1) { // Check if only headers are present
-      print("No data available to export for $reportType.");
+    if (rows.length <= 1) {
       return;
     }
 

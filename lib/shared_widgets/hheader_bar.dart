@@ -200,7 +200,9 @@ class HeaderBar extends HookConsumerWidget {
             const SizedBox(width: 16),
             PopupMenuButton<String>(
               onSelected: (value) {
-                if (value == 'profile') context.go('/profile');
+                if (value == 'profile') {
+                  context.go('/profile');
+                }
                 if (value == 'logout') {
                   ref.read(authStateProvider.notifier).logout();
                   context.go('/login');
@@ -214,7 +216,8 @@ class HeaderBar extends HookConsumerWidget {
                 PopupMenuItem<String>(
                     value: 'profile',
                     child: const ListTile(
-                        leading: Icon(Iconsax.user), title: Text('My Profile')),
+                        leading: Icon(Iconsax.user),
+                        title: Text('My Profile')),
                     onTap: () => context.go('/profile')),
                 const PopupMenuDivider(),
                 PopupMenuItem<String>(
@@ -276,27 +279,38 @@ class GlobalSearchField extends HookConsumerWidget {
       ref.read(searchServiceProvider).getCommandsForRole(currentRole);
       if (query.isEmpty) {
         ref.read(searchResultsProvider.notifier).state = [];
+        if (overlayPortalController.isShowing) {
+          overlayPortalController.hide();
+        }
       } else {
         final results = allCommands
             .where((cmd) => cmd.title.toLowerCase().contains(query.toLowerCase()))
             .toList();
         ref.read(searchResultsProvider.notifier).state = results;
+        if (!overlayPortalController.isShowing) {
+          overlayPortalController.show();
+        }
       }
     }
 
     void handleCommandSelection(SearchCommand command) {
+      // Use a post-frame callback to ensure the overlay is fully hidden
+      // before attempting to navigate.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.go(command.path);
+      });
+
       searchFocusNode.unfocus();
       searchController.clear();
-      runSearch('');
-      context.go(command.path);
+      overlayPortalController.hide();
+      ref.read(searchQueryProvider.notifier).state = '';
+      ref.read(searchResultsProvider.notifier).state = [];
     }
 
     useEffect(() {
       void listener() {
-        if (!searchFocusNode.hasFocus) {
+        if (!searchFocusNode.hasFocus && overlayPortalController.isShowing) {
           overlayPortalController.hide();
-        } else if (searchController.text.isNotEmpty) {
-          overlayPortalController.show();
         }
       }
       searchFocusNode.addListener(listener);
@@ -336,14 +350,7 @@ class GlobalSearchField extends HookConsumerWidget {
         child: TextField(
           controller: searchController,
           focusNode: searchFocusNode,
-          onChanged: (query) {
-            runSearch(query);
-            if (query.isNotEmpty && !overlayPortalController.isShowing) {
-              overlayPortalController.show();
-            } else if (query.isEmpty && overlayPortalController.isShowing) {
-              overlayPortalController.hide();
-            }
-          },
+          onChanged: runSearch,
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: 'Search actions or pages...',
