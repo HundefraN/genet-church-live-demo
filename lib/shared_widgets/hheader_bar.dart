@@ -16,6 +16,10 @@ class HeaderBar extends HookConsumerWidget {
   final bool isMobile;
   final double height;
   final VoidCallback? onMenuPressed;
+  final bool pinned;
+  final bool floating;
+  final bool snap;
+  final bool stretch;
 
   const HeaderBar({
     super.key,
@@ -23,6 +27,10 @@ class HeaderBar extends HookConsumerWidget {
     this.isMobile = false,
     this.height = 120.0,
     this.onMenuPressed,
+    this.pinned = false,
+    this.floating = false,
+    this.snap = false,
+    this.stretch = false,
   });
 
   @override
@@ -34,11 +42,14 @@ class HeaderBar extends HookConsumerWidget {
     user?.fullName.isNotEmpty == true ? user!.fullName[0].toUpperCase() : '?';
 
     return SliverAppBar(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppTheme.scaffoldBackground.withOpacity(0.85),
       elevation: 0,
-      pinned: false,
-      floating: true,
-      stretch: true,
+      scrolledUnderElevation: 4.0,
+      shadowColor: Colors.black.withOpacity(0.1),
+      pinned: pinned,
+      floating: floating,
+      snap: snap,
+      stretch: stretch,
       expandedHeight: height,
       leading: isMobile
           ? IconButton(
@@ -294,8 +305,6 @@ class GlobalSearchField extends HookConsumerWidget {
     }
 
     void handleCommandSelection(SearchCommand command) {
-      // Use a post-frame callback to ensure the overlay is fully hidden
-      // before attempting to navigate.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.go(command.path);
       });
@@ -350,7 +359,14 @@ class GlobalSearchField extends HookConsumerWidget {
         child: TextField(
           controller: searchController,
           focusNode: searchFocusNode,
-          onChanged: runSearch,
+          onChanged: (query) {
+            runSearch(query);
+            if (query.isNotEmpty && !overlayPortalController.isShowing) {
+              overlayPortalController.show();
+            } else if (query.isEmpty && overlayPortalController.isShowing) {
+              overlayPortalController.hide();
+            }
+          },
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: 'Search actions or pages...',

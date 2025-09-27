@@ -21,30 +21,27 @@ class MainLayout extends HookWidget {
     const double headerHeight = 120.0;
 
     Widget buildBody(bool mobile) {
-      return Column(
-        children: [
-          SizedBox(
+      return CustomScrollView(
+        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        slivers: [
+          HeaderBar(
+            breadcrumbs: breadcrumbs,
+            isMobile: mobile,
             height: headerHeight,
-            child: CustomScrollView(
-              physics: const NeverScrollableScrollPhysics(),
-              slivers: [
-                HeaderBar(
-                  breadcrumbs: breadcrumbs,
-                  isMobile: mobile,
-                  height: headerHeight,
-                  onMenuPressed: () {
-                    if (mobile) {
-                      _scaffoldKey.currentState?.openDrawer();
-                    } else {
-                      isCollapsed.value = !isCollapsed.value;
-                    }
-                  },
-                ),
-              ],
-            ),
+            onMenuPressed: () {
+              if (mobile) {
+                _scaffoldKey.currentState?.openDrawer();
+              } else {
+                isCollapsed.value = !isCollapsed.value;
+              }
+            },
+            pinned: false,
+            floating: true,
+            snap: true,
+            stretch: true,
           ),
-          Expanded(
-            child: SingleChildScrollView(
+          SliverToBoxAdapter(
+            child: Padding(
               padding: EdgeInsets.all(mobile ? 16.0 : 32.0),
               child: child,
             ),
