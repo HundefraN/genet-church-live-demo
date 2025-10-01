@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:genet_church_portal/core/theme/app_theme.dart';
+import 'package:genet_church_portal/core/theme/app_colors.dart';
 import 'package:iconsax/iconsax.dart';
 
 class InfoCard extends StatelessWidget {
@@ -19,20 +19,23 @@ class InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
+
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surfaceWhite,
+        color: appColors.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: appColors.shadow,
             blurRadius: 15,
             offset: const Offset(0, 5),
           )
         ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // Important for Column flexibility
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
@@ -43,11 +46,11 @@ class InfoCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryBlue.withOpacity(0.1),
+                    color: theme.colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Iconsax.document_upload,
-                      color: AppTheme.primaryBlue, size: 28),
+                  child: Icon(Iconsax.document_upload,
+                      color: theme.colorScheme.primary, size: 28),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -68,7 +71,6 @@ class InfoCard extends StatelessWidget {
             ),
           ),
           const Divider(height: 1),
-
           Flexible(
             child: Padding(
               padding: padding ?? const EdgeInsets.all(24.0),

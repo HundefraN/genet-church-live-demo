@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:genet_church_portal/core/theme/app_colors.dart';
 import 'package:genet_church_portal/shared_widgets/info_card.dart';
 
 class CategoriesScreen extends StatelessWidget {
@@ -6,15 +7,18 @@ class CategoriesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const InfoCard(
+    final appColors = Theme.of(context).extension<AppColors>()!;
+    return InfoCard(
       title: 'Manage Categories',
-      description: 'Add, edit, or remove member categories and groups from this section.',
+      description:
+      'Add, edit, or remove member categories and groups from this section.',
       child: Center(
         child: Text(
           'Categories Management - Content Coming Soon',
-          style: TextStyle(fontSize: 18, color: Colors.grey),
+          style: TextStyle(fontSize: 18, color: appColors.textSecondary),
         ),
       ),
     );
   }
 }
+

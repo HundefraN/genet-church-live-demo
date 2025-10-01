@@ -71,7 +71,8 @@ class AddPastorsScreen extends HookConsumerWidget {
         children: [
           PageHeader(
             title: 'New Pastor Details',
-            description: 'Enter the information for the new pastor. An invitation will be sent to their email to complete their profile.',
+            description:
+            'Enter the information for the new pastor. An invitation will be sent to their email to complete their profile.',
             action: PrimaryButton(
               text: 'Add Pastor',
               onPressed: addPastor,

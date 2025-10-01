@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/core/theme/app_theme.dart';
+import 'package:genet_church_portal/core/theme/app_colors.dart';
 import 'package:genet_church_portal/data/models/search_command_model.dart';
 import 'package:genet_church_portal/data/services/search_service.dart';
 import 'package:iconsax/iconsax.dart';
@@ -11,6 +11,8 @@ class SearchOverlay extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
     final results = ref.watch(searchResultsProvider);
     final query = ref.watch(searchQueryProvider);
 
@@ -23,11 +25,11 @@ class SearchOverlay extends ConsumerWidget {
       child: Container(
         margin: const EdgeInsets.only(top: 8),
         decoration: BoxDecoration(
-          color: AppTheme.surfaceWhite,
+          color: appColors.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: appColors.shadow,
               blurRadius: 20,
               offset: const Offset(0, 10),
             )
@@ -55,30 +57,32 @@ class SearchOverlay extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(String query) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Iconsax.search_zoom_out,
-              color: AppTheme.textSecondary, size: 40),
-          const SizedBox(height: 16),
-          Text(
-            'No results found for "$query"',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textPrimary,
+    return Builder(builder: (context) {
+      final appColors = Theme.of(context).extension<AppColors>()!;
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Iconsax.search_zoom_out, color: appColors.textSecondary, size: 40),
+            const SizedBox(height: 16),
+            Text(
+              'No results found for "$query"',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: appColors.textPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Try searching for a different page or action.',
-            style: TextStyle(color: AppTheme.textSecondary),
-          ),
-        ],
-      ),
-    );
+            const SizedBox(height: 4),
+            Text(
+              'Try searching for a different page or action.',
+              style: TextStyle(color: appColors.textSecondary),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }
 
@@ -95,16 +99,18 @@ class _SearchResultTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
     return ListTile(
       onTap: onTap,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppTheme.scaffoldBackground,
+          color: appColors.scaffold,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(command.icon, color: AppTheme.textSecondary, size: 20),
+        child: Icon(command.icon, color: appColors.textSecondary, size: 20),
       ),
       title: _HighlightedText(
         text: command.title,
@@ -112,8 +118,8 @@ class _SearchResultTile extends StatelessWidget {
       ),
       trailing: Text(
         command.category,
-        style: const TextStyle(
-          color: AppTheme.textSecondary,
+        style: TextStyle(
+          color: appColors.textSecondary,
           fontSize: 12,
         ),
       ),
@@ -129,6 +135,8 @@ class _HighlightedText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
     final lowerText = text.toLowerCase();
     final lowerHighlight = highlight.toLowerCase();
 
@@ -145,14 +153,15 @@ class _HighlightedText extends StatelessWidget {
 
     return RichText(
       text: TextSpan(
-        style: DefaultTextStyle.of(context).style.copyWith(
-            fontWeight: FontWeight.w500, color: AppTheme.textPrimary),
+        style: DefaultTextStyle.of(context)
+            .style
+            .copyWith(fontWeight: FontWeight.w500, color: appColors.textPrimary),
         children: [
           TextSpan(text: before),
           TextSpan(
             text: highlighted,
-            style: const TextStyle(
-              backgroundColor: AppTheme.primaryBlue,
+            style: TextStyle(
+              backgroundColor: theme.colorScheme.primary,
               color: Colors.white,
             ),
           ),

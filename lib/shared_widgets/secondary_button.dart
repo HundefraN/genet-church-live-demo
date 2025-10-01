@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:genet_church_portal/core/theme/app_theme.dart';
+import 'package:genet_church_portal/core/theme/app_colors.dart';
 
 class SecondaryButton extends StatefulWidget {
   final String text;
@@ -49,6 +49,10 @@ class _SecondaryButtonState extends State<SecondaryButton>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
+    final destructiveRed = theme.colorScheme.error;
+
     return MouseRegion(
       onEnter: (_) {
         setState(() => _isHovered = true);
@@ -68,7 +72,7 @@ class _SecondaryButtonState extends State<SecondaryButton>
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.destructiveRed.withOpacity(
+                    color: destructiveRed.withOpacity(
                       0.3 + (_glowAnimation.value * 0.4),
                     ),
                     blurRadius: 8 + (_glowAnimation.value * 12),
@@ -79,7 +83,7 @@ class _SecondaryButtonState extends State<SecondaryButton>
               child: ElevatedButton(
                 onPressed: widget.isLoading ? null : widget.onPressed,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.destructiveRed,
+                  backgroundColor: destructiveRed,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(
@@ -96,7 +100,8 @@ class _SecondaryButtonState extends State<SecondaryButton>
                   width: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor:
+                    AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
                     : Row(

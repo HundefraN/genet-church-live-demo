@@ -1,9 +1,10 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/core/theme/app_theme.dart';
+import 'package:genet_church_portal/core/theme/app_colors.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:ui';
 import 'package:iconsax/iconsax.dart';
 
 enum UserRole {
@@ -21,789 +22,568 @@ class SideMenu extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentRole = ref.watch(userRoleProvider);
     final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
+    final currentRole = ref.watch(userRoleProvider);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
-      curve: Curves.easeInOutCubic,
-      width: isCollapsed ? 85 : 320,
+      curve: Curves.easeInOutCubicEmphasized,
+      width: isCollapsed ? 85 : 300,
       decoration: BoxDecoration(
-        gradient: AppTheme.primaryGradient,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            appColors.surface,
+            appColors.surface.withOpacity(0.8),
+            appColors.surface,
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ),
+        border: Border(
+          right: BorderSide(
+            color: appColors.border.withOpacity(0.6),
+            width: 0.5,
+          ),
+        ),
         boxShadow: [
           BoxShadow(
-            color: theme.primaryColor.withOpacity(0.3),
-            blurRadius: 30,
+            color: appColors.shadow.withOpacity(0.08),
+            blurRadius: 32,
             offset: const Offset(8, 0),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: theme.primaryColor.withOpacity(0.02),
+            blurRadius: 64,
+            offset: const Offset(16, 0),
+            spreadRadius: 0,
           ),
         ],
       ),
       child: ClipRRect(
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withOpacity(0.1),
-                  Colors.white.withOpacity(0.05),
-                ],
-              ),
-            ),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: _EtherealAuroraPainter(
-                      primary: theme.primaryColor,
-                      secondary: theme.colorScheme.secondary,
-                    ),
-                  ),
-                ),
-                Column(
-                  children: [
-                    _buildModernHeader(isCollapsed),
-                    Expanded(
-                      child: Container(
-                        margin:
-                        EdgeInsets.symmetric(horizontal: isCollapsed ? 8 : 16),
-                        child: ListView(
-                          physics: const BouncingScrollPhysics(),
-                          children: [
-                            ..._buildMenuItemsForRole(
-                                currentRole, context, isCollapsed)
-                          ],
+          filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
+          child: Column(
+            children: [
+              _Header(isCollapsed: isCollapsed),
+              Expanded(
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 32,
+                      ),
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate(
+                          _buildMenuItemsForRole(
+                              currentRole, context, isCollapsed),
                         ),
                       ),
                     ),
-                    if (!isCollapsed) _buildModernRoleSwitcher(context, ref),
-                    const SizedBox(height: 24),
                   ],
                 ),
-              ],
-            ),
+              ),
+              _RoleSwitcher(isCollapsed: isCollapsed),
+              const SizedBox(height: 24),
+            ],
           ),
         ),
       ),
-    ).animate().slideX(begin: -1, duration: 600.ms, curve: Curves.easeOutCubic);
-  }
-
-  Widget _buildModernHeader(bool collapsed) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeInOutCubic,
-      height: collapsed ? 85 : 170,
-      padding: EdgeInsets.symmetric(
-        horizontal: collapsed ? 12 : 24,
-        vertical: collapsed ? 16 : 20,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            AppTheme.surfaceWhite.withOpacity(0.2),
-            AppTheme.surfaceWhite.withOpacity(0.05),
-          ],
-        ),
-        border: Border(
-          bottom: BorderSide(
-            color: AppTheme.surfaceWhite.withOpacity(0.2),
-            width: 1,
-          ),
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (!collapsed) ...[
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppTheme.surfaceWhite.withOpacity(0.3),
-                    AppTheme.surfaceWhite.withOpacity(0.1),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: AppTheme.surfaceWhite.withOpacity(0.3),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Image.asset(
-                'assets/images/logo.png',
-                height: 45,
-                width: 45,
-              ),
-            )
-                .animate()
-                .scale(delay: 200.ms, duration: 600.ms)
-                .shimmer(delay: 400.ms, duration: 1000.ms),
-            const SizedBox(height: 16),
-            Text(
-              "Genet Church Portal",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: AppTheme.surfaceWhite,
-                letterSpacing: 1.2,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withOpacity(0.3),
-                    offset: const Offset(0, 2),
-                    blurRadius: 4,
-                  ),
-                ],
-              ),
-            )
-                .animate()
-                .fadeIn(delay: 400.ms, duration: 600.ms)
-                .slideY(begin: 0.3, delay: 400.ms, duration: 600.ms),
-          ] else ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppTheme.surfaceWhite.withOpacity(0.3),
-                    AppTheme.surfaceWhite.withOpacity(0.1),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: AppTheme.surfaceWhite.withOpacity(0.3),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 15,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Image.asset(
-                'assets/images/logo.png',
-                height: 32,
-                width: 32,
-              ),
-            )
-                .animate()
-                .scale(delay: 200.ms, duration: 400.ms)
-                .shimmer(delay: 400.ms, duration: 800.ms),
-          ],
-        ],
-      ),
-    );
+    )
+        .animate()
+        .slideX(
+      begin: -1,
+      duration: 600.ms,
+      curve: Curves.easeInOutCubicEmphasized,
+    )
+        .fadeIn(duration: 400.ms, delay: 100.ms);
   }
 
   List<Widget> _buildMenuItemsForRole(
       UserRole role, BuildContext context, bool collapsed) {
     final currentRoute =
     GoRouter.of(context).routerDelegate.currentConfiguration.uri.toString();
-
     List<Widget> menuItems = [];
 
-    // --- DASHBOARD (Visible to all roles) ---
-    menuItems.add(const SizedBox(height: 16));
-    menuItems.add(_buildModernMenuItem(
+    Widget addSection(Widget item) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: item,
+      );
+    }
+
+    menuItems.add(addSection(_MenuItem(
       title: 'Dashboard',
       icon: Iconsax.category,
       isSelected: currentRoute.startsWith('/dashboard'),
       onTap: () => context.go('/dashboard'),
       isCollapsed: collapsed,
-    ));
+    )));
 
-    // --- CHURCH ADMIN (Super Admin only) ---
     if (role == UserRole.superAdmin) {
-      menuItems.add(const SizedBox(height: 12));
-      menuItems.add(_buildModernExpansionTile(
-          context, currentRoute, 'Church Admin', Iconsax.building_4, {
-        'Churches': '/report-churchs',
-        'Pastors': '/report-pastors',
-        'Departments': '/report-departments',
-        'Servants': '/report-servants',
-      }, collapsed));
+      menuItems.add(addSection(_ExpansionMenuItem(
+        title: 'Church Admin',
+        icon: Iconsax.building_4,
+        isCollapsed: collapsed,
+        children: {
+          'Churches': '/report-churchs',
+          'Pastors': '/report-pastors',
+          'Departments': '/report-departments',
+          'Servants': '/report-servants',
+        },
+      )));
     }
 
-    // --- MEMBERS (Super Admin, Pastor, Servant) ---
-    if (role == UserRole.superAdmin || role == UserRole.pastor || role == UserRole.servant) {
-      menuItems.add(const SizedBox(height: 12));
-      menuItems.add(_buildModernExpansionTile(
-          context, currentRoute, 'Members', Iconsax.people, {
-        'Add Member': '/add-members',
-        'Show Members': '/show-members',
-      }, collapsed));
+    if (role == UserRole.superAdmin ||
+        role == UserRole.pastor ||
+        role == UserRole.servant) {
+      menuItems.add(addSection(_ExpansionMenuItem(
+        title: 'Members',
+        icon: Iconsax.people,
+        isCollapsed: collapsed,
+        children: {
+          'Add Member': '/add-members',
+          'Show Members': '/show-members',
+        },
+      )));
     }
 
-    // --- SHOW MEMBERS ONLY (Servant Supporter) ---
     if (role == UserRole.servantSupporter) {
-      menuItems.add(const SizedBox(height: 12));
-      menuItems.add(_buildModernMenuItem(
+      menuItems.add(addSection(_MenuItem(
         title: 'Show Members',
         icon: Iconsax.people,
         isSelected: currentRoute.startsWith('/show-members'),
         onTap: () => context.go('/show-members'),
         isCollapsed: collapsed,
-      ));
+      )));
     }
 
-    // --- REPORTS & ADVANCED (Super Admin Only) ---
     if (role == UserRole.superAdmin) {
-      menuItems.add(const SizedBox(height: 12));
-      menuItems.add(_buildModernMenuItem(
+      menuItems.add(addSection(_MenuItem(
         title: 'Analytics',
         icon: Iconsax.chart_21,
         isSelected: currentRoute.startsWith('/advanced-reports'),
         onTap: () => context.go('/advanced-reports'),
         isCollapsed: collapsed,
-      ));
+      )));
     }
 
-    // --- PASTOR LEVEL REPORTS (Pastor Only) ---
     if (role == UserRole.pastor) {
-      menuItems.add(const SizedBox(height: 12));
-      menuItems.add(_buildModernMenuItem(
+      menuItems.add(addSection(_MenuItem(
         title: 'Categories',
         icon: Iconsax.folder_2,
         isSelected: currentRoute.startsWith('/categories'),
         onTap: () => context.go('/categories'),
         isCollapsed: collapsed,
-      ));
+      )));
     }
 
-    // --- SETTINGS (Super Admin Only) ---
     if (role == UserRole.superAdmin) {
-      menuItems.add(const SizedBox(height: 12));
-      menuItems.add(_buildModernMenuItem(
+      menuItems.add(addSection(_MenuItem(
         title: 'Permissions',
         icon: Iconsax.shield_tick,
         isSelected: currentRoute.startsWith('/permissions'),
         onTap: () => context.go('/permissions'),
         isCollapsed: collapsed,
-      ));
+      )));
     }
 
     return menuItems;
   }
+}
 
-  Widget _buildModernMenuItem({
-    required String title,
-    required IconData icon,
-    required bool isSelected,
-    required VoidCallback onTap,
-    required bool isCollapsed,
-  }) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      decoration: BoxDecoration(
-        gradient: isSelected
-            ? LinearGradient(
-          colors: [
-            AppTheme.surfaceWhite.withOpacity(0.3),
-            AppTheme.surfaceWhite.withOpacity(0.1),
-          ],
-        )
-            : null,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isSelected
-              ? AppTheme.surfaceWhite.withOpacity(0.4)
-              : Colors.transparent,
-          width: 1,
-        ),
-        boxShadow: isSelected
-            ? [
-          BoxShadow(
-            color: AppTheme.surfaceWhite.withOpacity(0.2),
-            blurRadius: 15,
-            offset: const Offset(0, 4),
-          ),
-        ]
-            : null,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: EdgeInsets.all(isCollapsed ? 16 : 16),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: isSelected
-                              ? [
-                            AppTheme.surfaceWhite.withOpacity(0.4),
-                            AppTheme.surfaceWhite.withOpacity(0.2)
-                          ]
-                              : [
-                            AppTheme.surfaceWhite.withOpacity(0.2),
-                            AppTheme.surfaceWhite.withOpacity(0.1)
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppTheme.surfaceWhite.withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Icon(
-                        icon,
-                        color: AppTheme.surfaceWhite,
-                        size: 22,
-                      ),
-                    ),
-                    if (!isCollapsed) ...[
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: TextStyle(
-                            color: AppTheme.surfaceWhite,
-                            fontSize: 15,
-                            fontWeight: isSelected
-                                ? FontWeight.w700
-                                : FontWeight.w600,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                      if (isSelected)
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: BoxDecoration(
-                            color: AppTheme.surfaceWhite,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.surfaceWhite.withOpacity(0.5),
-                                blurRadius: 8,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+class _Header extends StatelessWidget {
+  final bool isCollapsed;
+  const _Header({required this.isCollapsed});
 
-  Widget _buildModernExpansionTile(
-      BuildContext context,
-      String currentRoute,
-      String title,
-      IconData icon,
-      Map<String, String> children,
-      bool collapsed,
-      ) {
-    if (children.isEmpty) return const SizedBox.shrink();
-
-    final bool isExpanded =
-    children.values.any((route) => currentRoute.startsWith(route));
-
-    if (collapsed) {
-      return Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        decoration: BoxDecoration(
-          gradient: isExpanded
-              ? LinearGradient(
-            colors: [
-              AppTheme.surfaceWhite.withOpacity(0.3),
-              AppTheme.surfaceWhite.withOpacity(0.1),
-            ],
-          )
-              : null,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isExpanded
-                ? AppTheme.surfaceWhite.withOpacity(0.4)
-                : Colors.transparent,
-            width: 1,
-          ),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: PopupMenuButton(
-              tooltip: title,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              color: AppTheme.primaryBlue.withOpacity(0.95),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppTheme.surfaceWhite.withOpacity(0.3),
-                        AppTheme.surfaceWhite.withOpacity(0.1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppTheme.surfaceWhite.withOpacity(0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: AppTheme.surfaceWhite,
-                    size: 22,
-                  ),
-                ),
-              ),
-              itemBuilder: (context) => children.entries.map((entry) {
-                return PopupMenuItem(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: AppTheme.surfaceWhite.withOpacity(0.8),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          entry.key,
-                          style: const TextStyle(
-                            color: AppTheme.surfaceWhite,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  onTap: () => context.go(entry.value),
-                );
-              }).toList(),
-            ),
-          ),
-        ),
-      );
-    }
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      decoration: BoxDecoration(
-        gradient: isExpanded
-            ? LinearGradient(
-          colors: [
-            AppTheme.surfaceWhite.withOpacity(0.2),
-            AppTheme.surfaceWhite.withOpacity(0.05),
-          ],
-        )
-            : null,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isExpanded
-              ? AppTheme.surfaceWhite.withOpacity(0.3)
-              : Colors.transparent,
-          width: 1,
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              dividerColor: Colors.transparent,
-              expansionTileTheme: const ExpansionTileThemeData(
-                iconColor: AppTheme.surfaceWhite,
-                collapsedIconColor: AppTheme.surfaceWhite,
-              ),
-            ),
-            child: ExpansionTile(
-              initiallyExpanded: isExpanded,
-              tilePadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppTheme.surfaceWhite.withOpacity(0.3),
-                      AppTheme.surfaceWhite.withOpacity(0.1),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppTheme.surfaceWhite.withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Icon(
-                  icon,
-                  color: AppTheme.surfaceWhite,
-                  size: 20,
-                ),
-              ),
-              title: Text(
-                title,
-                style: const TextStyle(
-                  color: AppTheme.surfaceWhite,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              trailing: Icon(
-                isExpanded ? Iconsax.arrow_up_2 : Iconsax.arrow_down_1,
-                color: AppTheme.surfaceWhite,
-              ),
-              childrenPadding:
-              const EdgeInsets.only(left: 24, right: 16, bottom: 12),
-              children: children.entries.map((entry) {
-                final isSelected = currentRoute.startsWith(entry.value);
-                return Container(
-                  margin: const EdgeInsets.symmetric(vertical: 2),
-                  decoration: BoxDecoration(
-                    gradient: isSelected
-                        ? LinearGradient(
-                      colors: [
-                        AppTheme.surfaceWhite.withOpacity(0.25),
-                        AppTheme.surfaceWhite.withOpacity(0.1),
-                      ],
-                    )
-                        : null,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected
-                          ? AppTheme.surfaceWhite.withOpacity(0.3)
-                          : Colors.transparent,
-                      width: 1,
-                    ),
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => context.go(entry.value),
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? AppTheme.surfaceWhite
-                                    : AppTheme.surfaceWhite.withOpacity(0.5),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                entry.key,
-                                style: TextStyle(
-                                  color: AppTheme.surfaceWhite,
-                                  fontSize: 14,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildModernRoleSwitcher(BuildContext context, WidgetRef ref) {
-    final currentRole = ref.watch(userRoleProvider);
-    return Container(
-      margin: const EdgeInsets.all(20),
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOutCubicEmphasized,
+      height: 100,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
           colors: [
-            AppTheme.surfaceWhite.withOpacity(0.2),
-            AppTheme.surfaceWhite.withOpacity(0.05),
+            appColors.surface,
+            appColors.surface.withOpacity(0.95),
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppTheme.surfaceWhite.withOpacity(0.3),
-          width: 1,
+        border: Border(
+          bottom: BorderSide(
+            color: appColors.border.withOpacity(0.5),
+            width: 0.5,
+          ),
         ),
+      ),
+      child: Center(
+        child: isCollapsed
+            ? Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: theme.primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: theme.primaryColor.withOpacity(0.2),
+              width: 1,
+            ),
+          ),
+          child: Image.asset(
+            'assets/images/logo.png',
+            height: 40,
+          ),
+        )
+            .animate()
+            .scale(
+          begin: const Offset(0.8, 0.8),
+          duration: 300.ms,
+          delay: 200.ms,
+          curve: Curves.easeOutBack,
+        )
+            .fadeIn(delay: 150.ms)
+            : Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: theme.primaryColor.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              child: Image.asset('assets/images/logo.png', height: 44),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Ethiopian Genet Church',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: appColors.textPrimary,
+                      letterSpacing: -0.5,
+                      height: 1.0,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Church Management',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.primaryColor,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        )
+            .animate()
+            .slideX(
+          begin: -0.3,
+          duration: 400.ms,
+          delay: 200.ms,
+          curve: Curves.easeOutCubic,
+        )
+            .fadeIn(delay: 150.ms),
+      ),
+    );
+  }
+}
+
+class _MenuItem extends StatefulWidget {
+  final String title;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final bool isCollapsed;
+
+  const _MenuItem({
+    required this.title,
+    required this.icon,
+    this.isSelected = false,
+    required this.onTap,
+    this.isCollapsed = false,
+  });
+
+  @override
+  State<_MenuItem> createState() => _MenuItemState();
+}
+
+class _MenuItemState extends State<_MenuItem>
+    with SingleTickerProviderStateMixin {
+  bool _isHovered = false;
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.02,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutCubic,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
+
+    return Tooltip(
+      message: widget.isCollapsed ? widget.title : '',
+      waitDuration: const Duration(milliseconds: 400),
+      decoration: BoxDecoration(
+        color: appColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: appColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: appColors.shadow.withOpacity(0.1),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppTheme.surfaceWhite.withOpacity(0.3),
-                            AppTheme.surfaceWhite.withOpacity(0.1),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: AppTheme.surfaceWhite.withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: const Icon(
-                        Iconsax.shield_tick,
-                        size: 18,
-                        color: AppTheme.surfaceWhite,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      "ROLE SWITCHER",
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.surfaceWhite.withOpacity(0.9),
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppTheme.surfaceWhite.withOpacity(0.2),
-                        AppTheme.surfaceWhite.withOpacity(0.1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: AppTheme.surfaceWhite.withOpacity(0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 4),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<UserRole>(
-                            value: currentRole,
-                            isExpanded: true,
-                            icon: Icon(
-                              Iconsax.arrow_down_1,
-                              color: AppTheme.surfaceWhite.withOpacity(0.8),
+      textStyle: TextStyle(
+        color: appColors.textPrimary,
+        fontWeight: FontWeight.w500,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        child: MouseRegion(
+          onEnter: (_) {
+            setState(() => _isHovered = true);
+            _animationController.forward();
+          },
+          onExit: (_) {
+            setState(() => _isHovered = false);
+            _animationController.reverse();
+          },
+          child: GestureDetector(
+            onTap: widget.onTap,
+            child: AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _scaleAnimation.value,
+                  child: Stack(
+                    alignment: Alignment.centerLeft,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOutCubicEmphasized,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          gradient: widget.isSelected
+                              ? LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              theme.primaryColor.withOpacity(0.15),
+                              theme.primaryColor.withOpacity(0.08),
+                              theme.primaryColor.withOpacity(0.05),
+                            ],
+                          )
+                              : _isHovered
+                              ? LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              theme.primaryColor.withOpacity(0.08),
+                              theme.primaryColor.withOpacity(0.04),
+                              Colors.transparent,
+                            ],
+                          )
+                              : null,
+                          borderRadius: BorderRadius.circular(16),
+                          border: widget.isSelected
+                              ? Border.all(
+                            color: theme.primaryColor.withOpacity(0.2),
+                            width: 1,
+                          )
+                              : _isHovered
+                              ? Border.all(
+                            color:
+                            theme.primaryColor.withOpacity(0.1),
+                            width: 1,
+                          )
+                              : null,
+                          boxShadow: widget.isSelected
+                              ? [
+                            BoxShadow(
+                              color:
+                              theme.primaryColor.withOpacity(0.1),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
                             ),
-                            dropdownColor:
-                            AppTheme.primaryBlue.withOpacity(0.95),
-                            items: UserRole.values.map((UserRole role) {
-                              return DropdownMenuItem<UserRole>(
-                                value: role,
-                                child: Container(
-                                  padding:
-                                  const EdgeInsets.symmetric(vertical: 8),
-                                  child: Text(
-                                    role
-                                        .toString()
-                                        .split('.')
-                                        .last
-                                        .replaceAllMapped(
-                                      RegExp(r'[A-Z]'),
-                                          (match) => ' ${match.group(0)}',
-                                    )
-                                        .trim(),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                      color: AppTheme.surfaceWhite,
-                                    ),
+                            BoxShadow(
+                              color:
+                              theme.primaryColor.withOpacity(0.05),
+                              blurRadius: 32,
+                              offset: const Offset(0, 8),
+                            ),
+                          ]
+                              : _isHovered
+                              ? [
+                            BoxShadow(
+                              color: theme.primaryColor
+                                  .withOpacity(0.05),
+                              blurRadius: 12,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                              : null,
+                        ),
+                      ),
+                      if (widget.isSelected)
+                        Positioned(
+                          left: 0,
+                          top: 12,
+                          bottom: 12,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            width: 4,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  theme.primaryColor,
+                                  theme.primaryColor.withOpacity(0.7),
+                                ],
+                              ),
+                              borderRadius: const BorderRadius.horizontal(
+                                right: Radius.circular(4),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: theme.primaryColor.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(2, 0),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ).animate().scaleY(
+                          begin: 0.5,
+                          duration: 300.ms,
+                          curve: Curves.easeOutBack,
+                        ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: widget.isCollapsed ? 18 : 20,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: widget.isCollapsed
+                              ? MainAxisAlignment.center
+                              : MainAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                color: widget.isSelected
+                                    ? theme.primaryColor.withOpacity(0.1)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                widget.icon,
+                                size: 22,
+                                color: widget.isSelected
+                                    ? theme.primaryColor
+                                    : _isHovered
+                                    ? theme.primaryColor.withOpacity(0.8)
+                                    : appColors.textSecondary,
+                              ),
+                            ),
+                            if (!widget.isCollapsed) ...[
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Text(
+                                  widget.title,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: widget.isSelected
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: widget.isSelected
+                                        ? theme.primaryColor
+                                        : _isHovered
+                                        ? appColors.textPrimary
+                                        : appColors.textSecondary,
+                                    letterSpacing: widget.isSelected ? -0.2 : 0,
                                   ),
                                 ),
-                              );
-                            }).toList(),
-                            onChanged: (UserRole? newRole) {
-                              if (newRole != null) {
-                                ref.read(userRoleProvider.notifier).state =
-                                    newRole;
-                                const initialRoute = '/dashboard';
-                                if (GoRouter.of(context)
-                                    .routerDelegate
-                                    .currentConfiguration
-                                    .uri
-                                    .toString() !=
-                                    initialRoute) {
-                                  Future.microtask(
-                                          () => context.go(initialRoute));
-                                }
-                              }
-                            },
-                          ),
+                              ),
+                              if (widget.isSelected)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: theme.primaryColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Iconsax.arrow_right_3,
+                                    size: 14,
+                                    color: theme.primaryColor,
+                                  ),
+                                ).animate().scale(
+                                  begin: const Offset(0.8, 0.8),
+                                  duration: 200.ms,
+                                  delay: 100.ms,
+                                ),
+                            ],
+                          ],
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ),
-              ],
+                );
+              },
             ),
           ),
         ),
@@ -812,81 +592,534 @@ class SideMenu extends ConsumerWidget {
   }
 }
 
-class _EtherealAuroraPainter extends CustomPainter {
-  final Color primary;
-  final Color secondary;
+class _ExpansionMenuItem extends StatefulWidget {
+  final String title;
+  final IconData icon;
+  final bool isCollapsed;
+  final Map<String, String> children;
 
-  _EtherealAuroraPainter({required this.primary, required this.secondary});
+  const _ExpansionMenuItem({
+    required this.title,
+    required this.icon,
+    required this.isCollapsed,
+    required this.children,
+  });
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+  State<_ExpansionMenuItem> createState() => _ExpansionMenuItemState();
+}
 
-    final softGlow = Paint()
-      ..shader = RadialGradient(
-        center: const Alignment(-1.5, -0.5),
-        radius: 1.0,
-        colors: [secondary.withOpacity(0.15), Colors.transparent],
-      ).createShader(rect);
-    canvas.drawRect(rect, softGlow);
+class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
+    with TickerProviderStateMixin {
+  bool _isHovered = false;
+  late AnimationController _hoverController;
+  late Animation<double> _hoverAnimation;
 
-    final hotspotGlow = Paint()
-      ..shader = RadialGradient(
-        center: const Alignment(0.8, -0.8),
-        radius: 0.8,
-        colors: [Colors.white.withOpacity(0.2), Colors.transparent],
-      ).createShader(rect);
-    canvas.drawRect(rect, hotspotGlow);
-
-    final facetPaint = Paint()
-      ..color = Colors.white.withOpacity(0.03)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    final facetPath = Path()
-      ..moveTo(size.width * -0.2, size.height * 0.1)
-      ..lineTo(size.width * 0.7, size.height * 1.1)
-      ..moveTo(size.width * 0.1, size.height * -0.1)
-      ..lineTo(size.width * 1.1, size.height * 0.9);
-    canvas.drawPath(facetPath, facetPaint);
-
-    final auroraPath = Path();
-    auroraPath.moveTo(size.width * 0.2, -50);
-    auroraPath.cubicTo(
-      size.width * 1.2,
-      size.height * 0.3,
-      size.width * -0.2,
-      size.height * 0.6,
-      size.width * 0.8,
-      size.height + 50,
+  @override
+  void initState() {
+    super.initState();
+    _hoverController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
     );
-
-    final auroraGradient = LinearGradient(
-      colors: [secondary.withOpacity(0.6), primary.withOpacity(0.6)],
-    ).createShader(rect);
-
-    final auroraGlowPaint = Paint()
-      ..shader = auroraGradient
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 20
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40);
-
-    final auroraCorePaint = Paint()
-      ..shader = auroraGradient
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-
-    final auroraThreadPaint = Paint()
-      ..color = Colors.white.withOpacity(0.7)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.8;
-
-    canvas.drawPath(auroraPath, auroraGlowPaint);
-    canvas.drawPath(auroraPath, auroraCorePaint);
-    canvas.drawPath(auroraPath, auroraThreadPaint);
+    _hoverAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.02,
+    ).animate(CurvedAnimation(
+      parent: _hoverController,
+      curve: Curves.easeOutCubic,
+    ));
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  void dispose() {
+    _hoverController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
+    final currentRoute =
+    GoRouter.of(context).routerDelegate.currentConfiguration.uri.toString();
+    final bool isExpanded =
+    widget.children.values.any((route) => currentRoute.startsWith(route));
+
+    if (widget.isCollapsed) {
+      return Tooltip(
+        message: widget.title,
+        waitDuration: const Duration(milliseconds: 400),
+        decoration: BoxDecoration(
+          color: appColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: appColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: appColors.shadow.withOpacity(0.1),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: PopupMenuButton(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 16,
+          color: appColors.surface,
+          shadowColor: appColors.shadow.withOpacity(0.2),
+          itemBuilder: (context) {
+            return widget.children.entries.map((entry) {
+              return PopupMenuItem(
+                value: entry.value,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Iconsax.arrow_right_3,
+                        size: 16,
+                        color: appColors.textSecondary,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        entry.key,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: appColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList();
+          },
+          onSelected: (path) => context.go(path),
+          child: MouseRegion(
+            onEnter: (_) {
+              setState(() => _isHovered = true);
+              _hoverController.forward();
+            },
+            onExit: (_) {
+              setState(() => _isHovered = false);
+              _hoverController.reverse();
+            },
+            child: AnimatedBuilder(
+              animation: _hoverController,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _hoverAnimation.value,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOutCubicEmphasized,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: isExpanded
+                            ? LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            theme.primaryColor.withOpacity(0.15),
+                            theme.primaryColor.withOpacity(0.05),
+                          ],
+                        )
+                            : _isHovered
+                            ? LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            theme.primaryColor.withOpacity(0.08),
+                            Colors.transparent,
+                          ],
+                        )
+                            : null,
+                        borderRadius: BorderRadius.circular(16),
+                        border: isExpanded
+                            ? Border.all(
+                          color: theme.primaryColor.withOpacity(0.2),
+                          width: 1,
+                        )
+                            : null,
+                      ),
+                      child: Center(
+                        child: Icon(
+                          widget.icon,
+                          size: 22,
+                          color: isExpanded
+                              ? theme.primaryColor
+                              : _isHovered
+                              ? theme.primaryColor.withOpacity(0.8)
+                              : appColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: MouseRegion(
+        onEnter: (_) {
+          setState(() => _isHovered = true);
+          _hoverController.forward();
+        },
+        onExit: (_) {
+          setState(() => _isHovered = false);
+          _hoverController.reverse();
+        },
+        child: AnimatedBuilder(
+          animation: _hoverController,
+          builder: (context, child) {
+            return Transform.scale(
+              scale: _hoverAnimation.value,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: isExpanded
+                      ? LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      theme.primaryColor.withOpacity(0.1),
+                      theme.primaryColor.withOpacity(0.05),
+                      Colors.transparent,
+                    ],
+                  )
+                      : _isHovered
+                      ? LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      theme.primaryColor.withOpacity(0.05),
+                      Colors.transparent,
+                    ],
+                  )
+                      : null,
+                  borderRadius: BorderRadius.circular(16),
+                  border: isExpanded
+                      ? Border.all(
+                    color: theme.primaryColor.withOpacity(0.15),
+                    width: 1,
+                  )
+                      : null,
+                ),
+                child: Theme(
+                  data: theme.copyWith(
+                    dividerColor: Colors.transparent,
+                    expansionTileTheme: ExpansionTileThemeData(
+                      backgroundColor: Colors.transparent,
+                      collapsedBackgroundColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      collapsedShape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                  child: ExpansionTile(
+                    initiallyExpanded: isExpanded,
+                    leading: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: isExpanded
+                            ? theme.primaryColor.withOpacity(0.1)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        widget.icon,
+                        size: 22,
+                        color: isExpanded
+                            ? theme.primaryColor
+                            : _isHovered
+                            ? theme.primaryColor.withOpacity(0.8)
+                            : appColors.textSecondary,
+                      ),
+                    ),
+                    title: Text(
+                      widget.title,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight:
+                        isExpanded ? FontWeight.w700 : FontWeight.w500,
+                        color: isExpanded
+                            ? theme.primaryColor
+                            : _isHovered
+                            ? appColors.textPrimary
+                            : appColors.textSecondary,
+                        letterSpacing: isExpanded ? -0.2 : 0,
+                      ),
+                    ),
+                    tilePadding: const EdgeInsets.symmetric(horizontal: 20),
+                    childrenPadding: const EdgeInsets.only(
+                      left: 20,
+                      right: 20,
+                      bottom: 12,
+                      top: 8,
+                    ),
+                    trailing: Icon(
+                      isExpanded ? Iconsax.arrow_up_2 : Iconsax.arrow_down_2,
+                      size: 18,
+                      color: isExpanded
+                          ? theme.primaryColor
+                          : appColors.textSecondary,
+                    ),
+                    children: widget.children.entries.map((entry) {
+                      final isSelected = currentRoute.startsWith(entry.value);
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: _MenuItem(
+                          title: entry.key,
+                          icon: Iconsax.arrow_right_3,
+                          isCollapsed: false,
+                          isSelected: isSelected,
+                          onTap: () => context.go(entry.value),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _RoleSwitcher extends ConsumerStatefulWidget {
+  final bool isCollapsed;
+  const _RoleSwitcher({required this.isCollapsed});
+
+  @override
+  ConsumerState<_RoleSwitcher> createState() => _RoleSwitcherState();
+}
+
+class _RoleSwitcherState extends ConsumerState<_RoleSwitcher>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.05,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutCubic,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.isCollapsed) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
+    final currentRole = ref.watch(userRoleProvider);
+
+    return MouseRegion(
+      onEnter: (_) => _animationController.forward(),
+      onExit: (_) => _animationController.reverse(),
+      child: AnimatedBuilder(
+        animation: _animationController,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    appColors.scaffold,
+                    appColors.scaffold.withOpacity(0.8),
+                    appColors.surface,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: appColors.border.withOpacity(0.6),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: appColors.shadow.withOpacity(0.08),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                    spreadRadius: 0,
+                  ),
+                  BoxShadow(
+                    color: theme.primaryColor.withOpacity(0.03),
+                    blurRadius: 32,
+                    offset: const Offset(0, 16),
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: theme.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Iconsax.user_tag,
+                          size: 16,
+                          color: theme.primaryColor,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        "CURRENT ROLE",
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.primaryColor,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.2,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: appColors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: theme.primaryColor.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<UserRole>(
+                        value: currentRole,
+                        isExpanded: true,
+                        icon: Icon(
+                          Iconsax.arrow_down_1,
+                          color: theme.primaryColor,
+                          size: 18,
+                        ),
+                        style: TextStyle(
+                          color: appColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        dropdownColor: appColors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        items: UserRole.values.map((UserRole role) {
+                          final roleName = role
+                              .toString()
+                              .split('.')
+                              .last
+                              .replaceAllMapped(
+                            RegExp(r'[A-Z]'),
+                                (match) => ' ${match.group(0)}',
+                          )
+                              .trim();
+
+                          return DropdownMenuItem<UserRole>(
+                            value: role,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color:
+                                      theme.primaryColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      _getRoleIcon(role),
+                                      size: 16,
+                                      color: theme.primaryColor,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    roleName,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: appColors.textPrimary,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (UserRole? newRole) {
+                          if (newRole != null) {
+                            ref.read(userRoleProvider.notifier).state =
+                                newRole;
+                            const initialRoute = '/dashboard';
+                            if (GoRouter.of(context)
+                                .routerDelegate
+                                .currentConfiguration
+                                .uri
+                                .toString() !=
+                                initialRoute) {
+                              Future.microtask(() => context.go(initialRoute));
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  IconData _getRoleIcon(UserRole role) {
+    switch (role) {
+      case UserRole.superAdmin:
+        return Iconsax.crown_1;
+      case UserRole.pastor:
+        return Iconsax.book_1;
+      case UserRole.servant:
+        return Iconsax.user_octagon;
+      case UserRole.servantSupporter:
+        return Iconsax.user;
+    }
+  }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/core/theme/app_theme.dart';
+import 'package:genet_church_portal/core/theme/app_colors.dart';
 import 'package:genet_church_portal/data/models/activity_log_model.dart';
 import 'package:genet_church_portal/shared_widgets/page_header.dart';
 import 'package:genet_church_portal/state/providers.dart';
@@ -13,6 +13,8 @@ class ActivityLogScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
     final activitiesAsync = ref.watch(activityLogProvider);
 
     return activitiesAsync.when(
@@ -29,34 +31,34 @@ class ActivityLogScreen extends ConsumerWidget {
             if (activities.isEmpty)
               const Center(child: Text('No activities found.'))
             else
-            // Use ListView.builder directly for the list content
               ListView.builder(
-                shrinkWrap: true, // Important when nesting scrolls
-                physics: const NeverScrollableScrollPhysics(), // Parent handles scroll
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 itemCount: activities.length,
                 itemBuilder: (context, index) {
                   final activity = activities[index];
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
                     elevation: 1,
-                    shadowColor: Colors.black12,
+                    shadowColor: appColors.shadow,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: ListTile(
                       onTap: () => context.go(activity.path),
                       leading: CircleAvatar(
-                        backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-                        child:
-                        Icon(activity.icon, color: AppTheme.primaryBlue),
+                        backgroundColor:
+                        theme.colorScheme.primary.withOpacity(0.1),
+                        child: Icon(activity.icon,
+                            color: theme.colorScheme.primary),
                       ),
                       title: Text(activity.title,
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text(activity.subtitle),
                       trailing: Text(
                         DateFormat.yMMMd().add_jm().format(activity.timestamp),
-                        style: const TextStyle(
-                            fontSize: 12, color: AppTheme.textSecondary),
+                        style: TextStyle(
+                            fontSize: 12, color: appColors.textSecondary),
                       ),
                     ),
                   );
@@ -66,22 +68,35 @@ class ActivityLogScreen extends ConsumerWidget {
         );
       },
       loading: () => Shimmer.fromColors(
-        baseColor: Colors.grey.shade300,
-        highlightColor: Colors.grey.shade100,
+        baseColor: appColors.shimmerBase,
+        highlightColor: appColors.shimmerHighlight,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Shimmer for the PageHeader
-            Container(height: 60, width: 400, color: Colors.white, margin: const EdgeInsets.only(bottom: 24),),
-            // Shimmer for the ListView
-            ...List.generate(10, (index) => Card(
-              margin: const EdgeInsets.only(bottom: 12.0),
-              child: ListTile(
-                leading: const CircleAvatar(backgroundColor: Colors.white),
-                title: Container(height: 16, color: Colors.white, margin: const EdgeInsets.only(right: 50)),
-                subtitle: Container(height: 12, width: 100, color: Colors.white, margin: const EdgeInsets.only(top: 8, right: 100)),
-              ),
-            )),
+            Container(
+              height: 60,
+              width: 400,
+              color: appColors.surface,
+              margin: const EdgeInsets.only(bottom: 24),
+            ),
+            ...List.generate(
+                10,
+                    (index) => Card(
+                  margin: const EdgeInsets.only(bottom: 12.0),
+                  child: ListTile(
+                    leading:
+                    CircleAvatar(backgroundColor: appColors.surface),
+                    title: Container(
+                        height: 16,
+                        color: appColors.surface,
+                        margin: const EdgeInsets.only(right: 50)),
+                    subtitle: Container(
+                        height: 12,
+                        width: 100,
+                        color: appColors.surface,
+                        margin: const EdgeInsets.only(top: 8, right: 100)),
+                  ),
+                )),
           ],
         ),
       ),

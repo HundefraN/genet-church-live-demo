@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/core/theme/app_theme.dart';
+import 'package:genet_church_portal/core/theme/app_colors.dart';
 import 'package:genet_church_portal/data/repositories/auth_repository.dart';
 import 'package:genet_church_portal/shared_widgets/content_card.dart';
 import 'package:genet_church_portal/shared_widgets/modern_text_field.dart';
@@ -12,6 +12,8 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
     final user = ref.watch(authStateProvider);
 
     if (user == null) {
@@ -80,13 +82,13 @@ class ProfileScreen extends ConsumerWidget {
             children: [
               CircleAvatar(
                 radius: 60,
-                backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
+                backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
                 child: Text(
                   userInitial,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryBlue,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
               ),
@@ -99,13 +101,13 @@ class ProfileScreen extends ConsumerWidget {
               Chip(
                 label: Text(
                   user.role.replaceAll('_', ' ').toLowerCase(),
-                  style: const TextStyle(
-                    color: AppTheme.accentTeal,
+                  style: TextStyle(
+                    color: theme.colorScheme.secondary,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.5,
                   ),
                 ),
-                backgroundColor: AppTheme.accentTeal.withOpacity(0.1),
+                backgroundColor: theme.colorScheme.secondary.withOpacity(0.1),
                 side: BorderSide.none,
                 padding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -145,14 +147,15 @@ class _ProfileInfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appColors = Theme.of(context).extension<AppColors>()!;
     return Row(
       children: [
-        Icon(icon, color: AppTheme.textSecondary, size: 20),
+        Icon(icon, color: appColors.textSecondary, size: 20),
         const SizedBox(width: 16),
         Text(
           label,
-          style: const TextStyle(
-            color: AppTheme.textSecondary,
+          style: TextStyle(
+            color: appColors.textSecondary,
             fontWeight: FontWeight.w500,
             fontSize: 15,
           ),
@@ -160,8 +163,8 @@ class _ProfileInfoRow extends StatelessWidget {
         const Spacer(),
         Text(
           value,
-          style: const TextStyle(
-            color: AppTheme.textPrimary,
+          style: TextStyle(
+            color: appColors.textPrimary,
             fontWeight: FontWeight.w600,
             fontSize: 15,
           ),

@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:genet_church_portal/core/theme/app_colors.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
@@ -38,7 +39,7 @@ class ResponsiveLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 800) {
+        if (constraints.maxWidth < 850) {
           return mobileBody;
         } else {
           return desktopBody;
@@ -120,7 +121,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: ResponsiveLayout(
-        mobileBody: _LoginMobileView(
+        mobileBody: _LoginSmallScreenView(
           fadeAnimation: _fadeAnimation,
           slideAnimation: _slideAnimation,
           scaleAnimation: _scaleAnimation,
@@ -153,6 +154,8 @@ class _LoginDesktopView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final size = MediaQuery.of(context).size;
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
     final verseAsync = ref.watch(bibleVerseProvider);
 
     return Row(
@@ -160,12 +163,8 @@ class _LoginDesktopView extends ConsumerWidget {
         Expanded(
           flex: 5,
           child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF4FADE3), Color(0xFF2A8BC4)],
-              ),
+            decoration: BoxDecoration(
+              gradient: appColors.primaryGradient,
             ),
             child: Stack(
               children: [
@@ -183,8 +182,8 @@ class _LoginDesktopView extends ConsumerWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Colors.white.withOpacity(0.1),
-                        Colors.white.withOpacity(0.05),
+                        appColors.glass.withOpacity(0.1),
+                        appColors.glass.withOpacity(0.05),
                         Colors.transparent,
                       ],
                     ),
@@ -205,14 +204,17 @@ class _LoginDesktopView extends ConsumerWidget {
                           const SizedBox(height: 60),
                           verseAsync.when(
                             data: (verse) => _VerseDisplay(
-                                reference: verse.reference, text: verse.text),
+                              reference: verse.reference,
+                              text: verse.text,
+                            ),
                             loading: () => const Center(
                                 child: CircularProgressIndicator(
                                     color: Colors.white)),
                             error: (e, s) => const _VerseDisplay(
-                                reference: 'John 3:16',
-                                text:
-                                'For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life.'),
+                              reference: 'John 3:16',
+                              text:
+                              'For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life.',
+                            ),
                           ),
                           const SizedBox(height: 50),
                           Row(
@@ -236,7 +238,7 @@ class _LoginDesktopView extends ConsumerWidget {
         Expanded(
           flex: 4,
           child: Container(
-            color: const Color(0xFFFAFAFA),
+            color: appColors.scaffold,
             child: _LoginForm(
               scaleAnimation: scaleAnimation,
               fadeAnimation: fadeAnimation,
@@ -313,8 +315,23 @@ class _LoginDesktopView extends ConsumerWidget {
 class _VerseDisplay extends StatelessWidget {
   final String reference;
   final String text;
+  final double bookFontSize;
+  final double chapterVerseFontSize;
+  final double textFontSize;
+  final double? boxMaxWidth;
+  final EdgeInsets boxPadding;
+  final double gapHeight;
 
-  const _VerseDisplay({required this.reference, required this.text});
+  const _VerseDisplay({
+    required this.reference,
+    required this.text,
+    this.bookFontSize = 80,
+    this.chapterVerseFontSize = 32,
+    this.textFontSize = 18,
+    this.boxMaxWidth = 480,
+    this.boxPadding = const EdgeInsets.all(32),
+    this.gapHeight = 30,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -324,39 +341,43 @@ class _VerseDisplay extends StatelessWidget {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: max(8.0, bookFontSize * 0.2),
+          runSpacing: 8.0,
           children: [
             Text(
               book,
-              style: const TextStyle(
-                fontSize: 80,
+              style: TextStyle(
+                fontSize: bookFontSize,
                 fontWeight: FontWeight.w900,
                 color: Colors.white,
-                height: 0.9,
-                letterSpacing: -4,
+                height: 1.0,
+                letterSpacing: -2,
               ),
             ),
-            const SizedBox(width: 16),
-            Padding(
-              padding: const EdgeInsets.only(top: 12.0),
-              child: Text(
-                chapterVerse,
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white.withOpacity(0.8),
-                  height: 1.0,
+            if (chapterVerse.isNotEmpty)
+              Padding(
+                padding: EdgeInsets.only(top: bookFontSize * 0.1),
+                child: Text(
+                  chapterVerse,
+                  style: TextStyle(
+                    fontSize: chapterVerseFontSize,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white.withOpacity(0.8),
+                    height: 1.0,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
-        const SizedBox(height: 30),
+        SizedBox(height: gapHeight),
         Container(
-          constraints: const BoxConstraints(maxWidth: 480),
-          padding: const EdgeInsets.all(32),
+          constraints: BoxConstraints(
+              maxWidth: boxMaxWidth ?? MediaQuery.of(context).size.width),
+          padding: boxPadding,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
             color: Colors.white.withOpacity(0.12),
@@ -372,9 +393,9 @@ class _VerseDisplay extends StatelessWidget {
           child: Text(
             '"$text"',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: textFontSize,
               color: Colors.white.withOpacity(0.95),
-              height: 1.6,
+              height: 1.5,
               fontWeight: FontWeight.w400,
             ),
           ),
@@ -384,13 +405,13 @@ class _VerseDisplay extends StatelessWidget {
   }
 }
 
-class _LoginMobileView extends ConsumerWidget {
+class _LoginSmallScreenView extends ConsumerWidget {
   final Animation<double> fadeAnimation;
   final Animation<Offset> slideAnimation;
   final Animation<double> scaleAnimation;
   final AnimationController backgroundController;
 
-  const _LoginMobileView({
+  const _LoginSmallScreenView({
     required this.fadeAnimation,
     required this.slideAnimation,
     required this.scaleAnimation,
@@ -399,19 +420,25 @@ class _LoginMobileView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
     final verseAsync = ref.watch(bibleVerseProvider);
+    final size = MediaQuery.of(context).size;
+    final isTablet = size.width >= 600;
+
+    final double headerHeight = max(size.height * 0.45, 380.0);
+    final double logoSize = isTablet ? 70.0 : 50.0;
+    final double logoIconSize = logoSize * 0.5;
+
     return SingleChildScrollView(
       child: Column(
         children: [
           Container(
-            height: 500,
+            height: headerHeight,
             width: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF4FADE3), Color(0xFF2A8BC4)],
-              ),
+            clipBehavior: Clip.hardEdge,
+            decoration: BoxDecoration(
+              gradient: appColors.primaryGradient,
             ),
             child: Stack(
               children: [
@@ -427,46 +454,76 @@ class _LoginMobileView extends ConsumerWidget {
                 ),
                 FadeTransition(
                   opacity: fadeAnimation,
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: Colors.white.withOpacity(0.15),
-                            border: Border.all(
-                                color: Colors.white.withOpacity(0.3)),
-                          ),
-                          child: Center(
-                            child: Image.asset('assets/images/logo.png',
-                                height: 40),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        verseAsync.when(
-                          data: (verse) => Text(
-                            verse.reference,
-                            style: const TextStyle(
-                              fontSize: 48,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              height: 1.0,
-                              letterSpacing: -2,
+                  child: SlideTransition(
+                    position: slideAnimation,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: isTablet ? 32.0 : 20.0),
+                      child: SafeArea(
+                        bottom: false,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: isTablet ? 24 : 16),
+                            Container(
+                              width: logoSize,
+                              height: logoSize,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                color: Colors.white.withOpacity(0.15),
+                                border: Border.all(
+                                    color: Colors.white.withOpacity(0.3)),
+                              ),
+                              child: Center(
+                                child: Image.asset('assets/images/logo.png',
+                                    height: logoIconSize),
+                              ),
                             ),
-                          ),
-                          loading: () => const SizedBox(height: 48),
-                          error: (e, s) => const Text('Verse of the Day',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.bold)),
+                            SizedBox(height: isTablet ? 24 : 16),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                physics: const BouncingScrollPhysics(),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(bottom: 24.0),
+                                  child: verseAsync.when(
+                                    data: (verse) => _VerseDisplay(
+                                      reference: verse.reference,
+                                      text: verse.text,
+                                      bookFontSize: isTablet ? 42 : 32,
+                                      chapterVerseFontSize:
+                                      isTablet ? 24 : 20,
+                                      textFontSize: isTablet ? 15 : 13.5,
+                                      boxPadding: EdgeInsets.all(
+                                          isTablet ? 20 : 16),
+                                      boxMaxWidth: size.width * 0.85,
+                                      gapHeight: isTablet ? 20 : 12,
+                                    ),
+                                    loading: () => const Center(
+                                      child: SizedBox(
+                                          height: 40,
+                                          width: 40,
+                                          child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2)),
+                                    ),
+                                    error: (e, s) => _VerseDisplay(
+                                      reference: 'Ethiopian Genet Church',
+                                      text: 'Welcome to the Ministry.',
+                                      bookFontSize: isTablet ? 42 : 32,
+                                      chapterVerseFontSize: 0,
+                                      textFontSize: isTablet ? 15 : 14,
+                                      boxPadding: EdgeInsets.all(
+                                          isTablet ? 20 : 16),
+                                      boxMaxWidth: size.width * 0.85,
+                                      gapHeight: 10,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -474,8 +531,10 @@ class _LoginMobileView extends ConsumerWidget {
             ),
           ),
           Container(
-            color: const Color(0xFFFAFAFA),
-            padding: const EdgeInsets.symmetric(vertical: 40),
+            color: appColors.scaffold,
+            constraints: BoxConstraints(minHeight: size.height * 0.55),
+            padding: EdgeInsets.symmetric(
+                vertical: isTablet ? 40 : 24, horizontal: 16),
             child: _LoginForm(
               scaleAnimation: scaleAnimation,
               fadeAnimation: fadeAnimation,
@@ -490,10 +549,16 @@ class _LoginMobileView extends ConsumerWidget {
 class _LoginForm extends HookConsumerWidget {
   final Animation<double> scaleAnimation;
   final Animation<double> fadeAnimation;
-  const _LoginForm({required this.scaleAnimation, required this.fadeAnimation});
+  const _LoginForm(
+      {required this.scaleAnimation, required this.fadeAnimation});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
+    final width = MediaQuery.of(context).size.width;
+    final isSmall = width < 600;
+
     final formKey = useMemoized(() => GlobalKey<FormState>());
     final isLoading = useState(false);
     final rememberMe = useState(false);
@@ -563,32 +628,34 @@ class _LoginForm extends HookConsumerWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 440),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              padding: EdgeInsets.symmetric(horizontal: isSmall ? 8.0 : 32.0),
               child: Form(
                 key: formKey,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('Welcome Back',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF1F2937),
-                          letterSpacing: -0.5,
+                    Text('Welcome Back',
+                        style: theme.textTheme.headlineLarge?.copyWith(
+                          color: appColors.textPrimary,
+                          fontSize: isSmall ? 26 : null,
                         )),
-                    const SizedBox(height: 8),
-                    Text('Sign in to access your administrative portal',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey.shade600,
-                          fontWeight: FontWeight.w400,
+                    SizedBox(height: isSmall ? 4 : 8),
+                    Text('Sign in to access your portal',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: appColors.textSecondary,
+                          fontSize: isSmall ? 14 : null,
                         )),
-                    const SizedBox(height: 48),
+                    SizedBox(height: isSmall ? 32 : 48),
                     _buildModernTextField(
+                      context: context,
                       controller: emailController,
                       focusNode: emailFocusNode,
                       hintText: 'Username or Email',
                       icon: Iconsax.user,
+                      isSmall: isSmall,
+                      textInputAction: TextInputAction.next,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your email';
@@ -602,12 +669,14 @@ class _LoginForm extends HookConsumerWidget {
                         FocusScope.of(context).requestFocus(passwordFocusNode);
                       },
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: isSmall ? 16 : 20),
                     _buildModernTextField(
+                      context: context,
                       controller: passwordController,
                       focusNode: passwordFocusNode,
                       hintText: 'Password',
                       icon: Iconsax.lock_1,
+                      isSmall: isSmall,
                       obscureText: !isPasswordVisible.value,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -621,34 +690,40 @@ class _LoginForm extends HookConsumerWidget {
                           isPasswordVisible.value
                               ? Iconsax.eye
                               : Iconsax.eye_slash,
-                          color: Colors.grey.shade500,
+                          color: appColors.textSecondary,
+                          size: isSmall ? 20 : 24,
                         ),
-                        onPressed: () => isPasswordVisible.value =
-                        !isPasswordVisible.value,
+                        onPressed: () =>
+                        isPasswordVisible.value = !isPasswordVisible.value,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: isSmall ? 16 : 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            Transform.scale(
-                              scale: 0.9,
-                              child: Checkbox(
-                                value: rememberMe.value,
-                                onChanged: (val) =>
-                                rememberMe.value = val ?? false,
-                                activeColor: const Color(0xFF4FADE3),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
+                            SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: Transform.scale(
+                                scale: isSmall ? 0.8 : 0.9,
+                                child: Checkbox(
+                                  value: rememberMe.value,
+                                  onChanged: (val) =>
+                                  rememberMe.value = val ?? false,
+                                  activeColor: theme.colorScheme.primary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
                                 ),
                               ),
                             ),
+                            const SizedBox(width: 8),
                             Text('Remember me',
                                 style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade700,
+                                  fontSize: isSmall ? 13 : 14,
+                                  color: appColors.textSecondary,
                                   fontWeight: FontWeight.w500,
                                 )),
                           ],
@@ -657,31 +732,31 @@ class _LoginForm extends HookConsumerWidget {
                           onPressed: () {},
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
+                                horizontal: 4, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child: const Text('Forgot password?',
+                          child: Text('Forgot password?',
                               style: TextStyle(
-                                color: Color(0xFF4FADE3),
+                                color: theme.colorScheme.primary,
                                 fontWeight: FontWeight.w600,
-                                fontSize: 14,
+                                fontSize: isSmall ? 13 : 14,
                               )),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 32),
+                    SizedBox(height: isSmall ? 24 : 32),
                     Transform.scale(
                       scale: buttonScale,
                       child: Container(
                         width: double.infinity,
-                        height: 56,
+                        height: isSmall ? 48 : 56,
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF4FADE3), Color(0xFF2A8BC4)],
-                          ),
+                          gradient: appColors.primaryGradient,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF4FADE3).withOpacity(0.3),
+                              color: theme.colorScheme.primary.withOpacity(0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -694,20 +769,20 @@ class _LoginForm extends HookConsumerWidget {
                             onTap: submitForm,
                             child: Center(
                               child: isLoading.value
-                                  ? const SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
+                                  ? SizedBox(
+                                height: isSmall ? 20 : 24,
+                                width: isSmall ? 20 : 24,
+                                child: const CircularProgressIndicator(
                                   strokeWidth: 2.5,
                                   valueColor:
                                   AlwaysStoppedAnimation<Color>(
                                       Colors.white),
                                 ),
                               )
-                                  : const Text('Sign In',
+                                  : Text('Sign In',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 16,
+                                    fontSize: isSmall ? 15 : 16,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 0.5,
                                   )),
@@ -716,25 +791,26 @@ class _LoginForm extends HookConsumerWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    SizedBox(height: isSmall ? 24 : 32),
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.all(isSmall ? 12 : 16),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
+                        color: theme.colorScheme.primary.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.blue.shade100),
+                        border: Border.all(
+                            color: theme.colorScheme.primary.withOpacity(0.2)),
                       ),
                       child: Row(
                         children: [
                           Icon(Iconsax.message_question,
-                              color: Colors.blue.shade600, size: 20),
+                              color: theme.colorScheme.primary, size: 20),
                           const SizedBox(width: 12),
-                          const Expanded(
+                          Expanded(
                             child: Text(
                               'Need help? Contact your administrator',
                               style: TextStyle(
-                                color: Color.fromRGBO(30, 109, 175, 1),
-                                fontSize: 14,
+                                color: theme.colorScheme.primary,
+                                fontSize: isSmall ? 13 : 14,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -753,24 +829,31 @@ class _LoginForm extends HookConsumerWidget {
   }
 
   Widget _buildModernTextField({
+    required BuildContext context,
     required String hintText,
     required IconData icon,
     bool obscureText = false,
+    bool isSmall = false,
     Widget? suffixIcon,
     TextEditingController? controller,
     FocusNode? focusNode,
     String? Function(String?)? validator,
     void Function(String)? onFieldSubmitted,
+    TextInputAction? textInputAction,
   }) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
+    final borderRadius = BorderRadius.circular(isSmall ? 12 : 16);
+
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: Colors.white,
+        borderRadius: borderRadius,
+        color: appColors.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 15,
-            offset: const Offset(0, 4),
+            color: appColors.shadow.withOpacity(0.5),
+            blurRadius: isSmall ? 10 : 15,
+            offset: Offset(0, isSmall ? 2 : 4),
           ),
         ],
       ),
@@ -780,52 +863,55 @@ class _LoginForm extends HookConsumerWidget {
         obscureText: obscureText,
         validator: validator,
         onFieldSubmitted: onFieldSubmitted,
-        textInputAction: onFieldSubmitted != null ? TextInputAction.next : TextInputAction.done,
-        style: const TextStyle(
-          fontSize: 16,
+        textInputAction: textInputAction ?? TextInputAction.done,
+        style: TextStyle(
+          fontSize: isSmall ? 14 : 16,
           fontWeight: FontWeight.w500,
-          color: Color(0xFF1F2937),
+          color: appColors.textPrimary,
         ),
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(
-            color: Colors.grey.shade500,
+            color: appColors.textSecondary,
             fontWeight: FontWeight.w400,
+            fontSize: isSmall ? 14 : 16,
           ),
           prefixIcon: Container(
-            margin: const EdgeInsets.all(12),
-            padding: const EdgeInsets.all(8),
+            margin: EdgeInsets.all(isSmall ? 8 : 12),
+            padding: EdgeInsets.all(isSmall ? 6 : 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF4FADE3).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+              color: theme.colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(isSmall ? 6 : 8),
             ),
-            child: Icon(icon, color: const Color(0xFF4FADE3), size: 20),
+            child: Icon(icon,
+                color: theme.colorScheme.primary, size: isSmall ? 18 : 20),
           ),
           suffixIcon: suffixIcon,
           filled: true,
-          fillColor: Colors.white,
+          fillColor: appColors.surface,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.grey.shade200),
+            borderRadius: borderRadius,
+            borderSide: BorderSide(color: appColors.border),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.grey.shade200),
+            borderRadius: borderRadius,
+            borderSide: BorderSide(color: appColors.border),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFF4FADE3), width: 2),
+            borderRadius: borderRadius,
+            borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
           ),
           errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: borderRadius,
             borderSide: const BorderSide(color: Colors.red, width: 1.5),
           ),
           focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: borderRadius,
             borderSide: const BorderSide(color: Colors.red, width: 2),
           ),
-          contentPadding:
-          const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          contentPadding: EdgeInsets.symmetric(
+              horizontal: isSmall ? 16 : 20, vertical: isSmall ? 16 : 20),
+          isDense: isSmall,
         ),
       ),
     );

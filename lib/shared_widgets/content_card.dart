@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:genet_church_portal/core/theme/app_theme.dart';
+import 'package:genet_church_portal/core/theme/app_colors.dart';
 
 class ContentCard extends StatelessWidget {
   final Widget child;
@@ -9,17 +9,35 @@ class ContentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appColors = Theme.of(context).extension<AppColors>()!;
     return Container(
       padding: padding ?? const EdgeInsets.all(24.0),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceWhite,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.border.withOpacity(0.5)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            appColors.surface,
+            appColors.surface.withOpacity(0.95),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: appColors.border.withOpacity(0.3),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 30,
-            offset: const Offset(0, 10),
+            color: appColors.shadow.withOpacity(0.08),
+            blurRadius: 40,
+            offset: const Offset(0, 12),
+            spreadRadius: -4,
+          ),
+          BoxShadow(
+            color: appColors.shadow.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+            spreadRadius: -2,
           ),
         ],
       ),

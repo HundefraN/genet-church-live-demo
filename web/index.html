@@ -7,9 +7,13 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Genet Church Portal for database management.">
 
+  <!-- Dark Mode Theme Color for Browser UI -->
+  <meta name="theme-color" content="#0d1117">
+  <meta name="color-scheme" content="dark light">
+
   <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Genet Church Portal">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
@@ -21,7 +25,8 @@
 
   <style>
     body {
-      background-color: #f7f8fc;
+      /* Dark background color */
+      background-color: #0d1117;
       margin: 0;
       padding: 0;
       display: flex;
@@ -29,7 +34,7 @@
       align-items: center;
       height: 100vh;
       overflow: hidden;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     }
 
     #loading-container {
@@ -40,16 +45,19 @@
       animation: fade-in 1.5s ease-in-out;
     }
 
-    /* NEW: The Glass Container */
+    /* Dark Mode Glass Container */
     .logo-glass-container {
       width: 140px;
       height: 140px;
-      background: rgba(255, 255, 255, 0.6);
+      /* Dark, semi-transparent background */
+      background: rgba(22, 27, 34, 0.6);
       border-radius: 28px;
-      border: 1px solid rgba(255, 255, 255, 0.7);
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      /* Subtle, slightly lighter border */
+      border: 1px solid rgba(48, 54, 61, 0.8);
+      /* Deeper shadow for dark background */
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -62,7 +70,8 @@
     }
 
     #loading-text {
-        color: #475569;
+        /* Light text color for readability */
+        color: #c9d1d9;
         margin-top: 24px;
         font-size: 18px;
         font-weight: 300;
@@ -80,6 +89,7 @@
     .loader-bars div {
       width: 6px;
       height: 10px;
+      /* Accent color looks great on dark backgrounds */
       background-color: #4FADE3;
       margin: 0 3px;
       border-radius: 3px;
@@ -96,10 +106,11 @@
       20% { transform: scaleY(1.0); }
     }
 
+    /* Updated pulse animation with dark shadows */
     @keyframes pulse {
-      0% { transform: scale(0.98); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1); }
-      50% { transform: scale(1); box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.15); }
-      100% { transform: scale(0.98); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1); }
+      0% { transform: scale(0.98); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); }
+      50% { transform: scale(1); box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4); }
+      100% { transform: scale(0.98); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); }
     }
 
     @keyframes fade-in {
@@ -111,7 +122,6 @@
 <body>
 
 <div id="loading-container">
-  <!-- The logo is now inside the glass container -->
   <div class="logo-glass-container">
     <img id="loading-logo" src="icons/logo_loader.png" alt="Loading Logo" />
   </div>

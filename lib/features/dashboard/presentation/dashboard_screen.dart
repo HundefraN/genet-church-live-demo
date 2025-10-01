@@ -1,30 +1,80 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:genet_church_portal/core/theme/app_colors.dart';
+import 'package:genet_church_portal/data/repositories/auth_repository.dart';
 import 'package:genet_church_portal/features/dashboard/presentation/widgets/analytics_card.dart';
 import 'package:genet_church_portal/features/dashboard/presentation/widgets/recent_activity_card.dart';
 import 'package:genet_church_portal/features/dashboard/presentation/widgets/stat_card.dart';
 import 'package:genet_church_portal/shared_widgets/responsive_layout.dart';
-import 'package:genet_church_portal/state/providers.dart';
-import 'package:shimmer/shimmer.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statsAsync = ref.watch(dashboardStatsProvider);
+    final appColors = Theme.of(context).extension<AppColors>()!;
+    return Container(
+      color: appColors.scaffold,
+      child: const ResponsiveLayout(
+        mobileBody: _DashboardMobileLayout(),
+        desktopBody: _DashboardDesktopLayout(),
+      ),
+    );
+  }
+}
 
-    return statsAsync.when(
-      data: (stats) {
-        return const ResponsiveLayout(
-          mobileBody: _DashboardMobileLayout(),
-          desktopBody: _DashboardDesktopLayout(),
-        );
-      },
-      loading: () => const _DashboardLoadingShimmer(),
-      error: (error, stackTrace) => Center(
-        child: Text('Failed to load dashboard data: $error'),
+class _GreetingWidget extends ConsumerWidget {
+  const _GreetingWidget();
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Good morning';
+    }
+    if (hour < 18) {
+      return 'Good afternoon';
+    }
+    return 'Good evening';
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authStateProvider);
+    final userName = user?.fullName.split(' ').first ?? 'User';
+    final greeting = _getGreeting();
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: isSmallScreen ? 24.0 : 32.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$greeting, $userName!',
+            style: isSmallScreen
+                ? theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: appColors.textPrimary,
+            )
+                : theme.textTheme.headlineLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: appColors.textPrimary,
+              letterSpacing: -0.5,
+            ),
+          ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.2, curve: Curves.easeOut),
+          if (!isSmallScreen) ...[
+            const SizedBox(height: 8),
+            Text(
+              "Here's your portal's overview for today.",
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: appColors.textSecondary,
+              ),
+            ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideX(begin: -0.2, curve: Curves.easeOut),
+          ]
+        ],
       ),
     );
   }
@@ -35,30 +85,37 @@ class _DashboardDesktopLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      shrinkWrap: true,
-      physics: const ClampingScrollPhysics(),
-      children: [
-        Row(
-          children: const [
-            Expanded(child: ChurchesStatCard()),
-            SizedBox(width: 24),
-            Expanded(child: PastorsStatCard()),
-            SizedBox(width: 24),
-            Expanded(child: MembersStatCard()),
-          ],
-        ),
-        const SizedBox(height: 24),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Expanded(flex: 2, child: RecentActivityCard()),
-            SizedBox(width: 24),
-            Expanded(flex: 3, child: AnalyticsCard()),
-          ],
-        )
-      ],
-    ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, duration: 500.ms, curve: Curves.easeOut);
+    final appColors = Theme.of(context).extension<AppColors>()!;
+    return Container(
+      color: appColors.scaffold,
+      child: ListView(
+        padding: const EdgeInsets.all(24.0),
+        shrinkWrap: true,
+        physics: const ClampingScrollPhysics(),
+        children: [
+          const _GreetingWidget(),
+          Wrap(
+            spacing: 24,
+            runSpacing: 24,
+            alignment: WrapAlignment.spaceEvenly,
+            children: const [
+              ChurchesStatCard(),
+              PastorsStatCard(),
+              MembersStatCard(),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Expanded(flex: 2, child: RecentActivityCard()),
+              SizedBox(width: 24),
+              Expanded(flex: 3, child: AnalyticsCard()),
+            ],
+          )
+        ],
+      ).animate().fadeIn(duration: 500.ms, delay: 200.ms).slideY(begin: 0.1, duration: 500.ms, curve: Curves.easeOut),
+    );
   }
 }
 
@@ -67,121 +124,26 @@ class _DashboardMobileLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      shrinkWrap: true,
-      physics: const ClampingScrollPhysics(),
-      children: const [
-        ChurchesStatCard(),
-        SizedBox(height: 16),
-        PastorsStatCard(),
-        SizedBox(height: 16),
-        MembersStatCard(),
-        SizedBox(height: 24),
-        RecentActivityCard(),
-        SizedBox(height: 24),
-        AnalyticsCard(),
-      ],
-    ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, duration: 500.ms, curve: Curves.easeOut);
-  }
-}
-
-class _DashboardLoadingShimmer extends StatelessWidget {
-  const _DashboardLoadingShimmer();
-
-  @override
-  Widget build(BuildContext context) {
-    return Shimmer.fromColors(
-        baseColor: Colors.grey.shade300,
-        highlightColor: Colors.grey.shade100,
-        child: const ResponsiveLayout(
-          mobileBody: _ShimmerMobile(),
-          desktopBody: _ShimmerDesktop(),
-        ));
-  }
-}
-
-class _ShimmerDesktop extends StatelessWidget {
-  const _ShimmerDesktop();
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-                child: Container(
-                    height: 120,
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12)))),
-            const SizedBox(width: 24),
-            Expanded(
-                child: Container(
-                    height: 120,
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12)))),
-            const SizedBox(width: 24),
-            Expanded(
-                child: Container(
-                    height: 120,
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12)))),
-          ],
-        ),
-        const SizedBox(height: 24),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-                flex: 2,
-                child: Container(
-                    height: 600,
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12)))),
-            const SizedBox(width: 24),
-            Expanded(
-                flex: 3,
-                child: Container(
-                    height: 800,
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12)))),
-          ],
-        )
-      ],
-    );
-  }
-}
-
-class _ShimmerMobile extends StatelessWidget {
-  const _ShimmerMobile();
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-            height: 120,
-            decoration: BoxDecoration(
-                color: Colors.white, borderRadius: BorderRadius.circular(12))),
-        const SizedBox(height: 16),
-        Container(
-            height: 120,
-            decoration: BoxDecoration(
-                color: Colors.white, borderRadius: BorderRadius.circular(12))),
-        const SizedBox(height: 16),
-        Container(
-            height: 120,
-            decoration: BoxDecoration(
-                color: Colors.white, borderRadius: BorderRadius.circular(12))),
-        const SizedBox(height: 24),
-        Container(
-            height: 600,
-            decoration: BoxDecoration(
-                color: Colors.white, borderRadius: BorderRadius.circular(12))),
-      ],
+    final appColors = Theme.of(context).extension<AppColors>()!;
+    return Container(
+      color: appColors.scaffold,
+      child: ListView(
+        padding: const EdgeInsets.all(16.0),
+        shrinkWrap: true,
+        physics: const ClampingScrollPhysics(),
+        children: const [
+          _GreetingWidget(),
+          ChurchesStatCard(),
+          SizedBox(height: 16),
+          PastorsStatCard(),
+          SizedBox(height: 16),
+          MembersStatCard(),
+          SizedBox(height: 24),
+          RecentActivityCard(),
+          SizedBox(height: 24),
+          AnalyticsCard(),
+        ],
+      ).animate().fadeIn(duration: 500.ms, delay: 200.ms).slideY(begin: 0.1, duration: 500.ms, curve: Curves.easeOut),
     );
   }
 }

@@ -10,7 +10,6 @@ import 'package:genet_church_portal/features/screens/add_church_screen.dart';
 import 'package:genet_church_portal/features/screens/add_members_screen.dart';
 import 'package:genet_church_portal/features/screens/add_pastors_screen.dart';
 import 'package:genet_church_portal/features/screens/advanced_reports_screen.dart';
-import 'package:genet_church_portal/features/screens/communication_hub_screen.dart';
 import 'package:genet_church_portal/features/screens/permissions_screen.dart';
 import 'package:genet_church_portal/features/screens/profile_screen.dart';
 import 'package:genet_church_portal/features/screens/report_churchs_screen.dart';

@@ -1,131 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:genet_church_portal/core/theme/app_theme.dart';
-
-class TableActionButton extends StatefulWidget {
-  final String label;
-  final Color color;
-  final VoidCallback onPressed;
-  final IconData? icon;
-
-  const TableActionButton({
-    super.key,
-    required this.label,
-    required this.color,
-    required this.onPressed,
-    this.icon,
-  });
-
-  @override
-  State<TableActionButton> createState() => _TableActionButtonState();
-}
-
-class _TableActionButtonState extends State<TableActionButton>
-    with SingleTickerProviderStateMixin {
-  bool _isHovered = false;
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 150),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTapDown: (_) => _animationController.forward(),
-        onTapUp: (_) => _animationController.reverse(),
-        onTapCancel: () => _animationController.reverse(),
-        child: AnimatedBuilder(
-          animation: _scaleAnimation,
-          builder: (context, child) {
-            return Transform.scale(
-              scale: _scaleAnimation.value,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                height: 32,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      widget.color,
-                      widget.color.withOpacity(0.8),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: _isHovered
-                      ? [
-                    BoxShadow(
-                      color: widget.color.withOpacity(0.4),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    )
-                  ]
-                      : [
-                    BoxShadow(
-                      color: widget.color.withOpacity(0.2),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    )
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: widget.onPressed,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (widget.icon != null) ...[
-                            Icon(
-                              widget.icon,
-                              size: 14,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 4),
-                          ],
-                          Text(
-                            widget.label,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
+import 'package:genet_church_portal/core/theme/app_colors.dart';
 
 class StyledDataTable extends StatelessWidget {
   final List<String> columns;
@@ -139,70 +13,151 @@ class StyledDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            appColors.surface,
+            appColors.surface.withOpacity(0.98),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: appColors.border.withOpacity(0.2),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: appColors.shadow.withOpacity(0.06),
+            blurRadius: 32,
+            offset: const Offset(0, 12),
+            spreadRadius: -4,
+          ),
+          BoxShadow(
+            color: appColors.shadow.withOpacity(0.03),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+            spreadRadius: -2,
           ),
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
+      child: ShaderMask(
+        shaderCallback: (Rect bounds) {
+          return LinearGradient(
+            begin: Alignment.centerRight,
+            end: Alignment.centerLeft,
+            colors: <Color>[
+              Colors.transparent,
+              Colors.black,
+              Colors.black,
+            ],
+            stops: const [0.0, 0.05, 1.0],
+          ).createShader(bounds);
+        },
+        blendMode: BlendMode.dstIn,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: constraints.maxWidth),
-          child: DataTable(
-          headingRowHeight: 56,
-          dataRowHeight: 64,
-          horizontalMargin: 24,
-          columnSpacing: 32,
-          headingRowColor: MaterialStateProperty.all(
-          const Color(0xFFF8FAFC),
-          ),
-          headingTextStyle: const TextStyle(
-          fontWeight: FontWeight.w700,
-          color: Color(0xFF1E293B),
-          fontFamily: 'Poppins',
-          fontSize: 14,
-          letterSpacing: 0.5,
-          ),
-          dataTextStyle: const TextStyle(
-          fontWeight: FontWeight.w500,
-          color: Color(0xFF475569),
-          fontFamily: 'Poppins',
-          fontSize: 13,
-          ),
-          columns: columns
-          .map((col) => DataColumn(
-          label: Text(col),
-          ))
-              .toList(),
-          rows: rows
-              .asMap()
-              .entries
-              .map((entry) => DataRow(
-          color: MaterialStateProperty.resolveWith<Color?>(
-          (Set<MaterialState> states) {
-          if (entry.key % 2 == 0) {
-          return Colors.grey.shade50;
-          }
-          return null;
+                constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                child: DataTable(
+                  headingRowHeight: 64,
+                  dataRowHeight: 72,
+                  horizontalMargin: 28,
+                  columnSpacing: 40,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        appColors.scaffold.withOpacity(0.6),
+                        appColors.scaffold.withOpacity(0.8),
+                      ],
+                    ),
+                  ),
+                  headingRowColor: MaterialStateProperty.all(
+                    Colors.transparent,
+                  ),
+                  headingTextStyle: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: appColors.textPrimary,
+                    fontFamily: 'Poppins',
+                    fontSize: 15,
+                    letterSpacing: 0.8,
+                  ),
+                  dataTextStyle: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: appColors.textSecondary,
+                    fontFamily: 'Poppins',
+                    fontSize: 14,
+                    letterSpacing: 0.2,
+                  ),
+                  columns: columns
+                      .map((col) => DataColumn(
+                    label: Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            theme.colorScheme.primary.withOpacity(0.08),
+                            theme.colorScheme.primary.withOpacity(0.04),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: theme.colorScheme.primary
+                              .withOpacity(0.1),
+                        ),
+                      ),
+                      child: Text(col),
+                    ),
+                  ))
+                      .toList(),
+                  rows: rows
+                      .asMap()
+                      .entries
+                      .map((entry) => DataRow(
+                    color: MaterialStateProperty.resolveWith<Color?>(
+                          (Set<MaterialState> states) {
+                        if (states.contains(MaterialState.hovered)) {
+                          return theme.colorScheme.primary
+                              .withOpacity(0.04);
+                        }
+                        if (entry.key % 2 != 0) {
+                          return appColors.scaffold.withOpacity(0.3);
+                        }
+                        return Colors.transparent;
+                      },
+                    ),
+                    cells: entry.value.cells.map((cell) {
+                      return DataCell(
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 4,
+                          ),
+                          child: cell.child,
+                        ),
+                      );
+                    }).toList(),
+                  ))
+                      .toList(),
+                ),
+              ),
+            );
           },
-          ),
-          cells: entry.value.cells,
-          ))
-              .toList(),
-          ),
-          ));
-        },
+        ),
       ),
     );
   }

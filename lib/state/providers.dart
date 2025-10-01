@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:genet_church_portal/state/church_selection_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:genet_church_portal/data/models/activity_log_model.dart';
 import 'package:genet_church_portal/data/models/church_model.dart';
-import 'package:genet_church_portal/data/models/communication_model.dart';
 import 'package:genet_church_portal/data/models/dashboard_model.dart';
 import 'package:genet_church_portal/data/models/department_model.dart';
 import 'package:genet_church_portal/data/models/member_model.dart';
@@ -33,8 +33,7 @@ class Pastors extends _$Pastors {
     final api = ref.read(apiRepositoryProvider);
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      await api.addPastor(
-          fullName: fullName, email: email, password: password);
+      await api.addPastor(fullName: fullName, email: email, password: password);
       return api.getPastors();
     });
   }
@@ -110,45 +109,57 @@ class Churches extends _$Churches {
 
 @riverpod
 class Departments extends _$Departments {
-  String get _churchId => "c75631fc-861d-4cf3-94bb-9212fa542b9f";
-
   @override
   Future<List<Department>> build() {
-    return ref.watch(apiRepositoryProvider).getDepartments(_churchId);
+    final churchId = ref.watch(currentChurchProvider);
+    if (churchId == null) return Future.value([]);
+    return ref.watch(apiRepositoryProvider).getDepartments(churchId);
   }
 
   Future<void> addDepartment({required String name}) async {
+    final churchId = ref.read(currentChurchProvider);
+    if (churchId == null) {
+      throw Exception('A church must be selected to add a department.');
+    }
     final api = ref.read(apiRepositoryProvider);
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      await api.addDepartment(name: name, churchId: _churchId);
-      return api.getDepartments(_churchId);
+      await api.addDepartment(name: name, churchId: churchId);
+      return api.getDepartments(churchId);
     });
   }
 
   Future<void> removeDepartment(String id) async {
+    final churchId = ref.read(currentChurchProvider);
+    if (churchId == null) {
+      throw Exception('A church must be selected to remove a department.');
+    }
     final api = ref.read(apiRepositoryProvider);
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await api.removeDepartment(id);
-      return api.getDepartments(_churchId);
+      return api.getDepartments(churchId);
     });
   }
 }
 
 @riverpod
 class Servants extends _$Servants {
-  String get _churchId => "c75631fc-861d-4cf3-94bb-9212fa542b9f";
-
   @override
   Future<List<Servant>> build() {
-    return ref.watch(apiRepositoryProvider).getServants(_churchId);
+    final churchId = ref.watch(currentChurchProvider);
+    if (churchId == null) return Future.value([]);
+    return ref.watch(apiRepositoryProvider).getServants(churchId);
   }
 
   Future<void> addServant(
       {required String fullName,
         required String email,
         required String password}) async {
+    final churchId = ref.read(currentChurchProvider);
+    if (churchId == null) {
+      throw Exception('A church must be selected to add a servant.');
+    }
     final api = ref.read(apiRepositoryProvider);
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
@@ -156,17 +167,21 @@ class Servants extends _$Servants {
           fullName: fullName,
           email: email,
           password: password,
-          churchId: _churchId);
-      return api.getServants(_churchId);
+          churchId: churchId);
+      return api.getServants(churchId);
     });
   }
 
   Future<void> removeServant(String id) async {
+    final churchId = ref.read(currentChurchProvider);
+    if (churchId == null) {
+      throw Exception('A church must be selected to remove a servant.');
+    }
     final api = ref.read(apiRepositoryProvider);
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await api.removeServant(id);
-      return api.getServants(_churchId);
+      return api.getServants(churchId);
     });
   }
 }
@@ -176,8 +191,11 @@ class Members extends _$Members {
   @override
   void build() {}
 
-  Future<void> addMember(
-      {required Member member, required String churchId}) async {
+  Future<void> addMember({required Member member}) async {
+    final churchId = ref.read(currentChurchProvider);
+    if (churchId == null) {
+      throw Exception("No church selected. Please select a church from the header before adding a member.");
+    }
     await ref
         .read(apiRepositoryProvider)
         .addMember(member: member, churchId: churchId);

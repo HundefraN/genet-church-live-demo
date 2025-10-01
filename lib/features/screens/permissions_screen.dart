@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:genet_church_portal/core/theme/app_theme.dart';
+import 'package:genet_church_portal/core/theme/app_colors.dart';
 import 'package:genet_church_portal/shared_widgets/content_card.dart';
 import 'package:genet_church_portal/shared_widgets/page_header.dart';
 import 'package:genet_church_portal/shared_widgets/primary_button.dart';
@@ -11,6 +11,7 @@ class PermissionsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -36,7 +37,7 @@ class PermissionsScreen extends StatelessWidget {
           roleDescription:
           'Has unrestricted access to all features, including system settings and user management.',
           icon: Iconsax.crown_1,
-          iconColor: AppTheme.accentOrange,
+          iconColor: Color(0xFFF5A623),
           initialPermissions: {
             'Create, Read, Update, Delete Churches': true,
             'Manage All Pastors & Users': true,
@@ -47,13 +48,13 @@ class PermissionsScreen extends StatelessWidget {
           isLocked: true,
         ),
         const SizedBox(height: 24),
-        const _PermissionRoleCard(
+        _PermissionRoleCard(
           roleName: 'Pastor',
           roleDescription:
           'Manages members, events, and departments within their assigned church.',
           icon: Iconsax.user_octagon,
-          iconColor: AppTheme.primaryBlue,
-          initialPermissions: {
+          iconColor: theme.colorScheme.primary,
+          initialPermissions: const {
             'Add & Manage Church Members': true,
             'Create & Manage Departments': true,
             'View Own Church Reports': true,
@@ -62,13 +63,13 @@ class PermissionsScreen extends StatelessWidget {
           },
         ),
         const SizedBox(height: 24),
-        const _PermissionRoleCard(
+        _PermissionRoleCard(
           roleName: 'Servant',
           roleDescription:
           'Assists with managing members and activities within their assigned department.',
           icon: Iconsax.lifebuoy,
-          iconColor: AppTheme.accentTeal,
-          initialPermissions: {
+          iconColor: theme.colorScheme.secondary,
+          initialPermissions: const {
             'View Members in Own Department': true,
             'Mark Member Attendance': true,
             'View Departmental Reports': false,
@@ -100,6 +101,7 @@ class _PermissionRoleCard extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final permissionsState = useState(initialPermissions);
+    final appColors = Theme.of(context).extension<AppColors>()!;
 
     return ContentCard(
       child: Column(
@@ -130,8 +132,7 @@ class _PermissionRoleCard extends HookWidget {
               ),
               if (isLocked) ...[
                 const SizedBox(width: 16),
-                const Icon(Iconsax.lock,
-                    color: AppTheme.textSecondary, size: 20),
+                Icon(Iconsax.lock, color: appColors.textSecondary, size: 20),
               ]
             ],
           ),
@@ -169,6 +170,8 @@ class _PermissionToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -181,16 +184,16 @@ class _PermissionToggle extends StatelessWidget {
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
                 color: onChanged == null
-                    ? AppTheme.textSecondary
-                    : AppTheme.textPrimary,
+                    ? appColors.textSecondary
+                    : appColors.textPrimary,
               ),
             ),
           ),
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppTheme.primaryBlue,
-            inactiveThumbColor: AppTheme.border,
+            activeColor: theme.colorScheme.primary,
+            inactiveThumbColor: appColors.border,
           ),
         ],
       ),

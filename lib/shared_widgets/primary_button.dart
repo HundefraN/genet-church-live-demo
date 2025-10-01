@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:genet_church_portal/core/theme/app_theme.dart';
+import 'package:genet_church_portal/core/theme/app_colors.dart';
 
 class PrimaryButton extends StatefulWidget {
   final String text;
@@ -68,13 +68,16 @@ class _PrimaryButtonState extends State<PrimaryButton>
   void dispose() {
     _hoverController.dispose();
     _pressController.dispose();
-    _shimmerController.stop(); // FIX: Stop the repeating controller before disposing
+    _shimmerController.stop();
     _shimmerController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
+
     return MouseRegion(
       onEnter: (_) {
         setState(() => _isHovered = true);
@@ -103,10 +106,10 @@ class _PrimaryButtonState extends State<PrimaryButton>
                 height: 52,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  gradient: AppTheme.primaryGradient,
+                  gradient: appColors.primaryGradient,
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primaryBlue.withOpacity(0.4),
+                      color: theme.colorScheme.primary.withOpacity(0.4),
                       blurRadius: _elevationAnimation.value,
                       offset: Offset(0, _elevationAnimation.value / 2),
                     ),
