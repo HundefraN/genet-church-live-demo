@@ -7,17 +7,14 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Genet Church Portal for database management.">
 
-  <!-- Dark Mode Theme Color for Browser UI -->
   <meta name="theme-color" content="#0d1117">
   <meta name="color-scheme" content="dark light">
 
-  <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Genet Church Portal">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <title>Genet Church Portal</title>
@@ -25,7 +22,6 @@
 
   <style>
     body {
-      /* Dark background color */
       background-color: #0d1117;
       margin: 0;
       padding: 0;
@@ -43,18 +39,14 @@
       align-items: center;
       justify-content: center;
       animation: fade-in 1.5s ease-in-out;
+      transition: opacity 0.5s ease-out;
     }
-
-    /* Dark Mode Glass Container */
     .logo-glass-container {
       width: 140px;
       height: 140px;
-      /* Dark, semi-transparent background */
       background: rgba(22, 27, 34, 0.6);
       border-radius: 28px;
-      /* Subtle, slightly lighter border */
       border: 1px solid rgba(48, 54, 61, 0.8);
-      /* Deeper shadow for dark background */
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
       backdrop-filter: blur(5px);
       -webkit-backdrop-filter: blur(5px);
@@ -70,14 +62,18 @@
     }
 
     #loading-text {
-        /* Light text color for readability */
         color: #c9d1d9;
         margin-top: 24px;
         font-size: 18px;
         font-weight: 300;
         letter-spacing: 1.5px;
+        min-height: 27px;
     }
-
+    .loader-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
     .loader-bars {
       display: flex;
       justify-content: center;
@@ -89,7 +85,6 @@
     .loader-bars div {
       width: 6px;
       height: 10px;
-      /* Accent color looks great on dark backgrounds */
       background-color: #4FADE3;
       margin: 0 3px;
       border-radius: 3px;
@@ -106,7 +101,6 @@
       20% { transform: scaleY(1.0); }
     }
 
-    /* Updated pulse animation with dark shadows */
     @keyframes pulse {
       0% { transform: scale(0.98); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); }
       50% { transform: scale(1); box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4); }
@@ -125,16 +119,20 @@
   <div class="logo-glass-container">
     <img id="loading-logo" src="icons/logo_loader.png" alt="Loading Logo" />
   </div>
-  <p id="loading-text">Initializing Portal...</p>
-  <div class="loader-bars">
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
+  <div class="loader-container">
+    <p id="loading-text">Initializing Portal...</p>
+    <div class="loader-bars">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
   </div>
 </div>
 
-<script src="flutter_bootstrap.js" async></script>
+<script src="flutter.js" defer></script>
+<script src="flutter_bootstrap.js" defer></script>
+
 </body>
 </html>

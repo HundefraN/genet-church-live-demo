@@ -29,6 +29,7 @@ dependencies:
   shared_preferences: ^2.5.3
   timeago: ^3.7.1
   csv: ^6.0.0
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
