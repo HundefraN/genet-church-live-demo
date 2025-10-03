@@ -4,16 +4,48 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:genet_church_portal/data/repositories/auth_repository.dart';
 import 'package:genet_church_portal/data/services/api_service.dart';
-import 'package:genet_church_portal/features/auth/presentation/login_screen.dart';
-import 'app_router_deferred.dart' deferred as deferred_router;
+import 'package:genet_church_portal/features/dashboard/presentation/dashboard_screen.dart';
+import 'package:genet_church_portal/features/screens/activity_log_screen.dart';
+import 'package:genet_church_portal/features/screens/add_church_screen.dart';
+import 'package:genet_church_portal/features/screens/add_members_screen.dart';
+import 'package:genet_church_portal/features/screens/add_pastors_screen.dart';
+import 'package:genet_church_portal/features/screens/advanced_reports_screen.dart';
+import 'package:genet_church_portal/features/screens/permissions_screen.dart';
+import 'package:genet_church_portal/features/screens/profile_screen.dart';
+import 'package:genet_church_portal/features/screens/report_churchs_screen.dart';
+import 'package:genet_church_portal/features/screens/report_departments_screen.dart';
+import 'package:genet_church_portal/features/screens/report_pastors_screen.dart';
+import 'package:genet_church_portal/features/screens/report_servants_screen.dart';
+import 'package:genet_church_portal/features/screens/show_members_screen.dart';
+import 'package:genet_church_portal/shared_widgets/main_layout.dart';
+import 'features/auth/presentation/login_screen.dart';
+import 'features/categories_screen.dart';
 
 final routerAuthRepositoryProvider = Provider((ref) => AuthRepository(
   ref.watch(dioProvider),
   const FlutterSecureStorage(),
 ));
 
+final Map<String, List<String>> _routeBreadcrumbs = {
+  '/dashboard': ['App', 'Dashboard'],
+  '/add-church': ['App', 'Church', 'Add Church'],
+  '/add-pastors': ['App', 'Pastors', 'Add Pastor'],
+  '/permissions': ['App', 'Settings', 'Permissions'],
+  '/profile': ['App', 'User', 'Profile'],
+  '/report-churchs': ['App', 'Church', 'Reports'],
+  '/report-pastors': ['App', 'Pastors', 'Reports'],
+  '/report-departments': ['App', 'Departments', 'Reports'],
+  '/report-servants': ['App', 'Servants', 'Reports'],
+  '/add-members': ['App', 'Members', 'Add Member'],
+  '/show-members': ['App', 'Members', 'Show Members'],
+  '/categories': ['App', 'Members', 'Categories'],
+  '/advanced-reports': ['App', 'Analytics'],
+  '/activity-log': ['App', 'System', 'Activity Log'],
+};
+
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
+  static final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
   static GoRouter router(WidgetRef ref) {
     return GoRouter(
@@ -41,67 +73,69 @@ class AppRouter {
           builder: (context, state) => const LoginScreen(),
         ),
         ShellRoute(
+          navigatorKey: _shellNavigatorKey,
           builder: (context, state, child) {
-            return FutureBuilder<void>(
-              future: deferred_router.loadLibrary(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  }
-                  final shellRoute = deferred_router.buildShellRoute();
-                  final shellBuilder = shellRoute.builder;
-                  return shellBuilder!(context, state, child);
-                }
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              },
-            );
+            final breadcrumbs =
+                _routeBreadcrumbs[state.matchedLocation] ?? ['App'];
+            return MainLayout(breadcrumbs: breadcrumbs, child: child);
           },
           routes: [
             GoRoute(
-                path: '/dashboard',
-                builder: (context, state) => const SizedBox.shrink()),
+              path: '/dashboard',
+              builder: (context, state) => const DashboardScreen(),
+            ),
             GoRoute(
-                path: '/add-church',
-                builder: (context, state) => const SizedBox.shrink()),
+              path: '/add-church',
+              builder: (context, state) => const AddChurchScreen(),
+            ),
             GoRoute(
-                path: '/add-pastors',
-                builder: (context, state) => const SizedBox.shrink()),
+              path: '/add-pastors',
+              builder: (context, state) => const AddPastorsScreen(),
+            ),
             GoRoute(
-                path: '/permissions',
-                builder: (context, state) => const SizedBox.shrink()),
+              path: '/permissions',
+              builder: (context, state) => const PermissionsScreen(),
+            ),
             GoRoute(
-                path: '/profile',
-                builder: (context, state) => const SizedBox.shrink()),
+              path: '/profile',
+              builder: (context, state) => const ProfileScreen(),
+            ),
             GoRoute(
-                path: '/report-churchs',
-                builder: (context, state) => const SizedBox.shrink()),
+              path: '/report-churchs',
+              builder: (context, state) => const ReportChurchsScreen(),
+            ),
             GoRoute(
-                path: '/report-pastors',
-                builder: (context, state) => const SizedBox.shrink()),
+              path: '/report-pastors',
+              builder: (context, state) => const ReportPastorsScreen(),
+            ),
             GoRoute(
-                path: '/report-departments',
-                builder: (context, state) => const SizedBox.shrink()),
+              path: '/report-departments',
+              builder: (context, state) => const ReportDepartmentsScreen(),
+            ),
             GoRoute(
-                path: '/report-servants',
-                builder: (context, state) => const SizedBox.shrink()),
+              path: '/report-servants',
+              builder: (context, state) => const ReportServantsScreen(),
+            ),
             GoRoute(
-                path: '/add-members',
-                builder: (context, state) => const SizedBox.shrink()),
+              path: '/add-members',
+              builder: (context, state) => const AddMembersScreen(),
+            ),
             GoRoute(
-                path: '/show-members',
-                builder: (context, state) => const SizedBox.shrink()),
+              path: '/show-members',
+              builder: (context, state) => const ShowMembersScreen(),
+            ),
             GoRoute(
-                path: '/categories',
-                builder: (context, state) => const SizedBox.shrink()),
+              path: '/categories',
+              builder: (context, state) => const CategoriesScreen(),
+            ),
             GoRoute(
-                path: '/advanced-reports',
-                builder: (context, state) => const SizedBox.shrink()),
+              path: '/advanced-reports',
+              builder: (context, state) => const AdvancedReportsScreen(),
+            ),
             GoRoute(
-                path: '/activity-log',
-                builder: (context, state) => const SizedBox.shrink()),
+              path: '/activity-log',
+              builder: (context, state) => const ActivityLogScreen(),
+            ),
           ],
         ),
       ],

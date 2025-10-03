@@ -3,7 +3,7 @@
 window.addEventListener('load', function(ev) {
   var loadingText = document.getElementById("loading-text");
 
-  _flutter.loader.loadEntrypoint({
+  _flutter.loader.load({
     onProgress: function(event) {
       if (event.total) {
         var percent = Math.round(event.loaded / event.total * 100);
@@ -12,15 +12,16 @@ window.addEventListener('load', function(ev) {
         loadingText.innerText = "Downloading...";
       }
     },
-    onEntrypointLoaded: function(engineInitializer) {
-      loadingText.innerText = "Initializing App...";
-      engineInitializer.initializeEngine({
-        // THIS IS THE CRITICAL LINE
-        renderer: "html"
-      }).then(function(appRunner) {
-        loadingText.innerText = "Running App...";
-        appRunner.runApp();
+    engineInitializer: async function(engineInitializer) {
+      loadingText.innerText = "Initializing Engine...";
+      const appRunner = await engineInitializer.initializeEngine({
+        // CRITICAL: Use CanvasKit for max performance
+        renderer: "canvaskit",
+        // CRITICAL: Use this modern font loading method
+        canvasKitVariant: "skparagraph",
       });
+      loadingText.innerText = "Running App...";
+      appRunner.runApp();
     }
   });
 });
