@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!-- No base href needed, we are using absolute paths -->
+  <base href="/genet-church-live-demo/">
+
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Genet Church Portal for database management.">
@@ -10,71 +11,18 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Genet Church Portal">
-  <link rel="apple-touch-icon" href="/genet-church-live-demo/icons/Icon-192.png">
-  <link rel="icon" type="image/png" href="/genet-church-live-demo/favicon.png"/>
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
   <title>Genet Church Portal</title>
-  <link rel="manifest" href="/genet-church-live-demo/manifest.json">
+  <link rel="manifest" href="manifest.json">
   <style>
-    body {
-      background-color: #0d1117;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    }
-    #loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      animation: fade-in 1.5s ease-in-out;
-      transition: opacity 0.5s ease-out;
-    }
-    .logo-glass-container {
-      width: 140px;
-      height: 140px;
-      background: rgba(22, 27, 34, 0.6);
-      border-radius: 28px;
-      border: 1px solid rgba(48, 54, 61, 0.8);
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      animation: pulse 2.5s infinite ease-in-out;
-    }
-    #loading-logo {
-      width: 80px;
-      height: 80px;
-    }
-    #loading-text {
-        color: #c9d1d9;
-        margin-top: 24px;
-        font-size: 18px;
-        font-weight: 300;
-        letter-spacing: 1.5px;
-        min-height: 27px;
-    }
-    .loader-bars {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 60px;
-      margin-top: 10px;
-    }
-    .loader-bars div {
-      width: 6px;
-      height: 10px;
-      background-color: #4FADE3;
-      margin: 0 3px;
-      border-radius: 3px;
-      animation: wave 1.2s infinite ease-in-out;
-    }
+    body { background-color: #0d1117; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; }
+    #loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; animation: fade-in 1.5s ease-in-out; transition: opacity 0.5s ease-out; }
+    .logo-glass-container { width: 140px; height: 140px; background: rgba(22, 27, 34, 0.6); border-radius: 28px; border: 1px solid rgba(48, 54, 61, 0.8); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; animation: pulse 2.5s infinite ease-in-out; }
+    #loading-logo { width: 80px; height: 80px; }
+    #loading-text { color: #c9d1d9; margin-top: 24px; font-size: 18px; font-weight: 300; letter-spacing: 1.5px; min-height: 27px; }
+    .loader-bars { display: flex; justify-content: center; align-items: center; height: 60px; margin-top: 10px; }
+    .loader-bars div { width: 6px; height: 10px; background-color: #4FADE3; margin: 0 3px; border-radius: 3px; animation: wave 1.2s infinite ease-in-out; }
     .loader-bars div:nth-child(2) { animation-delay: 0.1s; }
     .loader-bars div:nth-child(3) { animation-delay: 0.2s; }
     .loader-bars div:nth-child(4) { animation-delay: 0.3s; }
@@ -85,27 +33,20 @@
   </style>
 </head>
 <body>
-
 <div id="loading-container">
   <div class="logo-glass-container">
-    <img id="loading-logo" src="/genet-church-live-demo/icons/logo_loader.png" alt="Loading Logo" />
+    <img id="loading-logo" src="icons/logo_loader.png" alt="Loading Logo" />
   </div>
   <p id="loading-text">Initializing Portal...</p>
   <div class="loader-bars">
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
+    <div></div><div></div><div></div><div></div><div></div>
   </div>
 </div>
-
-<script src="/genet-church-live-demo/flutter.js" defer></script>
+<script src="flutter.js" defer></script>
 <script>
   window.addEventListener('load', function(ev) {
     var loadingText = document.getElementById("loading-text");
     _flutter.loader.loadEntrypoint({
-      entrypointUrl: "/genet-church-live-demo/main.dart.js",
       onProgress: function(event) {
         if (event.total) {
           var percent = Math.round(event.loaded / event.total * 100);
@@ -117,7 +58,7 @@
       onEntrypointLoaded: function(engineInitializer) {
         loadingText.innerText = "Initializing Engine...";
         engineInitializer.initializeEngine({
-          renderer: "html"
+          renderer: "html" // Use the reliable HTML renderer
         }).then(function(appRunner) {
           loadingText.innerText = "Running App...";
           appRunner.runApp();
