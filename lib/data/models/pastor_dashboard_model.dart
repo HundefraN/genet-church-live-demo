@@ -1,5 +1,5 @@
 
-import '../../state/lib/data/models/dashboard_base_model.dart';
+import 'dashboard_base_model.dart';
 
 class PastorDashboardStats extends DashboardStatsBase {
   final int totalMembers;

@@ -11,7 +11,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:genet_church_portal/state/providers.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../state/lib/data/models/dashboard_base_model.dart';
+import '../../../../data/models/dashboard_base_model.dart';
 
 class AnalyticsCard extends HookConsumerWidget {
   const AnalyticsCard({super.key});

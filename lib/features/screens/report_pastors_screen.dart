@@ -10,7 +10,7 @@ import 'package:genet_church_portal/shared_widgets/modern_text_field.dart';
 import 'package:genet_church_portal/shared_widgets/styled_data_table.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:genet_church_portal/shared_widgets/custom_dropdown.dart';
-import '../../core/lib/shared_widgets/table_shimmer_loader.dart';
+import '../../shared_widgets/table_shimmer_loader.dart';
 import '../../shared_widgets/primary_button.dart';
 import '../../shared_widgets/table_action_button.dart';
 

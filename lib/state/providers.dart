@@ -11,7 +11,7 @@ import 'package:genet_church_portal/data/models/pastor_model.dart';
 import 'package:genet_church_portal/data/models/servant_model.dart';
 import 'package:genet_church_portal/data/repositories/api_repository.dart';
 
-import 'lib/data/models/dashboard_base_model.dart';
+import '../data/models/dashboard_base_model.dart';
 
 part 'providers.g.dart';
 

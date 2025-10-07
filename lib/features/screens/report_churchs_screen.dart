@@ -11,8 +11,8 @@ import 'package:genet_church_portal/shared_widgets/modern_text_field.dart';
 import 'package:genet_church_portal/shared_widgets/primary_button.dart';
 import 'package:genet_church_portal/shared_widgets/styled_data_table.dart';
 import 'package:iconsax/iconsax.dart';
-import '../../core/lib/core/constants.dart';
-import '../../core/lib/shared_widgets/table_shimmer_loader.dart';
+import '../../core/constants.dart';
+import '../../shared_widgets/table_shimmer_loader.dart';
 import '../../shared_widgets/table_action_button.dart';
 
 class ReportChurchsScreen extends HookConsumerWidget {

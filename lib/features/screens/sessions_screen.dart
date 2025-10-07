@@ -9,7 +9,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-import 'lib/data/models/session_model.dart';
+import '../../data/models/session_model.dart';
 
 class SessionsScreen extends HookConsumerWidget {
   const SessionsScreen({super.key});

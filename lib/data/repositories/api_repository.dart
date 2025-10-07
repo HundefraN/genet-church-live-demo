@@ -8,8 +8,8 @@ import 'package:genet_church_portal/data/models/pastor_model.dart';
 import 'package:genet_church_portal/data/models/servant_model.dart';
 import 'package:genet_church_portal/data/services/api_service.dart';
 
-import '../../features/screens/lib/features/screens/lib/data/models/lib/data/models/pastor_dashboard_model.dart';
-import '../../features/screens/lib/features/screens/lib/data/models/session_model.dart';
+import '../models/pastor_dashboard_model.dart';
+import '../models/session_model.dart';
 
 final apiRepositoryProvider = Provider<ApiRepository>((ref) {
   final dio = ref.watch(dioProvider);

@@ -18,7 +18,7 @@ import 'package:genet_church_portal/features/screens/show_members_screen.dart';
 import 'package:genet_church_portal/shared_widgets/main_layout.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/categories_screen.dart';
-import 'features/screens/lib/features/screens/sessions_screen.dart';
+import 'features/screens/sessions_screen.dart';
 
 final routerAuthRepositoryProvider = Provider((ref) => AuthRepository(
   ref.watch(dioProvider),
