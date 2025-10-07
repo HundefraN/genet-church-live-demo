@@ -1,4 +1,7 @@
-class SuperAdminDashboardStats {
+
+import '../../state/lib/data/models/dashboard_base_model.dart';
+
+class SuperAdminDashboardStats extends DashboardStatsBase {
   final int totalChurches;
   final int totalPastors;
   final int totalServants;

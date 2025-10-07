@@ -1,17 +1,17 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/core/theme/app_colors.dart';
-import 'package:genet_church_portal/features/dashboard/presentation/widgets/clock_painter.dart';
+import 'package:genet_church_portal/data/models/dashboard_model.dart';
+import 'package:genet_church_portal/data/models/pastor_dashboard_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:genet_church_portal/core/theme/app_colors.dart';
+import 'package:genet_church_portal/features/dashboard/presentation/widgets/clock_painter.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:genet_church_portal/state/providers.dart';
 import 'package:intl/intl.dart';
-import 'package:shimmer/shimmer.dart';
 
-import '../../../../data/models/dashboard_model.dart';
+import '../../../../state/lib/data/models/dashboard_base_model.dart';
 
 class AnalyticsCard extends HookConsumerWidget {
   const AnalyticsCard({super.key});
@@ -21,7 +21,12 @@ class AnalyticsCard extends HookConsumerWidget {
     final statsAsync = ref.watch(dashboardStatsProvider);
 
     return statsAsync.when(
-      data: (stats) => _AnalyticsCardContent(stats: stats),
+      data: (stats) {
+        if (stats == null) {
+          return const SizedBox.shrink(); // Or a placeholder for roles with no dashboard
+        }
+        return _AnalyticsCardContent(stats: stats);
+      },
       loading: () => const _AnalyticsCardShimmer(),
       error: (e, s) {
         final appColors = Theme.of(context).extension<AppColors>()!;
@@ -55,7 +60,7 @@ class AnalyticsCard extends HookConsumerWidget {
 }
 
 class _AnalyticsCardContent extends HookConsumerWidget {
-  final SuperAdminDashboardStats stats;
+  final DashboardStatsBase stats;
   const _AnalyticsCardContent({required this.stats});
 
   @override
@@ -84,12 +89,32 @@ class _AnalyticsCardContent extends HookConsumerWidget {
         );
       });
     }, [chartController]);
+
     useEffect(() {
       Future.delayed(const Duration(milliseconds: 500), () {
         if (context.mounted) chartController.forward();
       });
       return null;
     }, [chartController]);
+
+    // Role-specific data extraction
+    int churches = 0;
+    int pastors = 0;
+    int servants = 0;
+    int totalItemsForChart = 0;
+
+    if (stats is SuperAdminDashboardStats) {
+      final s = stats as SuperAdminDashboardStats;
+      churches = s.totalChurches;
+      pastors = s.totalPastors;
+      servants = s.totalServants;
+      totalItemsForChart = churches + pastors + servants;
+    } else if (stats is PastorDashboardStats) {
+      final p = stats as PastorDashboardStats;
+      servants = p.totalServants;
+      totalItemsForChart = servants + p.totalMembers;
+    }
+
     return Column(
       children: [
         Container(
@@ -261,7 +286,11 @@ class _AnalyticsCardContent extends HookConsumerWidget {
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(32),
           child: InkWell(
-            onTap: () => context.go('/advanced-reports'),
+            onTap: () {
+              if (stats is SuperAdminDashboardStats) {
+                context.go('/advanced-reports');
+              }
+            },
             borderRadius: BorderRadius.circular(32),
             splashColor: theme.colorScheme.primary.withOpacity(0.1),
             highlightColor: theme.colorScheme.primary.withOpacity(0.05),
@@ -297,31 +326,12 @@ class _AnalyticsCardContent extends HookConsumerWidget {
                     runSpacing: 20.0,
                     alignment: WrapAlignment.spaceBetween,
                     children: [
-                      _IconStat(
-                        icon: Iconsax.building,
-                        value: stats.totalChurches.toString(),
-                        label: 'Churches',
-                        color: theme.colorScheme.primary,
-                        pulseController: pulseController,
-                      ),
-                      _IconStat(
-                        icon: Iconsax.user_octagon,
-                        value: stats.totalPastors.toString(),
-                        label: 'Pastors',
-                        color: theme.colorScheme.secondary,
-                        pulseController: pulseController,
-                      ),
-                      _IconStat(
-                        icon: Iconsax.lifebuoy,
-                        value: stats.totalServants.toString(),
-                        label: 'Servants',
-                        color: const Color(0xFF0091FF),
-                        pulseController: pulseController,
-                      ),
-                      const _ComingSoonStat(
-                        icon: Iconsax.wallet_3,
-                        label: 'Donations',
-                      ),
+                      if (stats is SuperAdminDashboardStats) ...[
+                        _IconStat(icon: Iconsax.building, value: churches.toString(), label: 'Churches', color: theme.colorScheme.primary, pulseController: pulseController),
+                        _IconStat(icon: Iconsax.user_octagon, value: pastors.toString(), label: 'Pastors', color: theme.colorScheme.secondary, pulseController: pulseController),
+                      ],
+                      _IconStat(icon: Iconsax.lifebuoy, value: servants.toString(), label: 'Servants', color: const Color(0xFF0091FF), pulseController: pulseController),
+                      const _ComingSoonStat(icon: Iconsax.wallet_3, label: 'Donations'),
                     ],
                   ),
                   const SizedBox(height: 48),
@@ -428,13 +438,8 @@ class _AnalyticsCardContent extends HookConsumerWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children:
                             List.generate(12, (index) {
-                              final totalItems = stats.totalChurches +
-                                  stats.totalPastors +
-                                  stats.totalServants;
                               final baseHeight =
-                                  (math.sin(index * 0.5) + 1.5) *
-                                      (totalItems > 0 ? totalItems : 5) +
-                                      30.0;
+                                  (math.sin(index * 0.5) + 1.5) * (totalItemsForChart > 0 ? totalItemsForChart : 5) + 30.0;
                               final isOrange = index % 2 == 0;
                               final color = isOrange
                                   ? const Color(0xFFFEC53D)
@@ -480,18 +485,8 @@ class _AnalyticsCardContent extends HookConsumerWidget {
                           children: List.generate(12, (index) {
                             return Text(
                               [
-                                'J',
-                                'F',
-                                'M',
-                                'A',
-                                'M',
-                                'J',
-                                'J',
-                                'A',
-                                'S',
-                                'O',
-                                'N',
-                                'D'
+                                'J', 'F', 'M', 'A', 'M', 'J',
+                                'J', 'A', 'S', 'O', 'N', 'D'
                               ][index],
                               style: TextStyle(
                                 fontSize: 11,

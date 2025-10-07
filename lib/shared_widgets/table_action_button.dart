@@ -5,6 +5,7 @@ class TableActionButton extends StatefulWidget {
   final Color color;
   final VoidCallback onPressed;
   final IconData? icon;
+  final bool isLoading;
 
   const TableActionButton({
     super.key,
@@ -12,6 +13,7 @@ class TableActionButton extends StatefulWidget {
     required this.color,
     required this.onPressed,
     this.icon,
+    this.isLoading = false,
   });
 
   @override
@@ -63,10 +65,12 @@ class _TableActionButtonState extends State<TableActionButton>
   Widget build(BuildContext context) {
     return MouseRegion(
       onEnter: (_) {
+        if (widget.isLoading) return;
         setState(() => _isHovered = true);
         _pulseController.repeat(reverse: true);
       },
       onExit: (_) {
+        if (widget.isLoading) return;
         setState(() => _isHovered = false);
         _pulseController.stop();
         _pulseController.reset();
@@ -85,9 +89,10 @@ class _TableActionButtonState extends State<TableActionButton>
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   height: 36,
+                  constraints: const BoxConstraints(minWidth: 80),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: _isHovered
+                      colors: _isHovered && !widget.isLoading
                           ? [
                         widget.color,
                         widget.color.withOpacity(0.7),
@@ -99,14 +104,14 @@ class _TableActionButtonState extends State<TableActionButton>
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      stops: _isHovered ? [0.0, 0.5, 1.0] : [0.0, 1.0],
+                      stops: _isHovered && !widget.isLoading ? [0.0, 0.5, 1.0] : [0.0, 1.0],
                     ),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: widget.color.withOpacity(0.3),
                       width: 1,
                     ),
-                    boxShadow: _isHovered
+                    boxShadow: _isHovered && !widget.isLoading
                         ? [
                       BoxShadow(
                         color: widget.color.withOpacity(0.4),
@@ -134,37 +139,48 @@ class _TableActionButtonState extends State<TableActionButton>
                     color: Colors.transparent,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),
-                      onTap: widget.onPressed,
+                      onTap: widget.isLoading ? null : widget.onPressed,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (widget.icon != null) ...[
-                              Container(
-                                padding: const EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Icon(
-                                  widget.icon,
-                                  size: 14,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                            ],
-                            Text(
-                              widget.label,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                                letterSpacing: 0.8,
-                              ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Center(
+                          child: widget.isLoading
+                              ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.0,
+                              color: Colors.white,
                             ),
-                          ],
+                          )
+                              : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (widget.icon != null) ...[
+                                Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Icon(
+                                    widget.icon,
+                                    size: 14,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                              ],
+                              Text(
+                                widget.label,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -178,5 +194,3 @@ class _TableActionButtonState extends State<TableActionButton>
     );
   }
 }
-
-//modified

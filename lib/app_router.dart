@@ -6,9 +6,7 @@ import 'package:genet_church_portal/data/repositories/auth_repository.dart';
 import 'package:genet_church_portal/data/services/api_service.dart';
 import 'package:genet_church_portal/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:genet_church_portal/features/screens/activity_log_screen.dart';
-import 'package:genet_church_portal/features/screens/add_church_screen.dart';
 import 'package:genet_church_portal/features/screens/add_members_screen.dart';
-import 'package:genet_church_portal/features/screens/add_pastors_screen.dart';
 import 'package:genet_church_portal/features/screens/advanced_reports_screen.dart';
 import 'package:genet_church_portal/features/screens/permissions_screen.dart';
 import 'package:genet_church_portal/features/screens/profile_screen.dart';
@@ -20,6 +18,7 @@ import 'package:genet_church_portal/features/screens/show_members_screen.dart';
 import 'package:genet_church_portal/shared_widgets/main_layout.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/categories_screen.dart';
+import 'features/screens/lib/features/screens/sessions_screen.dart';
 
 final routerAuthRepositoryProvider = Provider((ref) => AuthRepository(
   ref.watch(dioProvider),
@@ -28,10 +27,9 @@ final routerAuthRepositoryProvider = Provider((ref) => AuthRepository(
 
 final Map<String, List<String>> _routeBreadcrumbs = {
   '/dashboard': ['App', 'Dashboard'],
-  '/add-church': ['App', 'Church', 'Add Church'],
-  '/add-pastors': ['App', 'Pastors', 'Add Pastor'],
   '/permissions': ['App', 'Settings', 'Permissions'],
   '/profile': ['App', 'User', 'Profile'],
+  '/sessions': ['App', 'User', 'Security'],
   '/report-churchs': ['App', 'Church', 'Reports'],
   '/report-pastors': ['App', 'Pastors', 'Reports'],
   '/report-departments': ['App', 'Departments', 'Reports'],
@@ -85,20 +83,16 @@ class AppRouter {
               builder: (context, state) => const DashboardScreen(),
             ),
             GoRoute(
-              path: '/add-church',
-              builder: (context, state) => const AddChurchScreen(),
-            ),
-            GoRoute(
-              path: '/add-pastors',
-              builder: (context, state) => const AddPastorsScreen(),
-            ),
-            GoRoute(
               path: '/permissions',
               builder: (context, state) => const PermissionsScreen(),
             ),
             GoRoute(
               path: '/profile',
               builder: (context, state) => const ProfileScreen(),
+            ),
+            GoRoute(
+              path: '/sessions',
+              builder: (context, state) => const SessionsScreen(),
             ),
             GoRoute(
               path: '/report-churchs',

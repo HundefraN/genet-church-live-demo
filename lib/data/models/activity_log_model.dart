@@ -3,14 +3,14 @@ import 'package:iconsax/iconsax.dart';
 
 enum ActivityType { pastor, church, member, department, servant }
 
-class ActivityLog {
+class ActivityLogItem {
   final String title;
   final String subtitle;
   final DateTime timestamp;
   final ActivityType type;
   final String path;
 
-  ActivityLog({
+  ActivityLogItem({
     required this.title,
     required this.subtitle,
     required this.timestamp,

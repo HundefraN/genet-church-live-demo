@@ -2,68 +2,30 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
+import 'package:genet_church_portal/data/models/dashboard_model.dart';
+import 'package:genet_church_portal/data/models/pastor_dashboard_model.dart';
 import 'package:genet_church_portal/state/providers.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ChurchesStatCard extends ConsumerWidget {
   const ChurchesStatCard({super.key});
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(dashboardStatsProvider);
     return statsAsync.when(
-      data: (stats) => _StatCard(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF667eea),
-            Color(0xFF764ba2),
-          ],
-        ),
-        onTap: () => context.go('/report-churchs'),
-        value: stats.totalChurches.toString(),
-        label: 'Total Churches',
-        icon: Icons.church_outlined,
-        chart: SizedBox(
-          width: 80,
-          height: 80,
-          child: PieChart(
-            PieChartData(
-              sectionsSpace: 3,
-              centerSpaceRadius: 28,
-              startDegreeOffset: -90,
-              sections: [
-                PieChartSectionData(
-                  color: Colors.white.withOpacity(0.9),
-                  value: 35,
-                  showTitle: false,
-                  radius: 12,
-                ),
-                PieChartSectionData(
-                  color: Colors.white.withOpacity(0.7),
-                  value: 25,
-                  showTitle: false,
-                  radius: 12,
-                ),
-                PieChartSectionData(
-                  color: Colors.white.withOpacity(0.5),
-                  value: 20,
-                  showTitle: false,
-                  radius: 12,
-                ),
-                PieChartSectionData(
-                  color: Colors.white.withOpacity(0.3),
-                  value: 20,
-                  showTitle: false,
-                  radius: 12,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      data: (stats) {
+        if (stats is! SuperAdminDashboardStats) return const SizedBox.shrink();
+        return _StatCard(
+          gradient: const LinearGradient(colors: [Color(0xFF667eea), Color(0xFF764ba2)]),
+          onTap: () => context.go('/report-churchs'),
+          value: stats.totalChurches.toString(),
+          label: 'Total Churches',
+          icon: Iconsax.building,
+          chart: _buildPieChart(),
+        );
+      },
       loading: () => const _StatCardLoading(),
       error: (e, s) => _StatCardError(label: 'Churches'),
     );
@@ -72,65 +34,21 @@ class ChurchesStatCard extends ConsumerWidget {
 
 class PastorsStatCard extends ConsumerWidget {
   const PastorsStatCard({super.key});
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(dashboardStatsProvider);
     return statsAsync.when(
-      data: (stats) => _StatCard(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF11998e),
-            Color(0xFF38ef7d),
-          ],
-        ),
-        onTap: () => context.go('/report-pastors'),
-        value: stats.totalPastors.toString(),
-        label: 'Total Pastors',
-        icon: Icons.person_outline,
-        chart: SizedBox(
-          width: 90,
-          height: 50,
-          child: BarChart(
-            BarChartData(
-              alignment: BarChartAlignment.spaceAround,
-              maxY:
-              (stats.totalPastors * 1.5).clamp(10, double.infinity).toDouble(),
-              titlesData: const FlTitlesData(show: false),
-              borderData: FlBorderData(show: false),
-              gridData: const FlGridData(show: false),
-              barGroups: [
-                BarChartGroupData(x: 0, barRods: [
-                  BarChartRodData(
-                    toY: (stats.totalPastors * 0.8).toDouble(),
-                    color: Colors.white.withOpacity(0.9),
-                    width: 10,
-                    borderRadius: const BorderRadius.all(Radius.circular(6)),
-                  )
-                ]),
-                BarChartGroupData(x: 1, barRods: [
-                  BarChartRodData(
-                    toY: (stats.totalPastors * 0.6).toDouble(),
-                    color: Colors.white.withOpacity(0.7),
-                    width: 10,
-                    borderRadius: const BorderRadius.all(Radius.circular(6)),
-                  )
-                ]),
-                BarChartGroupData(x: 2, barRods: [
-                  BarChartRodData(
-                    toY: (stats.totalPastors * 0.9).toDouble(),
-                    color: Colors.white.withOpacity(0.8),
-                    width: 10,
-                    borderRadius: const BorderRadius.all(Radius.circular(6)),
-                  )
-                ]),
-              ],
-            ),
-          ),
-        ),
-      ),
+      data: (stats) {
+        if (stats is! SuperAdminDashboardStats) return const SizedBox.shrink();
+        return _StatCard(
+          gradient: const LinearGradient(colors: [Color(0xFF11998e), Color(0xFF38ef7d)]),
+          onTap: () => context.go('/report-pastors'),
+          value: stats.totalPastors.toString(),
+          label: 'Total Pastors',
+          icon: Iconsax.user_octagon,
+          chart: _buildBarChart(stats.totalPastors.toDouble()),
+        );
+      },
       loading: () => const _StatCardLoading(),
       error: (e, s) => _StatCardError(label: 'Pastors'),
     );
@@ -139,78 +57,145 @@ class PastorsStatCard extends ConsumerWidget {
 
 class MembersStatCard extends ConsumerWidget {
   const MembersStatCard({super.key});
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(dashboardStatsProvider);
     return statsAsync.when(
-      data: (stats) => _StatCard(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFf093fb),
-            Color(0xFFf5576c),
-          ],
-        ),
-        onTap: () => context.go('/show-members'),
-        value: stats.totalMembers.toString(),
-        label: 'Active Members',
-        icon: Icons.groups_outlined,
-        chart: SizedBox(
-          width: 100,
-          height: 60,
-          child: LineChart(
-            LineChartData(
-              gridData: const FlGridData(show: false),
-              titlesData: const FlTitlesData(show: false),
-              borderData: FlBorderData(show: false),
-              lineBarsData: [
-                LineChartBarData(
-                  spots: const [
-                    FlSpot(0, 3),
-                    FlSpot(1, 1.5),
-                    FlSpot(2.5, 4),
-                    FlSpot(4, 2.8),
-                    FlSpot(5, 3.5),
-                  ],
-                  isCurved: true,
-                  curveSmoothness: 0.4,
-                  color: Colors.white,
-                  barWidth: 4,
-                  isStrokeCapRound: true,
-                  dotData: FlDotData(
-                    show: true,
-                    getDotPainter: (spot, percent, barData, index) {
-                      return FlDotCirclePainter(
-                        radius: 3,
-                        color: Colors.white,
-                        strokeWidth: 2,
-                        strokeColor: Colors.white.withOpacity(0.5),
-                      );
-                    },
-                  ),
-                  belowBarData: BarAreaData(
-                    show: true,
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.white.withOpacity(0.3),
-                        Colors.white.withOpacity(0.1),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      data: (stats) {
+        String value = '0';
+        String label = 'Members';
+
+        if (stats is SuperAdminDashboardStats) {
+          value = stats.totalMembers.toString();
+          label = 'Total Members';
+        } else if (stats is PastorDashboardStats) {
+          value = stats.totalMembers.toString();
+          label = 'Your Members';
+        }
+
+        return _StatCard(
+          gradient: const LinearGradient(colors: [Color(0xFFf093fb), Color(0xFFf5576c)]),
+          onTap: () => context.go('/show-members'),
+          value: value,
+          label: label,
+          icon: Iconsax.people,
+          chart: _buildLineChart(),
+        );
+      },
       loading: () => const _StatCardLoading(),
       error: (e, s) => _StatCardError(label: 'Members'),
     );
   }
+}
+
+class ServantsStatCard extends ConsumerWidget {
+  const ServantsStatCard({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(dashboardStatsProvider);
+    return statsAsync.when(
+      data: (stats) {
+        String value = '0';
+        String label = 'Servants';
+
+        if (stats is SuperAdminDashboardStats) {
+          value = stats.totalServants.toString();
+          label = 'Total Servants';
+        } else if (stats is PastorDashboardStats) {
+          value = stats.totalServants.toString();
+          label = 'Your Servants';
+        }
+
+        return _StatCard(
+          gradient: const LinearGradient(colors: [Color(0xFFf5a623), Color(0xFFf76b1c)]),
+          onTap: () => context.go('/report-servants'),
+          value: value,
+          label: label,
+          icon: Iconsax.lifebuoy,
+          chart: _buildBarChart(double.tryParse(value) ?? 0),
+        );
+      },
+      loading: () => const _StatCardLoading(),
+      error: (e, s) => _StatCardError(label: 'Servants'),
+    );
+  }
+}
+
+Widget _buildPieChart() {
+  return SizedBox(
+    width: 80,
+    height: 80,
+    child: PieChart(
+      PieChartData(
+        sectionsSpace: 3,
+        centerSpaceRadius: 28,
+        startDegreeOffset: -90,
+        sections: [
+          PieChartSectionData(color: Colors.white.withOpacity(0.9), value: 35, showTitle: false, radius: 12),
+          PieChartSectionData(color: Colors.white.withOpacity(0.7), value: 25, showTitle: false, radius: 12),
+          PieChartSectionData(color: Colors.white.withOpacity(0.5), value: 20, showTitle: false, radius: 12),
+          PieChartSectionData(color: Colors.white.withOpacity(0.3), value: 20, showTitle: false, radius: 12),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildBarChart(double total) {
+  return SizedBox(
+    width: 90,
+    height: 50,
+    child: BarChart(
+      BarChartData(
+        alignment: BarChartAlignment.spaceAround,
+        maxY: (total * 1.5).clamp(10, double.infinity),
+        titlesData: const FlTitlesData(show: false),
+        borderData: FlBorderData(show: false),
+        gridData: const FlGridData(show: false),
+        barGroups: [
+          BarChartGroupData(x: 0, barRods: [BarChartRodData(toY: total * 0.8, color: Colors.white.withOpacity(0.9), width: 10, borderRadius: const BorderRadius.all(Radius.circular(6)))]),
+          BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: total * 0.6, color: Colors.white.withOpacity(0.7), width: 10, borderRadius: const BorderRadius.all(Radius.circular(6)))]),
+          BarChartGroupData(x: 2, barRods: [BarChartRodData(toY: total * 0.9, color: Colors.white.withOpacity(0.8), width: 10, borderRadius: const BorderRadius.all(Radius.circular(6)))]),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildLineChart() {
+  return SizedBox(
+    width: 100,
+    height: 60,
+    child: LineChart(
+      LineChartData(
+        gridData: const FlGridData(show: false),
+        titlesData: const FlTitlesData(show: false),
+        borderData: FlBorderData(show: false),
+        lineBarsData: [
+          LineChartBarData(
+            spots: const [FlSpot(0, 3), FlSpot(1, 1.5), FlSpot(2.5, 4), FlSpot(4, 2.8), FlSpot(5, 3.5)],
+            isCurved: true,
+            curveSmoothness: 0.4,
+            color: Colors.white,
+            barWidth: 4,
+            isStrokeCapRound: true,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(radius: 3, color: Colors.white, strokeWidth: 2, strokeColor: Colors.white.withOpacity(0.5)),
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.white.withOpacity(0.3), Colors.white.withOpacity(0.1)],
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _StatCard extends StatefulWidget {

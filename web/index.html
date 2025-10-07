@@ -42,30 +42,58 @@
     <div></div><div></div><div></div><div></div><div></div>
   </div>
 </div>
-<script src="flutter.js" defer></script>
+
 <script>
-  window.addEventListener('load', function(ev) {
-    var loadingText = document.getElementById("loading-text");
-    _flutter.loader.loadEntrypoint({
-      onProgress: function(event) {
-        if (event.total) {
-          var percent = Math.round(event.loaded / event.total * 100);
-          loadingText.innerText = "Downloading (" + percent + "%)...";
-        } else {
-          loadingText.innerText = "Downloading...";
-        }
-      },
-      onEntrypointLoaded: function(engineInitializer) {
-        loadingText.innerText = "Initializing Engine...";
-        engineInitializer.initializeEngine({
-          renderer: "html" // Use the reliable HTML renderer
-        }).then(function(appRunner) {
-          loadingText.innerText = "Running App...";
-          appRunner.runApp();
-        });
+  var serviceWorkerVersion = null;
+  var scriptLoaded = false;
+  function loadMainDartJs() {
+      if (scriptLoaded) {
+          return;
       }
-    });
-  });
+      scriptLoaded = true;
+      var script = document.createElement('script');
+      script.src = 'main.dart.js';
+      script.type = 'application/javascript';
+      document.body.appendChild(script);
+  }
+
+  if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+          navigator.serviceWorker.register('flutter_service_worker.js?v=' + serviceWorkerVersion)
+              .then((reg) => {
+                  function waitForActivation(serviceWorker) {
+                      serviceWorker.addEventListener('statechange', () => {
+                          if (serviceWorker.state == 'activated') {
+                              console.log('Installed new service worker.');
+                              loadMainDartJs();
+                          }
+                      });
+                  }
+                  if (!reg.active && (reg.installing || reg.waiting)) {
+                      waitForActivation(reg.installing || reg.waiting);
+                  } else if (!reg.active.scriptURL.endsWith(serviceWorkerVersion)) {
+                      console.log('New service worker available.');
+                      reg.update();
+                      waitForActivation(reg.installing);
+                  } else {
+                      console.log('Service worker active.');
+                      loadMainDartJs();
+                  }
+              });
+
+          setTimeout(function() {
+              if (!scriptLoaded) {
+                  console.warn(
+                      'Failed to load app from service worker. Falling back to plain <script> tag.',
+                  );
+                  loadMainDartJs();
+              }
+          }, 500);
+      });
+  } else {
+      loadMainDartJs();
+  }
 </script>
+<script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

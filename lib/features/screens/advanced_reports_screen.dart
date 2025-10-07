@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
+import 'package:genet_church_portal/data/models/dashboard_model.dart';
+import 'package:genet_church_portal/data/models/pastor_dashboard_model.dart';
 import 'package:genet_church_portal/shared_widgets/export_report_dialog.dart';
 import 'package:genet_church_portal/state/providers.dart';
 import 'package:genet_church_portal/shared_widgets/primary_button.dart';
 import 'package:iconsax/iconsax.dart';
-import 'dart:ui' as ui;
 import 'dart:math';
 
 class AdvancedReportsScreen extends ConsumerWidget {
@@ -21,103 +22,114 @@ class AdvancedReportsScreen extends ConsumerWidget {
     final isSmallScreen = screenWidth < 650;
 
     return statsAsync.when(
-      data: (stats) => Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              theme.colorScheme.background,
-              theme.colorScheme.background.withOpacity(0.8),
-            ],
-          ),
-        ),
-        child: ListView(
-          shrinkWrap: true,
-          physics: const ClampingScrollPhysics(),
-          padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
-          children: [
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Text(
-                  'Analytics Dashboard',
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                    fontSize: isSmallScreen ? 24 : 32,
-                  ),
-                ),
-                PrimaryButton(
-                  text: 'Export Report',
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => const ExportReportDialog(),
-                    );
-                  },
-                  icon: Iconsax.document_download,
-                ),
+      data: (stats) {
+        int totalMembers = 0;
+        int totalChurches = 0;
+        int totalPastors = 0;
+        int totalServants = 0;
+        Map<String, int> membersByGender = {};
+        Map<String, int> membersByStatus = {};
+
+        if (stats is SuperAdminDashboardStats) {
+          totalMembers = stats.totalMembers;
+          totalChurches = stats.totalChurches;
+          totalPastors = stats.totalPastors;
+          totalServants = stats.totalServants;
+          membersByGender = stats.membersByGender;
+          membersByStatus = stats.membersByStatus;
+        } else if (stats is PastorDashboardStats) {
+          totalMembers = stats.totalMembers;
+          totalServants = stats.totalServants;
+          membersByGender = stats.membersByGender;
+          membersByStatus = stats.membersByStatus;
+        }
+
+        return Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                theme.colorScheme.background,
+                theme.colorScheme.background.withOpacity(0.8),
               ],
             ),
-            const SizedBox(height: 24),
-            LayoutBuilder(builder: (context, constraints) {
-              int crossAxisCount = constraints.maxWidth < 650
-                  ? 2
-                  : (constraints.maxWidth < 1200 ? 4 : 4);
-              double childAspectRatio = constraints.maxWidth < 650 ? 1.0 : 1.25;
+          ),
+          child: ListView(
+            shrinkWrap: true,
+            physics: const ClampingScrollPhysics(),
+            padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
+            children: [
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    'Analytics Dashboard',
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                      fontSize: isSmallScreen ? 24 : 32,
+                    ),
+                  ),
+                  PrimaryButton(
+                    text: 'Export Report',
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => const ExportReportDialog(),
+                      );
+                    },
+                    icon: Iconsax.document_download,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              LayoutBuilder(builder: (context, constraints) {
+                final statCards = [
+                  if (stats is SuperAdminDashboardStats) ...[
+                    _ReportStatCard(icon: Iconsax.people, value: totalMembers.toString(), label: 'Total Members', color: theme.colorScheme.primary),
+                    _ReportStatCard(icon: Iconsax.building, value: totalChurches.toString(), label: 'Total Churches', color: theme.colorScheme.secondary),
+                    _ReportStatCard(icon: Iconsax.user_octagon, value: totalPastors.toString(), label: 'Total Pastors', color: const Color(0xFFF5A623)),
+                    _ReportStatCard(icon: Iconsax.lifebuoy, value: totalServants.toString(), label: 'Total Servants', color: theme.colorScheme.error),
+                  ],
+                  if (stats is PastorDashboardStats) ...[
+                    _ReportStatCard(icon: Iconsax.people, value: totalMembers.toString(), label: 'Total Members', color: theme.colorScheme.primary),
+                    _ReportStatCard(icon: Iconsax.lifebuoy, value: totalServants.toString(), label: 'Total Servants', color: theme.colorScheme.error),
+                  ]
+                ];
 
-              final statCards = [
-                _ReportStatCard(
-                  icon: Iconsax.people,
-                  value: stats.totalMembers.toString(),
-                  label: 'Total Members',
-                  color: theme.colorScheme.primary,
-                ),
-                _ReportStatCard(
-                  icon: Iconsax.building,
-                  value: stats.totalChurches.toString(),
-                  label: 'Total Churches',
-                  color: theme.colorScheme.secondary,
-                ),
-                _ReportStatCard(
-                  icon: Iconsax.user_octagon,
-                  value: stats.totalPastors.toString(),
-                  label: 'Total Pastors',
-                  color: const Color(0xFFF5A623),
-                ),
-                _ReportStatCard(
-                  icon: Iconsax.lifebuoy,
-                  value: stats.totalServants.toString(),
-                  label: 'Total Servants',
-                  color: theme.colorScheme.error,
-                ),
-              ];
+                int crossAxisCount = statCards.length <= 2 ? 2 : (constraints.maxWidth < 1200 ? 4 : 4);
+                if (constraints.maxWidth < 650) {
+                  crossAxisCount = 2;
+                }
 
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: isSmallScreen ? 16 : 24,
-                  mainAxisSpacing: isSmallScreen ? 16 : 24,
-                  childAspectRatio: childAspectRatio,
-                ),
-                itemCount: statCards.length,
-                itemBuilder: (context, index) => statCards[index],
-              );
-            }),
-            const SizedBox(height: 24),
-            _ResponsiveChartLayout(
-              genderData: stats.membersByGender,
-              statusData: stats.membersByStatus,
-            ),
-          ],
-        ).animate().fadeIn(duration: 600.ms, curve: Curves.easeOutQuint),
-      ),
+                double childAspectRatio = constraints.maxWidth < 650 ? 1.0 : 1.25;
+
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: isSmallScreen ? 16 : 24,
+                    mainAxisSpacing: isSmallScreen ? 16 : 24,
+                    childAspectRatio: childAspectRatio,
+                  ),
+                  itemCount: statCards.length,
+                  itemBuilder: (context, index) => statCards[index],
+                );
+              }),
+              const SizedBox(height: 24),
+              _ResponsiveChartLayout(
+                genderData: membersByGender,
+                statusData: membersByStatus,
+              ),
+            ],
+          ).animate().fadeIn(duration: 600.ms, curve: Curves.easeOutQuint),
+        );
+      },
       loading: () => Center(
         child: SizedBox(
           width: 60,
@@ -432,7 +444,7 @@ class GenderDistributionCard extends StatelessWidget {
               child: BarChart(
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
-                  maxY: maxCount,
+                  maxY: maxCount > 0 ? maxCount : 1,
                   gridData: const FlGridData(show: false),
                   borderData: FlBorderData(show: false),
                   barGroups: [
@@ -449,7 +461,7 @@ class GenderDistributionCard extends StatelessWidget {
                           ),
                           backDrawRodData: BackgroundBarChartRodData(
                             show: true,
-                            toY: maxCount,
+                            toY: maxCount > 0 ? maxCount : 1,
                             color: theme.colorScheme.primary.withOpacity(0.1),
                           ),
                         ),
@@ -468,7 +480,7 @@ class GenderDistributionCard extends StatelessWidget {
                           ),
                           backDrawRodData: BackgroundBarChartRodData(
                             show: true,
-                            toY: maxCount,
+                            toY: maxCount > 0 ? maxCount : 1,
                             color: theme.colorScheme.secondary.withOpacity(0.1),
                           ),
                         ),
@@ -487,33 +499,13 @@ class GenderDistributionCard extends StatelessWidget {
                         showTitles: true,
                         reservedSize: 110,
                         getTitlesWidget: (value, meta) {
-                          final style = TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: isSmall ? 12 : 14,
-                            color: appColors.textPrimary,
-                          );
-
                           Widget content;
                           switch (value.toInt()) {
                             case 0:
-                              content = _GenderIndicator(
-                                isSmall: isSmall,
-                                theme: theme,
-                                icon: Iconsax.man,
-                                label: 'Male',
-                                percentage: malePercentage,
-                                color: theme.colorScheme.primary,
-                              );
+                              content = _GenderIndicator(isSmall: isSmall, icon: Iconsax.man, label: 'Male', percentage: malePercentage, color: theme.colorScheme.primary);
                               break;
                             case 1:
-                              content = _GenderIndicator(
-                                isSmall: isSmall,
-                                theme: theme,
-                                icon: Iconsax.woman,
-                                label: 'Female',
-                                percentage: femalePercentage,
-                                color: theme.colorScheme.secondary,
-                              );
+                              content = _GenderIndicator(isSmall: isSmall, icon: Iconsax.woman, label: 'Female', percentage: femalePercentage, color: theme.colorScheme.secondary);
                               break;
                             default:
                               content = const SizedBox();
@@ -532,7 +524,6 @@ class GenderDistributionCard extends StatelessWidget {
                     touchTooltipData: BarTouchTooltipData(
                       tooltipPadding: const EdgeInsets.all(12),
                       tooltipMargin: 8,
-                      tooltipBorderRadius: BorderRadius.circular(12),
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         return BarTooltipItem(
                           '${group.x == 0 ? 'Male' : 'Female'}: ${rod.toY.toInt()}',
@@ -562,7 +553,6 @@ class GenderDistributionCard extends StatelessWidget {
 class _GenderIndicator extends StatelessWidget {
   const _GenderIndicator({
     required this.isSmall,
-    required this.theme,
     required this.icon,
     required this.label,
     required this.percentage,
@@ -570,7 +560,6 @@ class _GenderIndicator extends StatelessWidget {
   });
 
   final bool isSmall;
-  final ThemeData theme;
   final IconData icon;
   final String label;
   final int percentage;
@@ -733,8 +722,6 @@ class MemberStatusCard extends StatelessWidget {
                         centerSpaceRadius: centerSpaceRadius,
                         sections: List.generate(statusEntries.length, (i) {
                           final entry = statusEntries[i];
-                          final percentage =
-                          (entry.value / totalMembers * 100).round();
                           return PieChartSectionData(
                             color: colors[i % colors.length],
                             value: entry.value.toDouble(),

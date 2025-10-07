@@ -246,7 +246,7 @@ class _ActivityShimmer extends StatelessWidget {
 }
 
 class _ActivityItem extends StatefulWidget {
-  final ActivityLog activity;
+  final ActivityLogItem activity;
   final bool isLast;
   final int index;
 

@@ -1,20 +1,30 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
+import 'package:genet_church_portal/data/repositories/auth_repository.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 
 enum UserRole {
-  superAdmin,
-  pastor,
-  servant,
-  servantSupporter,
+  SUPER_ADMIN,
+  PASTOR,
+  SERVANT,
 }
 
-final userRoleProvider = StateProvider<UserRole>((ref) => UserRole.superAdmin);
+UserRole mapRoleFromString(String roleString) {
+  switch (roleString.toUpperCase()) {
+    case 'SUPER_ADMIN':
+      return UserRole.SUPER_ADMIN;
+    case 'PASTOR':
+      return UserRole.PASTOR;
+    case 'SERVANT':
+      return UserRole.SERVANT;
+    default:
+      return UserRole.SERVANT;
+  }
+}
 
 class SideMenu extends ConsumerWidget {
   final bool isCollapsed;
@@ -24,7 +34,8 @@ class SideMenu extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
-    final currentRole = ref.watch(userRoleProvider);
+    final user = ref.watch(authStateProvider);
+    final currentRole = user != null ? mapRoleFromString(user.role) : UserRole.SERVANT;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
@@ -87,7 +98,6 @@ class SideMenu extends ConsumerWidget {
                   ],
                 ),
               ),
-              _RoleSwitcher(isCollapsed: isCollapsed),
               const SizedBox(height: 24),
             ],
           ),
@@ -124,7 +134,7 @@ class SideMenu extends ConsumerWidget {
       isCollapsed: collapsed,
     )));
 
-    if (role == UserRole.superAdmin) {
+    if (role == UserRole.SUPER_ADMIN) {
       menuItems.add(addSection(_ExpansionMenuItem(
         title: 'Church Admin',
         icon: Iconsax.building_4,
@@ -138,9 +148,9 @@ class SideMenu extends ConsumerWidget {
       )));
     }
 
-    if (role == UserRole.superAdmin ||
-        role == UserRole.pastor ||
-        role == UserRole.servant) {
+    if (role == UserRole.SUPER_ADMIN ||
+        role == UserRole.PASTOR ||
+        role == UserRole.SERVANT) {
       menuItems.add(addSection(_ExpansionMenuItem(
         title: 'Members',
         icon: Iconsax.people,
@@ -152,17 +162,7 @@ class SideMenu extends ConsumerWidget {
       )));
     }
 
-    if (role == UserRole.servantSupporter) {
-      menuItems.add(addSection(_MenuItem(
-        title: 'Show Members',
-        icon: Iconsax.people,
-        isSelected: currentRoute.startsWith('/show-members'),
-        onTap: () => context.go('/show-members'),
-        isCollapsed: collapsed,
-      )));
-    }
-
-    if (role == UserRole.superAdmin) {
+    if (role == UserRole.SUPER_ADMIN) {
       menuItems.add(addSection(_MenuItem(
         title: 'Analytics',
         icon: Iconsax.chart_21,
@@ -172,7 +172,7 @@ class SideMenu extends ConsumerWidget {
       )));
     }
 
-    if (role == UserRole.pastor) {
+    if (role == UserRole.PASTOR) {
       menuItems.add(addSection(_MenuItem(
         title: 'Categories',
         icon: Iconsax.folder_2,
@@ -182,7 +182,7 @@ class SideMenu extends ConsumerWidget {
       )));
     }
 
-    if (role == UserRole.superAdmin) {
+    if (role == UserRole.SUPER_ADMIN) {
       menuItems.add(addSection(_MenuItem(
         title: 'Permissions',
         icon: Iconsax.shield_tick,
@@ -895,231 +895,5 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
         ),
       ),
     );
-  }
-}
-
-class _RoleSwitcher extends ConsumerStatefulWidget {
-  final bool isCollapsed;
-  const _RoleSwitcher({required this.isCollapsed});
-
-  @override
-  ConsumerState<_RoleSwitcher> createState() => _RoleSwitcherState();
-}
-
-class _RoleSwitcherState extends ConsumerState<_RoleSwitcher>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.05,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.isCollapsed) return const SizedBox.shrink();
-
-    final theme = Theme.of(context);
-    final appColors = theme.extension<AppColors>()!;
-    final currentRole = ref.watch(userRoleProvider);
-
-    return MouseRegion(
-      onEnter: (_) => _animationController.forward(),
-      onExit: (_) => _animationController.reverse(),
-      child: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    appColors.scaffold,
-                    appColors.scaffold.withOpacity(0.8),
-                    appColors.surface,
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: appColors.border.withOpacity(0.6),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: appColors.shadow.withOpacity(0.08),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
-                    spreadRadius: 0,
-                  ),
-                  BoxShadow(
-                    color: theme.primaryColor.withOpacity(0.03),
-                    blurRadius: 32,
-                    offset: const Offset(0, 16),
-                    spreadRadius: 0,
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: theme.primaryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          Iconsax.user_tag,
-                          size: 16,
-                          color: theme.primaryColor,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        "CURRENT ROLE",
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.primaryColor,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.2,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: appColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: theme.primaryColor.withOpacity(0.2),
-                        width: 1,
-                      ),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<UserRole>(
-                        value: currentRole,
-                        isExpanded: true,
-                        icon: Icon(
-                          Iconsax.arrow_down_1,
-                          color: theme.primaryColor,
-                          size: 18,
-                        ),
-                        style: TextStyle(
-                          color: appColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        dropdownColor: appColors.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        items: UserRole.values.map((UserRole role) {
-                          final roleName = role
-                              .toString()
-                              .split('.')
-                              .last
-                              .replaceAllMapped(
-                            RegExp(r'[A-Z]'),
-                                (match) => ' ${match.group(0)}',
-                          )
-                              .trim();
-
-                          return DropdownMenuItem<UserRole>(
-                            value: role,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color:
-                                      theme.primaryColor.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Icon(
-                                      _getRoleIcon(role),
-                                      size: 16,
-                                      color: theme.primaryColor,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    roleName,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      color: appColors.textPrimary,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (UserRole? newRole) {
-                          if (newRole != null) {
-                            ref.read(userRoleProvider.notifier).state =
-                                newRole;
-                            const initialRoute = '/dashboard';
-                            if (GoRouter.of(context)
-                                .routerDelegate
-                                .currentConfiguration
-                                .uri
-                                .toString() !=
-                                initialRoute) {
-                              Future.microtask(() => context.go(initialRoute));
-                            }
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  IconData _getRoleIcon(UserRole role) {
-    switch (role) {
-      case UserRole.superAdmin:
-        return Iconsax.crown_1;
-      case UserRole.pastor:
-        return Iconsax.book_1;
-      case UserRole.servant:
-        return Iconsax.user_octagon;
-      case UserRole.servantSupporter:
-        return Iconsax.user;
-    }
   }
 }

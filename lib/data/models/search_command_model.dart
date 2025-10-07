@@ -14,10 +14,9 @@ class SearchCommand {
     required this.icon,
     required this.category,
     this.roles = const [
-      UserRole.superAdmin,
-      UserRole.pastor,
-      UserRole.servant,
-      UserRole.servantSupporter,
+      UserRole.SUPER_ADMIN,
+      UserRole.PASTOR,
+      UserRole.SERVANT,
     ],
   });
 }

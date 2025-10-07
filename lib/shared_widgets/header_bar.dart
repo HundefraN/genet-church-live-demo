@@ -118,13 +118,14 @@ class _HeaderActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentRole = ref.watch(userRoleProvider);
+    final user = ref.watch(authStateProvider);
+    final currentRole = user != null ? mapRoleFromString(user.role) : UserRole.SERVANT;
 
     if (isSmallScreen) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (currentRole == UserRole.superAdmin) const _CompactChurchSelector(),
+          if (currentRole == UserRole.SUPER_ADMIN) const _CompactChurchSelector(),
           const _CompactGlobalSearch(),
           const SizedBox(width: 8),
           const _UserProfileButton(),
@@ -134,7 +135,7 @@ class _HeaderActions extends ConsumerWidget {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (currentRole == UserRole.superAdmin) ...[
+          if (currentRole == UserRole.SUPER_ADMIN) ...[
             const ChurchSelector(),
             const SizedBox(width: 16),
           ],
@@ -654,7 +655,8 @@ class _SearchDialog extends HookConsumerWidget {
     final searchController = useTextEditingController();
     final searchFocusNode = useFocusNode();
     final searchResults = ref.watch(searchResultsProvider);
-    final currentRole = ref.watch(userRoleProvider);
+    final user = ref.watch(authStateProvider);
+    final currentRole = user != null ? mapRoleFromString(user.role) : UserRole.SERVANT;
 
     useEffect(() {
       Future.microtask(() => searchFocusNode.requestFocus());

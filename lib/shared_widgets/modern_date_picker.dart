@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
-class ModernDatePicker extends StatelessWidget {
+class ModernDatePicker extends HookWidget {
   final String hintText;
   final IconData icon;
   final DateTime? selectedDate;
@@ -23,11 +24,17 @@ class ModernDatePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
-    final controller = TextEditingController(
-      text: selectedDate != null
+    final controller = useTextEditingController();
+
+    useEffect(() {
+      final newText = selectedDate != null
           ? DateFormat.yMMMMd().format(selectedDate!)
-          : '',
-    );
+          : '';
+      if (controller.text != newText) {
+        controller.text = newText;
+      }
+      return null;
+    }, [selectedDate]);
 
     return TextFormField(
       controller: controller,
@@ -92,11 +99,11 @@ class ModernDatePicker extends StatelessWidget {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red, width: 1.5),
+          borderSide: BorderSide(color: theme.colorScheme.error, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
+          borderSide: BorderSide(color: theme.colorScheme.error, width: 2),
         ),
         contentPadding:
         const EdgeInsets.symmetric(vertical: 16, horizontal: 20),

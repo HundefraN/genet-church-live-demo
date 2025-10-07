@@ -14,11 +14,51 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appColors = Theme.of(context).extension<AppColors>()!;
+    final user = ref.watch(authStateProvider);
+
+    if (user == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    Widget statCards;
+    if (user.role.toUpperCase() == 'SUPER_ADMIN') {
+      statCards = const Wrap(
+        spacing: 24,
+        runSpacing: 24,
+        alignment: WrapAlignment.spaceEvenly,
+        children: [
+          ChurchesStatCard(),
+          PastorsStatCard(),
+          MembersStatCard(),
+        ],
+      );
+    } else if (user.role.toUpperCase() == 'PASTOR') {
+      statCards = const Wrap(
+        spacing: 24,
+        runSpacing: 24,
+        alignment: WrapAlignment.spaceEvenly,
+        children: [
+          MembersStatCard(),
+          ServantsStatCard(),
+        ],
+      );
+    } else {
+      statCards = const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 40.0),
+          child: Text(
+            "Welcome to the Genet Church Portal!",
+            style: TextStyle(fontSize: 18),
+          ),
+        ),
+      );
+    }
+
     return Container(
       color: appColors.scaffold,
-      child: const ResponsiveLayout(
-        mobileBody: _DashboardMobileLayout(),
-        desktopBody: _DashboardDesktopLayout(),
+      child: ResponsiveLayout(
+        mobileBody: _DashboardMobileLayout(statCards: statCards),
+        desktopBody: _DashboardDesktopLayout(statCards: statCards),
       ),
     );
   }
@@ -29,12 +69,8 @@ class _GreetingWidget extends ConsumerWidget {
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
-    if (hour < 12) {
-      return 'Good morning';
-    }
-    if (hour < 18) {
-      return 'Good afternoon';
-    }
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
     return 'Good evening';
   }
 
@@ -81,7 +117,8 @@ class _GreetingWidget extends ConsumerWidget {
 }
 
 class _DashboardDesktopLayout extends StatelessWidget {
-  const _DashboardDesktopLayout();
+  final Widget statCards;
+  const _DashboardDesktopLayout({required this.statCards});
 
   @override
   Widget build(BuildContext context) {
@@ -94,16 +131,7 @@ class _DashboardDesktopLayout extends StatelessWidget {
         physics: const ClampingScrollPhysics(),
         children: [
           const _GreetingWidget(),
-          Wrap(
-            spacing: 24,
-            runSpacing: 24,
-            alignment: WrapAlignment.spaceEvenly,
-            children: const [
-              ChurchesStatCard(),
-              PastorsStatCard(),
-              MembersStatCard(),
-            ],
-          ),
+          statCards,
           const SizedBox(height: 24),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,7 +148,8 @@ class _DashboardDesktopLayout extends StatelessWidget {
 }
 
 class _DashboardMobileLayout extends StatelessWidget {
-  const _DashboardMobileLayout();
+  final Widget statCards;
+  const _DashboardMobileLayout({required this.statCards});
 
   @override
   Widget build(BuildContext context) {
@@ -131,17 +160,19 @@ class _DashboardMobileLayout extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         shrinkWrap: true,
         physics: const ClampingScrollPhysics(),
-        children: const [
-          _GreetingWidget(),
-          ChurchesStatCard(),
-          SizedBox(height: 16),
-          PastorsStatCard(),
-          SizedBox(height: 16),
-          MembersStatCard(),
-          SizedBox(height: 24),
-          RecentActivityCard(),
-          SizedBox(height: 24),
-          AnalyticsCard(),
+        children: [
+          const _GreetingWidget(),
+          if (statCards is Wrap)
+            ...(statCards as Wrap).children.expand((widget) => [
+              widget,
+              const SizedBox(height: 16),
+            ]).toList()..removeLast()
+          else
+            statCards,
+          const SizedBox(height: 8),
+          const RecentActivityCard(),
+          const SizedBox(height: 24),
+          const AnalyticsCard(),
         ],
       ).animate().fadeIn(duration: 500.ms, delay: 200.ms).slideY(begin: 0.1, duration: 500.ms, curve: Curves.easeOut),
     );

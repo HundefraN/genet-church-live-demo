@@ -8,6 +8,9 @@ import 'package:genet_church_portal/data/models/pastor_model.dart';
 import 'package:genet_church_portal/data/models/servant_model.dart';
 import 'package:genet_church_portal/data/services/api_service.dart';
 
+import '../../features/screens/lib/features/screens/lib/data/models/lib/data/models/pastor_dashboard_model.dart';
+import '../../features/screens/lib/features/screens/lib/data/models/session_model.dart';
+
 final apiRepositoryProvider = Provider<ApiRepository>((ref) {
   final dio = ref.watch(dioProvider);
   return ApiRepository(dio);
@@ -20,6 +23,11 @@ class ApiRepository {
   Future<SuperAdminDashboardStats> getSuperAdminDashboardStats() async {
     final response = await _dio.get('/dashboard/super-admin');
     return SuperAdminDashboardStats.fromJson(response.data);
+  }
+
+  Future<PastorDashboardStats> getPastorDashboardStats() async {
+    final response = await _dio.get('/dashboard/pastor');
+    return PastorDashboardStats.fromJson(response.data);
   }
 
   Future<void> addMember({required Member member, required String churchId}) async {
@@ -86,12 +94,22 @@ class ApiRepository {
     return Department.fromJson(response.data);
   }
 
+  Future<Department> updateDepartment({required String departmentId, required String name}) async {
+    final response = await _dio.patch('/departments/$departmentId', data: {'name': name});
+    return Department.fromJson(response.data);
+  }
+
   Future<void> removeDepartment(String id) async {
     await _dio.delete('/departments/$id');
   }
 
+  Future<Servant> assignServantToDepartment({required String departmentId, required String servantId}) async {
+    final response = await _dio.post('/departments/$departmentId/assign-servant', data: {'servantId': servantId});
+    return Servant.fromJson(response.data);
+  }
+
   Future<List<Servant>> getServants(String churchId) async {
-    final response = await _dio.get('/servants', queryParameters: {'churchId': churchId});
+    final response = await _dio.get('/servants', queryParameters: {'churchId': churchId, 'limit': 100});
     final responseData = response.data['data'] as List;
     return responseData.map((json) => Servant.fromJson(json)).toList();
   }
@@ -101,7 +119,29 @@ class ApiRepository {
     return Servant.fromJson(response.data);
   }
 
+  Future<Servant> updateServant({required String servantId, required String fullName}) async {
+    final response = await _dio.patch('/servants/$servantId', data: {'fullName': fullName});
+    return Servant.fromJson(response.data);
+  }
+
   Future<void> removeServant(String id) async {
     await _dio.delete('/servants/$id');
+  }
+
+  Future<List<Session>> getSessions() async {
+    final currentSessionResponse = await _dio.get('/sessions/current');
+    final allSessionsResponse = await _dio.get('/sessions/all');
+
+    final currentSessionId = currentSessionResponse.data['id'];
+    final sessionsList = (allSessionsResponse.data as List)
+        .map((json) => Session.fromJson(json, currentSessionId: currentSessionId))
+        .toList();
+
+    sessionsList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return sessionsList;
+  }
+
+  Future<void> revokeSession(String sessionId) async {
+    await _dio.delete('/sessions/$sessionId');
   }
 }

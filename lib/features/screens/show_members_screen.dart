@@ -16,7 +16,7 @@ class ShowMembersScreen extends StatelessWidget {
         const PageHeader(
           title: 'Member Records',
           description:
-          'A list of all registered members in the church will be displayed here.',
+          'A searchable and filterable list of all registered members in the church.',
         ),
         const SizedBox(height: 24),
         ContentCard(
@@ -28,11 +28,19 @@ class ShowMembersScreen extends StatelessWidget {
                 Icon(Iconsax.code_1, size: 48, color: appColors.textSecondary),
                 const SizedBox(height: 24),
                 Text(
-                  'Feature Awaiting Backend API',
+                  'Feature In Development',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
                     color: appColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'This screen is waiting for the backend developer to provide the\n`GET /church-members/all` endpoint.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: appColors.textSecondary,
                   ),
                 ),
               ],

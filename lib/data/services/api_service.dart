@@ -8,8 +8,9 @@ final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
       baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
+      // Increased timeouts for services that may "sleep"
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -56,7 +57,6 @@ final dioProvider = Provider<Dio>((ref) {
                 return handler.resolve(clonedRequest);
               }
             } catch (refreshError) {
-              // If refresh fails, log out
               await storage.deleteAll();
             }
           }
