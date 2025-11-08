@@ -1,22 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:genet_church_portal/data/models/user_model.dart';
 
-class SearchCommand {
+class AppMenuItem {
   final String title;
   final String path;
   final IconData icon;
-  final String category;
   final List<UserRole> roles;
+  final Map<String, String>? children;
 
-  const SearchCommand({
+  const AppMenuItem({
     required this.title,
     required this.path,
     required this.icon,
-    required this.category,
-    this.roles = const [
-      UserRole.SUPER_ADMIN,
-      UserRole.PASTOR,
-      UserRole.SERVANT,
-    ],
+    this.roles = const [UserRole.SUPER_ADMIN, UserRole.PASTOR, UserRole.SERVANT],
+    this.children,
   });
 }

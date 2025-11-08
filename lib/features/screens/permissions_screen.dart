@@ -20,7 +20,7 @@ class PermissionsScreen extends StatelessWidget {
           description: 'Configure access levels for different user roles.',
           action: PrimaryButton(
             text: 'Save Changes',
-            onPressed: () {
+            onPressed: () async {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Permissions saved! (Simulation)'),

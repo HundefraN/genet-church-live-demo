@@ -5,6 +5,7 @@ import 'package:genet_church_portal/data/repositories/auth_repository.dart';
 import 'package:genet_church_portal/shared_widgets/content_card.dart';
 import 'package:genet_church_portal/shared_widgets/modern_text_field.dart';
 import 'package:genet_church_portal/shared_widgets/primary_button.dart';
+import 'package:genet_church_portal/shared_widgets/secondary_button.dart';
 import 'package:iconsax/iconsax.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -56,12 +57,6 @@ class ProfileScreen extends ConsumerWidget {
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Profile updated! (Simulation)'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
                 },
                 child: const Text('Save'),
               ),
@@ -121,10 +116,25 @@ class ProfileScreen extends ConsumerWidget {
               _ProfileInfoRow(
                   icon: Iconsax.key, label: 'Password', value: '••••••••'),
               const SizedBox(height: 48),
-              PrimaryButton(
-                text: 'Edit Profile',
-                onPressed: showEditProfileDialog,
-                icon: Iconsax.edit,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SecondaryButton(
+                    text: 'Change Password',
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Feature coming soon!')),
+                      );
+                    },
+                    icon: Iconsax.key,
+                  ),
+                  const SizedBox(width: 16),
+                  PrimaryButton(
+                    text: 'Edit Profile',
+                    onPressed: () async => showEditProfileDialog(),
+                    icon: Iconsax.edit,
+                  ),
+                ],
               ),
             ],
           ),
@@ -133,7 +143,6 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 }
-
 class _ProfileInfoRow extends StatelessWidget {
   final IconData icon;
   final String label;

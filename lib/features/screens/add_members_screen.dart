@@ -13,6 +13,26 @@ import 'package:genet_church_portal/shared_widgets/primary_button.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../shared_widgets/modern_date_picker.dart';
 
+class MemberFormData {
+  String fullName = '';
+  String phoneNumber = '';
+  DateTime? birthDate;
+  String birthPlace = '';
+  String motherTongue = '';
+  Gender? gender;
+  String city = '';
+  String subCity = '';
+  String woreda = '';
+  String placeName = '';
+  MarriageStatus? marriageStatus;
+  EducationLevel? educationLevel;
+  JobStatus? jobStatus;
+  IncomeRange? incomeRange;
+  BaptismStatus? baptismStatus;
+}
+
+final addMemberFormProvider = Provider((ref) => MemberFormData());
+
 class AddMembersScreen extends HookConsumerWidget {
   const AddMembersScreen({super.key});
 
@@ -20,29 +40,13 @@ class AddMembersScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final pageController = usePageController();
     final currentPage = useState(0);
-    final isLoading = useState(false);
+    final formData = ref.read(addMemberFormProvider);
 
     final formKeys = useMemoized(() => [
       GlobalKey<FormState>(),
       GlobalKey<FormState>(),
       GlobalKey<FormState>(),
     ]);
-
-    final fullNameController = useTextEditingController();
-    final phoneNumberController = useTextEditingController();
-    final birthDate = useState<DateTime?>(null);
-    final birthPlaceController = useTextEditingController();
-    final motherTongueController = useTextEditingController();
-    final cityController = useTextEditingController();
-    final subCityController = useTextEditingController();
-    final woredaController = useTextEditingController();
-    final placeNameController = useTextEditingController();
-    final gender = useState<Gender?>(null);
-    final marriageStatus = useState<MarriageStatus?>(null);
-    final educationLevel = useState<EducationLevel?>(null);
-    final jobStatus = useState<JobStatus?>(null);
-    final incomeRange = useState<IncomeRange?>(null);
-    final baptismStatus = useState<BaptismStatus?>(null);
 
     void navigateToPage(int page) {
       pageController.animateToPage(
@@ -53,12 +57,14 @@ class AddMembersScreen extends HookConsumerWidget {
       currentPage.value = page;
     }
 
-    void addMember() async {
+    Future<void> addMember() async {
       bool allFormsValid = true;
       for (int i = 0; i < formKeys.length; i++) {
         if (!(formKeys[i].currentState?.validate() ?? false)) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please complete all required fields on all pages.')),
+            const SnackBar(
+                content:
+                Text('Please complete all required fields on all pages.')),
           );
           if (currentPage.value != i) {
             navigateToPage(i);
@@ -73,46 +79,47 @@ class AddMembersScreen extends HookConsumerWidget {
       final selectedChurchId = ref.read(currentChurchProvider);
       if (selectedChurchId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select a church from the header before adding a member.')),
+          const SnackBar(
+              content: Text(
+                  'Please select a church from the header before adding a member.')),
         );
         return;
       }
 
-      isLoading.value = true;
       final newMember = Member(
-        fullName: fullNameController.text,
-        phoneNumber: phoneNumberController.text,
-        birthDate: birthDate.value!.toIso8601String(),
-        birthPlace: birthPlaceController.text,
-        motherTongue: motherTongueController.text,
-        gender: gender.value!,
-        marriageStatus: marriageStatus.value!,
+        fullName: formData.fullName,
+        phoneNumber: formData.phoneNumber,
+        birthDate: formData.birthDate!.toIso8601String(),
+        birthPlace: formData.birthPlace,
+        motherTongue: formData.motherTongue,
+        gender: formData.gender!,
+        marriageStatus: formData.marriageStatus!,
         address: Address(
-          city: cityController.text,
-          subCity: subCityController.text,
-          woreda: woredaController.text,
-          placeName: placeNameController.text,
+          city: formData.city,
+          subCity: formData.subCity,
+          woreda: formData.woreda,
+          placeName: formData.placeName,
         ),
-        educationLevel: educationLevel.value!,
-        jobStatus: jobStatus.value!,
-        incomeRange: incomeRange.value!,
-        baptismStatus: baptismStatus.value!,
+        educationLevel: formData.educationLevel!,
+        jobStatus: formData.jobStatus!,
+        incomeRange: formData.incomeRange!,
+        baptismStatus: formData.baptismStatus!,
         memberStatus: MemberStatus.ACTIVE,
       );
 
       try {
         await ref.read(membersProvider.notifier).addMember(member: newMember);
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Member added successfully!'), backgroundColor: Colors.green));
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Member added successfully!'),
+              backgroundColor: Colors.green));
           context.go('/dashboard');
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to add member: $e'), backgroundColor: Colors.red));
-        }
-      } finally {
-        if (context.mounted) {
-          isLoading.value = false;
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Failed to add member: $e'),
+              backgroundColor: Colors.red));
         }
       }
     }
@@ -128,27 +135,10 @@ class AddMembersScreen extends HookConsumerWidget {
     }
 
     final wizardSteps = [
-      _WizardStep(formKey: formKeys[0], child: _PersonalForm(
-        fullNameController: fullNameController,
-        phoneNumberController: phoneNumberController,
-        birthDate: birthDate,
-        birthPlaceController: birthPlaceController,
-        motherTongueController: motherTongueController,
-        gender: gender,
-      )),
-      _WizardStep(formKey: formKeys[1], child: _AddressForm(
-        cityController: cityController,
-        subCityController: subCityController,
-        woredaController: woredaController,
-        placeNameController: placeNameController,
-      )),
-      _WizardStep(formKey: formKeys[2], child: _AdditionalInfoForm(
-        marriageStatus: marriageStatus,
-        educationLevel: educationLevel,
-        jobStatus: jobStatus,
-        incomeRange: incomeRange,
-        baptismStatus: baptismStatus,
-      )),
+      _WizardStep(formKey: formKeys[0], child: _PersonalForm(formData: formData)),
+      _WizardStep(formKey: formKeys[1], child: _AddressForm(formData: formData)),
+      _WizardStep(
+          formKey: formKeys[2], child: _AdditionalInfoForm(formData: formData)),
     ];
 
     return SingleChildScrollView(
@@ -176,8 +166,7 @@ class AddMembersScreen extends HookConsumerWidget {
                     itemBuilder: (context, index) {
                       return Form(
                           key: wizardSteps[index].formKey,
-                          child: wizardSteps[index].child
-                      );
+                          child: wizardSteps[index].child);
                     },
                   ),
                 ),
@@ -193,10 +182,13 @@ class AddMembersScreen extends HookConsumerWidget {
                       ),
                     const Spacer(),
                     PrimaryButton(
-                      text: currentPage.value == wizardSteps.length - 1 ? 'Save Member' : 'Next Step',
-                      icon: currentPage.value == wizardSteps.length - 1 ? Iconsax.save_2 : Iconsax.arrow_right_3,
-                      isLoading: isLoading.value,
-                      onPressed: handleNextOrSubmit,
+                      text: currentPage.value == wizardSteps.length - 1
+                          ? 'Save Member'
+                          : 'Next Step',
+                      icon: currentPage.value == wizardSteps.length - 1
+                          ? Iconsax.save_2
+                          : Iconsax.arrow_right_3,
+                      onPressed: () async => handleNextOrSubmit(),
                     ),
                   ],
                 ),
@@ -218,7 +210,8 @@ class _WizardStep {
 class _WizardProgressIndicator extends StatelessWidget {
   final int stepCount;
   final int currentStep;
-  const _WizardProgressIndicator({required this.stepCount, required this.currentStep});
+  const _WizardProgressIndicator(
+      {required this.stepCount, required this.currentStep});
 
   @override
   Widget build(BuildContext context) {
@@ -237,28 +230,46 @@ class _WizardProgressIndicator extends StatelessWidget {
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         height: 2,
-                        color: isActive ? theme.colorScheme.primary : theme.dividerColor,
+                        color: isActive
+                            ? theme.colorScheme.primary
+                            : theme.dividerColor,
                       ),
                     ),
                   CircleAvatar(
                     radius: 16,
-                    backgroundColor: isActive ? theme.colorScheme.primary : theme.dividerColor,
-                    child: isActive ?
-                    (index < currentStep ? const Icon(Icons.check, color: Colors.white, size: 18) : Text('${index + 1}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)))
-                        : Text('${index + 1}', style: TextStyle(color: Theme.of(context).disabledColor)),
+                    backgroundColor: isActive
+                        ? theme.colorScheme.primary
+                        : theme.dividerColor,
+                    child: isActive
+                        ? (index < currentStep
+                        ? const Icon(Icons.check,
+                        color: Colors.white, size: 18)
+                        : Text('${index + 1}',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold)))
+                        : Text('${index + 1}',
+                        style: TextStyle(color: Theme.of(context).disabledColor)),
                   ),
                   if (index < stepCount - 1)
                     Expanded(
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         height: 2,
-                        color: index < currentStep ? theme.colorScheme.primary : theme.dividerColor,
+                        color: index < currentStep
+                            ? theme.colorScheme.primary
+                            : theme.dividerColor,
                       ),
                     ),
                 ],
               ),
               const SizedBox(height: 8),
-              Text(labels[index], style: TextStyle(fontWeight: isActive ? FontWeight.bold : FontWeight.normal, color: isActive ? theme.colorScheme.primary : theme.disabledColor)),
+              Text(labels[index],
+                  style: TextStyle(
+                      fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                      color: isActive
+                          ? theme.colorScheme.primary
+                          : theme.disabledColor)),
             ],
           ),
         );
@@ -271,83 +282,102 @@ Widget _formRow(List<Widget> children) {
   return LayoutBuilder(builder: (context, constraints) {
     if (constraints.maxWidth < 600) {
       return Column(
-        children: children.map((child) => Padding(
+        children: children
+            .map((child) => Padding(
           padding: const EdgeInsets.only(bottom: 16.0),
           child: child,
-        )).toList(),
+        ))
+            .toList(),
       );
     }
     return Row(
-      children: children.map((child) => Expanded(
+      children: children
+          .map((child) => Expanded(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
           child: child,
         ),
-      )).toList(),
+      ))
+          .toList(),
     );
   });
 }
 
-// CONVERTED TO STATEFUL WIDGET WITH MIXIN
-class _PersonalForm extends StatefulWidget {
-  final TextEditingController fullNameController;
-  final TextEditingController phoneNumberController;
-  final ValueNotifier<DateTime?> birthDate;
-  final TextEditingController birthPlaceController;
-  final TextEditingController motherTongueController;
-  final ValueNotifier<Gender?> gender;
+class _PersonalForm extends StatefulHookWidget {
+  final MemberFormData formData;
 
-  const _PersonalForm({
-    required this.fullNameController,
-    required this.phoneNumberController,
-    required this.birthDate,
-    required this.birthPlaceController,
-    required this.motherTongueController,
-    required this.gender
-  });
+  const _PersonalForm({required this.formData});
 
   @override
   State<_PersonalForm> createState() => _PersonalFormState();
 }
 
-class _PersonalFormState extends State<_PersonalForm> with AutomaticKeepAliveClientMixin {
+class _PersonalFormState extends State<_PersonalForm>
+    with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final fullNameController =
+    useTextEditingController(text: widget.formData.fullName);
+    final phoneNumberController =
+    useTextEditingController(text: widget.formData.phoneNumber);
+    final birthPlaceController =
+    useTextEditingController(text: widget.formData.birthPlace);
+    final motherTongueController =
+    useTextEditingController(text: widget.formData.motherTongue);
+
     return ListView(
       physics: const BouncingScrollPhysics(),
       children: [
         _formRow([
           ModernTextField(
-              controller: widget.fullNameController, hintText: 'Full Name', icon: Iconsax.user_octagon,
+              controller: fullNameController,
+              hintText: 'Full Name',
+              icon: Iconsax.user_octagon,
+              onChanged: (v) => widget.formData.fullName = v,
               validator: (v) => v!.isEmpty ? 'Required' : null),
           ModernTextField(
-              controller: widget.phoneNumberController, hintText: 'Phone Number', icon: Iconsax.call,
+              controller: phoneNumberController,
+              hintText: 'Phone Number',
+              icon: Iconsax.call,
+              onChanged: (v) => widget.formData.phoneNumber = v,
               validator: (v) => v!.isEmpty ? 'Required' : null),
         ]),
         _formRow([
           ModernDatePicker(
-            hintText: 'Birth Date', icon: Iconsax.calendar_1, selectedDate: widget.birthDate.value,
-            onDateSelected: (date) => widget.birthDate.value = date,
-            validator: (_) => widget.birthDate.value == null ? 'Please select a date' : null,
+            hintText: 'Birth Date',
+            icon: Iconsax.calendar_1,
+            selectedDate: widget.formData.birthDate,
+            onDateSelected: (date) =>
+                setState(() => widget.formData.birthDate = date),
+            validator: (_) =>
+            widget.formData.birthDate == null ? 'Please select a date' : null,
           ),
           ModernTextField(
-              controller: widget.birthPlaceController, hintText: 'Birth Place', icon: Iconsax.location,
+              controller: birthPlaceController,
+              hintText: 'Birth Place',
+              icon: Iconsax.location,
+              onChanged: (v) => widget.formData.birthPlace = v,
               validator: (v) => v!.isEmpty ? 'Required' : null),
         ]),
         _formRow([
           ModernTextField(
-              controller: widget.motherTongueController, hintText: 'Mother Tongue', icon: Iconsax.translate,
+              controller: motherTongueController,
+              hintText: 'Mother Tongue',
+              icon: Iconsax.translate,
+              onChanged: (v) => widget.formData.motherTongue = v,
               validator: (v) => v!.isEmpty ? 'Required' : null),
           ModernDropdown<Gender>(
             hintText: 'Gender',
             icon: Iconsax.user,
-            value: widget.gender.value,
-            items: Gender.values.map((e) => DropdownMenuItem(value: e, child: Text(e.name))).toList(),
-            onChanged: (val) => setState(() => widget.gender.value = val),
+            value: widget.formData.gender,
+            items: Gender.values
+                .map((e) => DropdownMenuItem(value: e, child: Text(e.name)))
+                .toList(),
+            onChanged: (val) => setState(() => widget.formData.gender = val),
             validator: (v) => v == null ? 'Required' : null,
           ),
         ]),
@@ -356,48 +386,47 @@ class _PersonalFormState extends State<_PersonalForm> with AutomaticKeepAliveCli
   }
 }
 
-// CONVERTED TO STATEFUL WIDGET WITH MIXIN
-class _AddressForm extends StatefulWidget {
-  final TextEditingController cityController;
-  final TextEditingController subCityController;
-  final TextEditingController woredaController;
-  final TextEditingController placeNameController;
+class _AddressForm extends HookWidget {
+  final MemberFormData formData;
 
-  const _AddressForm({
-    required this.cityController,
-    required this.subCityController,
-    required this.woredaController,
-    required this.placeNameController,
-  });
-
-  @override
-  State<_AddressForm> createState() => _AddressFormState();
-}
-
-class _AddressFormState extends State<_AddressForm> with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
+  const _AddressForm({required this.formData});
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
+    final cityController = useTextEditingController(text: formData.city);
+    final subCityController = useTextEditingController(text: formData.subCity);
+    final woredaController = useTextEditingController(text: formData.woreda);
+    final placeNameController =
+    useTextEditingController(text: formData.placeName);
     return ListView(
       physics: const BouncingScrollPhysics(),
       children: [
         _formRow([
           ModernTextField(
-              controller: widget.cityController, hintText: 'City', icon: Iconsax.buildings,
+              controller: cityController,
+              hintText: 'City',
+              icon: Iconsax.buildings,
+              onChanged: (v) => formData.city = v,
               validator: (v) => v!.isEmpty ? 'Required' : null),
           ModernTextField(
-              controller: widget.subCityController, hintText: 'Sub-City', icon: Iconsax.building_3,
+              controller: subCityController,
+              hintText: 'Sub-City',
+              icon: Iconsax.building_3,
+              onChanged: (v) => formData.subCity = v,
               validator: (v) => v!.isEmpty ? 'Required' : null),
         ]),
         _formRow([
           ModernTextField(
-              controller: widget.woredaController, hintText: 'Woreda', icon: Iconsax.routing,
+              controller: woredaController,
+              hintText: 'Woreda',
+              icon: Iconsax.routing,
+              onChanged: (v) => formData.woreda = v,
               validator: (v) => v!.isEmpty ? 'Required' : null),
           ModernTextField(
-              controller: widget.placeNameController, hintText: 'Specific Place Name', icon: Iconsax.location_tick,
+              controller: placeNameController,
+              hintText: 'Specific Place Name',
+              icon: Iconsax.location_tick,
+              onChanged: (v) => formData.placeName = v,
               validator: (v) => v!.isEmpty ? 'Required' : null),
         ]),
       ],
@@ -405,27 +434,17 @@ class _AddressFormState extends State<_AddressForm> with AutomaticKeepAliveClien
   }
 }
 
-// CONVERTED TO STATEFUL WIDGET WITH MIXIN
 class _AdditionalInfoForm extends StatefulWidget {
-  final ValueNotifier<MarriageStatus?> marriageStatus;
-  final ValueNotifier<EducationLevel?> educationLevel;
-  final ValueNotifier<JobStatus?> jobStatus;
-  final ValueNotifier<IncomeRange?> incomeRange;
-  final ValueNotifier<BaptismStatus?> baptismStatus;
+  final MemberFormData formData;
 
-  const _AdditionalInfoForm({
-    required this.marriageStatus,
-    required this.educationLevel,
-    required this.jobStatus,
-    required this.incomeRange,
-    required this.baptismStatus,
-  });
+  const _AdditionalInfoForm({required this.formData});
 
   @override
   State<_AdditionalInfoForm> createState() => _AdditionalInfoFormState();
 }
 
-class _AdditionalInfoFormState extends State<_AdditionalInfoForm> with AutomaticKeepAliveClientMixin {
+class _AdditionalInfoFormState extends State<_AdditionalInfoForm>
+    with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -437,37 +456,61 @@ class _AdditionalInfoFormState extends State<_AdditionalInfoForm> with Automatic
       children: [
         _formRow([
           ModernDropdown<EducationLevel>(
-            hintText: 'Education Level', icon: Iconsax.book, value: widget.educationLevel.value,
-            items: EducationLevel.values.map((e) => DropdownMenuItem(value: e, child: Text(e.name))).toList(),
-            onChanged: (val) => setState(() => widget.educationLevel.value = val),
+            hintText: 'Education Level',
+            icon: Iconsax.book,
+            value: widget.formData.educationLevel,
+            items: EducationLevel.values
+                .map((e) => DropdownMenuItem(value: e, child: Text(e.name)))
+                .toList(),
+            onChanged: (val) =>
+                setState(() => widget.formData.educationLevel = val),
             validator: (v) => v == null ? 'Required' : null,
           ),
           ModernDropdown<JobStatus>(
-            hintText: 'Job Status', icon: Iconsax.briefcase, value: widget.jobStatus.value,
-            items: JobStatus.values.map((e) => DropdownMenuItem(value: e, child: Text(e.name))).toList(),
-            onChanged: (val) => setState(() => widget.jobStatus.value = val),
+            hintText: 'Job Status',
+            icon: Iconsax.briefcase,
+            value: widget.formData.jobStatus,
+            items: JobStatus.values
+                .map((e) => DropdownMenuItem(value: e, child: Text(e.name)))
+                .toList(),
+            onChanged: (val) => setState(() => widget.formData.jobStatus = val),
             validator: (v) => v == null ? 'Required' : null,
           ),
         ]),
         _formRow([
           ModernDropdown<MarriageStatus>(
-            hintText: 'Marriage Status', icon: Iconsax.like, value: widget.marriageStatus.value,
-            items: MarriageStatus.values.map((e) => DropdownMenuItem(value: e, child: Text(e.name))).toList(),
-            onChanged: (val) => setState(() => widget.marriageStatus.value = val),
+            hintText: 'Marriage Status',
+            icon: Iconsax.like,
+            value: widget.formData.marriageStatus,
+            items: MarriageStatus.values
+                .map((e) => DropdownMenuItem(value: e, child: Text(e.name)))
+                .toList(),
+            onChanged: (val) =>
+                setState(() => widget.formData.marriageStatus = val),
             validator: (v) => v == null ? 'Required' : null,
           ),
           ModernDropdown<IncomeRange>(
-            hintText: 'Income Range', icon: Iconsax.wallet_money, value: widget.incomeRange.value,
-            items: IncomeRange.values.map((e) => DropdownMenuItem(value: e, child: Text(e.name))).toList(),
-            onChanged: (val) => setState(() => widget.incomeRange.value = val),
+            hintText: 'Income Range',
+            icon: Iconsax.wallet_money,
+            value: widget.formData.incomeRange,
+            items: IncomeRange.values
+                .map((e) => DropdownMenuItem(value: e, child: Text(e.name)))
+                .toList(),
+            onChanged: (val) =>
+                setState(() => widget.formData.incomeRange = val),
             validator: (v) => v == null ? 'Required' : null,
           ),
         ]),
         _formRow([
           ModernDropdown<BaptismStatus>(
-            hintText: 'Baptism Status', icon: Icons.church, value: widget.baptismStatus.value,
-            items: BaptismStatus.values.map((e) => DropdownMenuItem(value: e, child: Text(e.name))).toList(),
-            onChanged: (val) => setState(() => widget.baptismStatus.value = val),
+            hintText: 'Baptism Status',
+            icon: Icons.church,
+            value: widget.formData.baptismStatus,
+            items: BaptismStatus.values
+                .map((e) => DropdownMenuItem(value: e, child: Text(e.name)))
+                .toList(),
+            onChanged: (val) =>
+                setState(() => widget.formData.baptismStatus = val),
             validator: (v) => v == null ? 'Required' : null,
           ),
           const SizedBox.shrink(),

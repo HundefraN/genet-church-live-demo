@@ -1,11 +1,9 @@
-// lib/data/models/church_model.dart
-
 class Church {
   final String id;
   String name;
   String? locationLink;
   String? establishmentDate;
-  String? dateCreated; // Add this field
+  String? dateCreated;
   String? headOfficeId;
 
   Church({
@@ -13,7 +11,7 @@ class Church {
     required this.name,
     this.locationLink,
     this.establishmentDate,
-    this.dateCreated, // Add to constructor
+    this.dateCreated,
     this.headOfficeId,
   });
 
@@ -23,17 +21,26 @@ class Church {
       name: json['name'] as String,
       locationLink: json['locationLink'] as String?,
       establishmentDate: json['establishmentDate'] as String?,
-      dateCreated: json['dateCreated'] as String?, // Parse from JSON
+      dateCreated: json['dateCreated'] as String?,
       headOfficeId: json['headOfficeId'] as String?,
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toCreateJson() {
     return {
       'name': name,
       'locationLink': locationLink,
       'establishmentDate': establishmentDate,
-      'Head_office': headOfficeId,
+      'headOfficeId': headOfficeId,
+    };
+  }
+
+  Map<String, dynamic> toUpdateJson() {
+    return {
+      'name': name,
+      'locationLink': locationLink,
+      'establishmentDate': establishmentDate,
+      'headOfficeId': headOfficeId,
     };
   }
 }

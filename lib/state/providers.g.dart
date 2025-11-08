@@ -6,7 +6,7 @@ part of 'providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$pastorsHash() => r'ea2633af107e1799b597d742544fb02e9aef1208';
+String _$pastorsHash() => r'901269898177da804980ba73ee3a987b07c9e4fb';
 
 /// See also [Pastors].
 @ProviderFor(Pastors)
@@ -22,7 +22,7 @@ final pastorsProvider =
     );
 
 typedef _$Pastors = AutoDisposeAsyncNotifier<List<Pastor>>;
-String _$churchesHash() => r'5a5b498343b3c0e754edb4dc4b236bbdeaa55ba0';
+String _$churchesHash() => r'5a20debd030e68aaeb58427d64bff7f0caf22611';
 
 /// See also [Churches].
 @ProviderFor(Churches)
@@ -38,7 +38,7 @@ final churchesProvider =
     );
 
 typedef _$Churches = AutoDisposeAsyncNotifier<List<Church>>;
-String _$departmentsHash() => r'c97233c4f4af0c8421cd15cf6b6f49aaa03c2f69';
+String _$departmentsHash() => r'4b8e29a5bbff818c39dfa7d81c8455bbb74f0702';
 
 /// See also [Departments].
 @ProviderFor(Departments)
@@ -54,7 +54,7 @@ final departmentsProvider =
     );
 
 typedef _$Departments = AutoDisposeAsyncNotifier<List<Department>>;
-String _$servantsHash() => r'484726495c564457a105a2d0867d3145fa2579a5';
+String _$servantsHash() => r'7e31f5a2e1b5268a5618a9fd7bea25ab2f4ecb3c';
 
 /// See also [Servants].
 @ProviderFor(Servants)
@@ -70,7 +70,7 @@ final servantsProvider =
     );
 
 typedef _$Servants = AutoDisposeAsyncNotifier<List<Servant>>;
-String _$membersHash() => r'e19ee34dac17eea457e61f5bfbd1127a1a2a7a2a';
+String _$membersHash() => r'a0f15ab3fe092566f33ea912b52dab78af210ccf';
 
 /// See also [Members].
 @ProviderFor(Members)
@@ -85,6 +85,22 @@ final membersProvider = AutoDisposeNotifierProvider<Members, void>.internal(
 );
 
 typedef _$Members = AutoDisposeNotifier<void>;
+String _$membersListHash() => r'1f97022985e36d6f559d8586439a0e16246cc678';
+
+/// See also [MembersList].
+@ProviderFor(MembersList)
+final membersListProvider =
+    AutoDisposeAsyncNotifierProvider<MembersList, MemberListState>.internal(
+      MembersList.new,
+      name: r'membersListProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$membersListHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+typedef _$MembersList = AutoDisposeAsyncNotifier<MemberListState>;
 String _$activityLogHash() => r'8b1ff53f4eeabd9e8f397e20523eb2ee03a555c6';
 
 /// See also [ActivityLog].

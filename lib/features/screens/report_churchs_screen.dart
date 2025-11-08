@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:genet_church_portal/state/new_item_provider.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
 import 'package:genet_church_portal/data/models/church_model.dart';
@@ -23,9 +25,21 @@ class ReportChurchsScreen extends HookConsumerWidget {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
     final churchesAsync = ref.watch(churchesProvider);
+    final newlyAddedItemId = ref.watch(newlyAddedItemIdProvider);
     final searchQuery = useState('');
     final isDeleting = useState<String?>(null);
     final urlLauncher = UrlLauncherService();
+
+    useEffect(() {
+      if (newlyAddedItemId != null) {
+        Future.delayed(const Duration(seconds: 3), () {
+          if (context.mounted) {
+            ref.read(newlyAddedItemIdProvider.notifier).set(null);
+          }
+        });
+      }
+      return null;
+    }, [newlyAddedItemId]);
 
     return SingleChildScrollView(
       child: Column(
@@ -70,7 +84,7 @@ class ReportChurchsScreen extends HookConsumerWidget {
                 ),
                 const SizedBox(width: 24),
                 PrimaryButton(
-                  onPressed: () => _showAddChurchDialog(context, ref),
+                  onPressed: () async => _showAddChurchDialog(context, ref),
                   text: 'Add New Church',
                   icon: Iconsax.add,
                 ),
@@ -119,7 +133,8 @@ class ReportChurchsScreen extends HookConsumerWidget {
                         rows: filteredChurches.asMap().entries.map((entry) {
                           final index = entry.key;
                           final church = entry.value;
-                          return DataRow(cells: [
+                          final isNew = church.id == newlyAddedItemId;
+                          final rowWidget = DataRow(cells: [
                             DataCell(Text((index + 1).toString())),
                             DataCell(Text(church.name)),
                             DataCell(Text(church.headOfficeId ?? 'N/A')),
@@ -144,8 +159,8 @@ class ReportChurchsScreen extends HookConsumerWidget {
                                   label: 'EDIT',
                                   color: theme.colorScheme.primary,
                                   icon: Iconsax.edit,
-                                  onPressed: () =>
-                                      _showEditChurchDialog(context, ref, church),
+                                  onPressed: () => _showEditChurchDialog(
+                                      context, ref, church),
                                 ),
                                 const SizedBox(width: 8),
                                 TableActionButton(
@@ -153,11 +168,36 @@ class ReportChurchsScreen extends HookConsumerWidget {
                                   color: theme.colorScheme.error,
                                   icon: Iconsax.trash,
                                   isLoading: isDeleting.value == church.id,
-                                  onPressed: () => _showDeleteConfirmationDialog(context, ref, church, isDeleting),
+                                  onPressed: () =>
+                                      _showDeleteConfirmationDialog(
+                                          context, ref, church, isDeleting),
                                 ),
                               ],
                             )),
                           ]);
+                          if (isNew) {
+                            return DataRow(
+                                cells: rowWidget.cells
+                                    .map((cell) => DataCell(
+                                    Animate(
+                                      effects: const [
+                                        FadeEffect(
+                                            duration: Duration(
+                                                milliseconds: 600)),
+                                        SlideEffect(
+                                            begin: Offset(0, 0.2),
+                                            duration: Duration(
+                                                milliseconds: 600),
+                                            curve: Curves.easeOutCubic)
+                                      ],
+                                      child: cell.child,
+                                    ),
+                                    showEditIcon: cell.showEditIcon,
+                                    placeholder: cell.placeholder,
+                                    onTap: cell.onTap))
+                                    .toList());
+                          }
+                          return rowWidget;
                         }).toList(),
                       ),
                     );
@@ -176,13 +216,15 @@ class ReportChurchsScreen extends HookConsumerWidget {
     );
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context, WidgetRef ref, Church church, ValueNotifier<String?> isDeleting) {
+  void _showDeleteConfirmationDialog(BuildContext context, WidgetRef ref,
+      Church church, ValueNotifier<String?> isDeleting) {
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Confirm Deletion'),
-          content: Text('Are you sure you want to delete the church "${church.name}"? This action cannot be undone.'),
+          content: Text(
+              'Are you sure you want to delete the church "${church.name}"? This action cannot be undone.'),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
@@ -191,13 +233,30 @@ class ReportChurchsScreen extends HookConsumerWidget {
               },
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.error),
               child: const Text('Delete'),
               onPressed: () async {
                 isDeleting.value = church.id;
                 Navigator.of(dialogContext).pop();
-                await ref.read(churchesProvider.notifier).removeChurch(church.id);
-                isDeleting.value = null;
+                try {
+                  await ref
+                      .read(churchesProvider.notifier)
+                      .removeChurch(church.id);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content:
+                        Text('Church "${church.name}" deleted successfully.'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } finally {
+                  if (context.mounted) {
+                    isDeleting.value = null;
+                  }
+                }
               },
             ),
           ],
@@ -215,69 +274,63 @@ class ReportChurchsScreen extends HookConsumerWidget {
     showDialog(
         context: context,
         builder: (context) {
-          return HookConsumer(builder: (context, ref, child) {
-            final isLoading = useState(false);
-            return AlertDialog(
-              title: const Text('Add New Church'),
-              content: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ModernTextField(
-                      controller: nameController,
-                      hintText: 'Church Name',
-                      icon: Iconsax.building,
-                      validator: (v) => v!.isEmpty ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 20),
-                    ModernTextField(
-                      controller: locationController,
-                      hintText: 'Google Maps Link (Optional)',
-                      icon: Iconsax.map_1,
-                    ),
-                    const SizedBox(height: 20),
-                    ModernTextField(
-                        controller: establishmentDateController,
-                        hintText: 'Establishment Date (YYYY-MM-DD)',
-                        icon: Iconsax.calendar_1),
-                  ],
-                ),
+          return AlertDialog(
+            title: const Text('Add New Church'),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ModernTextField(
+                    controller: nameController,
+                    hintText: 'Church Name',
+                    icon: Iconsax.building,
+                    validator: (v) => v!.isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 20),
+                  ModernTextField(
+                    controller: locationController,
+                    hintText: 'Google Maps Link (Optional)',
+                    icon: Iconsax.map_1,
+                  ),
+                  const SizedBox(height: 20),
+                  ModernTextField(
+                      controller: establishmentDateController,
+                      hintText: 'Establishment Date (YYYY-MM-DD)',
+                      icon: Iconsax.calendar_1),
+                ],
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                PrimaryButton(
-                    isLoading: isLoading.value,
-                    onPressed: () async {
-                      if (formKey.currentState!.validate()) {
-                        isLoading.value = true;
-                        final newChurch = Church(
-                          id: '',
-                          name: nameController.text,
-                          locationLink: locationController.text,
-                          establishmentDate: establishmentDateController.text,
-                          headOfficeId: AppConstants.addisAbabaHeadOfficeId,
-                        );
-                        try {
-                          await ref.read(churchesProvider.notifier).addChurch(newChurch);
-                          if(context.mounted) Navigator.pop(context);
-                        } finally {
-                          if(context.mounted) isLoading.value = false;
-                        }
-                      }
-                    },
-                    text: 'Add Church'),
-              ],
-            );
-          });
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              PrimaryButton(
+                  onPressed: () async {
+                    if (formKey.currentState!.validate()) {
+                      final newChurchData = Church(
+                        id: '',
+                        name: nameController.text,
+                        locationLink: locationController.text,
+                        establishmentDate: establishmentDateController.text,
+                        headOfficeId: AppConstants.addisAbabaHeadOfficeId,
+                      );
+                      final newChurch = await ref
+                          .read(churchesProvider.notifier)
+                          .addChurch(newChurchData);
+                      ref.read(newlyAddedItemIdProvider.notifier).set(newChurch.id);
+                      if (context.mounted) Navigator.pop(context);
+                    }
+                  },
+                  text: 'Add Church'),
+            ],
+          );
         });
   }
 
-
-  void _showEditChurchDialog(BuildContext context, WidgetRef ref, Church church) {
+  void _showEditChurchDialog(
+      BuildContext context, WidgetRef ref, Church church) {
     final nameController = TextEditingController(text: church.name);
     final locationController = TextEditingController(text: church.locationLink);
     final formKey = GlobalKey<FormState>();
@@ -286,65 +339,54 @@ class ReportChurchsScreen extends HookConsumerWidget {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return HookConsumer(
-            builder: (context, ref, child) {
-              final isSaving = useState(false);
-              return AlertDialog(
-                title: const Text('Edit Church'),
-                content: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ModernTextField(
-                        controller: nameController,
-                        hintText: 'Church Name',
-                        icon: Iconsax.building,
-                        validator: (v) => v!.isEmpty ? 'Required' : null,
-                      ),
-                      const SizedBox(height: 20),
-                      ModernTextField(
-                        controller: locationController,
-                        hintText: 'Location Link',
-                        icon: Iconsax.map_1,
-                      ),
-                    ],
-                  ),
+        return AlertDialog(
+          title: const Text('Edit Church'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ModernTextField(
+                  controller: nameController,
+                  hintText: 'Church Name',
+                  icon: Iconsax.building,
+                  validator: (v) => v!.isEmpty ? 'Required' : null,
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: isSaving.value ? null : () => Navigator.pop(context),
-                    child: const Text('Cancel'),
-                  ),
-                  PrimaryButton(
-                    isLoading: isSaving.value,
-                    onPressed: () async {
-                      if (formKey.currentState!.validate()) {
-                        isSaving.value = true;
-                        final updatedChurch = Church(
-                          id: church.id,
-                          name: nameController.text,
-                          locationLink: locationController.text,
-                          establishmentDate: church.establishmentDate,
-                          headOfficeId: church.headOfficeId,
-                          dateCreated: church.dateCreated,
-                        );
-                        try {
-                          await ref.read(churchesProvider.notifier).updateChurch(
-                            churchId: church.id,
-                            church: updatedChurch,
-                          );
-                          if (context.mounted) Navigator.pop(context);
-                        } finally {
-                          if (context.mounted) isSaving.value = false;
-                        }
-                      }
-                    },
-                    text: 'Save Changes',
-                  ),
-                ],
-              );
-            }
+                const SizedBox(height: 20),
+                ModernTextField(
+                  controller: locationController,
+                  hintText: 'Location Link',
+                  icon: Iconsax.map_1,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            PrimaryButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  final updatedChurch = Church(
+                    id: church.id,
+                    name: nameController.text,
+                    locationLink: locationController.text,
+                    establishmentDate: church.establishmentDate,
+                    headOfficeId: church.headOfficeId,
+                    dateCreated: church.dateCreated,
+                  );
+                  await ref.read(churchesProvider.notifier).updateChurch(
+                    churchId: church.id,
+                    church: updatedChurch,
+                  );
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
+              text: 'Save Changes',
+            ),
+          ],
         );
       },
     );
@@ -390,7 +432,7 @@ class _EmptyState extends StatelessWidget {
           if (searchQuery.isEmpty) ...[
             const SizedBox(height: 24),
             PrimaryButton(
-              onPressed: onAddPressed,
+              onPressed: () async => onAddPressed(),
               text: 'Add First Church',
               icon: Iconsax.add,
             ),

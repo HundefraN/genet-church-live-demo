@@ -6,7 +6,6 @@ import 'header_bar.dart';
 class MainLayout extends HookWidget {
   final Widget child;
   final List<String> breadcrumbs;
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   MainLayout({
     super.key,
@@ -16,20 +15,21 @@ class MainLayout extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scaffoldKey = useMemoized(() => GlobalKey<ScaffoldState>());
     final isMobile = MediaQuery.of(context).size.width < 900;
     final isCollapsed = useState(isMobile ? true : false);
     const double headerHeight = 130.0;
 
     Widget buildBody(bool mobile) {
       return CustomScrollView(
-        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        physics:
+        const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
         slivers: [
           HeaderBar(
             breadcrumbs: breadcrumbs,
-
             onMenuPressed: () {
               if (mobile) {
-                _scaffoldKey.currentState?.openDrawer();
+                scaffoldKey.currentState?.openDrawer();
               } else {
                 isCollapsed.value = !isCollapsed.value;
               }
@@ -51,7 +51,7 @@ class MainLayout extends HookWidget {
 
     if (isMobile) {
       return Scaffold(
-        key: _scaffoldKey,
+        key: scaffoldKey,
         drawer: const SideMenu(isCollapsed: false),
         body: buildBody(true),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,

@@ -1,5 +1,3 @@
-// web/flutter_bootstrap.js
-
 window.addEventListener('load', function(ev) {
   var loadingText = document.getElementById("loading-text");
 
@@ -15,9 +13,7 @@ window.addEventListener('load', function(ev) {
     engineInitializer: async function(engineInitializer) {
       loadingText.innerText = "Initializing Engine...";
       const appRunner = await engineInitializer.initializeEngine({
-        // CRITICAL: Use CanvasKit for max performance
         renderer: "canvaskit",
-        // CRITICAL: Use this modern font loading method
         canvasKitVariant: "skparagraph",
       });
       loadingText.innerText = "Running App...";

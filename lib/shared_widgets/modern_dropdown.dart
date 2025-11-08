@@ -24,8 +24,14 @@ class ModernDropdown<T> extends StatelessWidget {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
 
+    // Defensive check: If the current value is not in the list of items, treat it as null.
+    // This prevents the "Assertion failed: items.where((DropdownMenuItem<T> item) => item.value == value).length == 1" error.
+    final isValueInItems =
+        value == null || items.any((item) => item.value == value);
+    final T? currentValue = isValueInItems ? value : null;
+
     return DropdownButtonFormField<T>(
-      value: value,
+      value: currentValue,
       items: items,
       onChanged: onChanged,
       validator: validator,

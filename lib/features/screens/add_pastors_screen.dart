@@ -19,7 +19,6 @@ class AddPastorsScreen extends HookConsumerWidget {
     final emailController = useTextEditingController();
     final passwordController = useTextEditingController();
     final formKey = useMemoized(() => GlobalKey<FormState>());
-    final isLoading = useState(false);
 
     void clearForm() {
       nameController.clear();
@@ -27,9 +26,8 @@ class AddPastorsScreen extends HookConsumerWidget {
       passwordController.clear();
     }
 
-    void addPastor() async {
+    Future<void> addPastor() async {
       if (formKey.currentState?.validate() ?? false) {
-        isLoading.value = true;
         try {
           await ref.read(pastorsProvider.notifier).addPastor(
             fullName: nameController.text,
@@ -37,13 +35,6 @@ class AddPastorsScreen extends HookConsumerWidget {
             password: passwordController.text,
           );
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content:
-                Text('${nameController.text} has been added successfully!'),
-                backgroundColor: Colors.green,
-              ),
-            );
             clearForm();
             context.go('/report-pastors');
           }
@@ -57,10 +48,7 @@ class AddPastorsScreen extends HookConsumerWidget {
               ),
             );
           }
-        } finally {
-          if (context.mounted) {
-            isLoading.value = false;
-          }
+          throw e;
         }
       }
     }
@@ -76,7 +64,6 @@ class AddPastorsScreen extends HookConsumerWidget {
             action: PrimaryButton(
               text: 'Add Pastor',
               onPressed: addPastor,
-              isLoading: isLoading.value,
             ),
           ),
           const SizedBox(height: 24),

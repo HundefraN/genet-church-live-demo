@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
@@ -22,8 +23,6 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
     final departmentsAsync = ref.watch(departmentsProvider);
-    final nameController = useTextEditingController();
-    final isLoading = useState(false);
     final selectedChurchId = ref.watch(currentChurchProvider);
 
     return Column(
@@ -31,70 +30,23 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
       children: [
         PageHeader(
           title: 'Department Records',
-          description: 'Manage all departments within the currently selected church.',
+          description:
+          'Manage all departments within the currently selected church.',
           action: PrimaryButton(
             text: 'Add New Department',
             icon: Iconsax.add,
-            onPressed: () {
+            onPressed: () async {
               if (selectedChurchId == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: const Text('Please select a church from the header first.'),
+                    content: const Text(
+                        'Please select a church from the header first.'),
                     backgroundColor: theme.colorScheme.error,
                   ),
                 );
                 return;
               }
-              showDialog(
-                context: context,
-                builder: (_) => Dialog(
-                  backgroundColor: Colors.transparent,
-                  child: Container(
-                    width: 450,
-                    padding: const EdgeInsets.all(32),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('Add New Department', style: theme.textTheme.headlineSmall),
-                        const SizedBox(height: 24),
-                        ModernTextField(
-                          controller: nameController,
-                          hintText: 'Department Name',
-                          icon: Iconsax.folder,
-                        ),
-                        const SizedBox(height: 32),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            TextButton(
-                              onPressed: () => context.pop(),
-                              child: const Text('Cancel'),
-                            ),
-                            const SizedBox(width: 12),
-                            ElevatedButton(
-                              onPressed: () async {
-                                if (nameController.text.isNotEmpty) {
-                                  isLoading.value = true;
-                                  await ref.read(departmentsProvider.notifier).addDepartment(name: nameController.text);
-                                  isLoading.value = false;
-                                  if (context.mounted) context.pop();
-                                }
-                              },
-                              child: isLoading.value
-                                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                                  : const Text('Add Department'),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
+              _showAddDepartmentDialog(context, ref);
             },
           ),
         ),
@@ -106,11 +58,14 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Iconsax.building_4, size: 48, color: appColors.textSecondary),
+                  Icon(Iconsax.building_4,
+                      size: 48, color: appColors.textSecondary),
                   const SizedBox(height: 16),
-                  Text('Please select a church from the header to manage departments.',
+                  Text(
+                    'Please select a church from the header to manage departments.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16, color: appColors.textSecondary),
+                    style:
+                    TextStyle(fontSize: 16, color: appColors.textSecondary),
                   ),
                 ],
               ),
@@ -128,7 +83,12 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
                   );
                 }
                 return StyledDataTable(
-                  columns: const ['#', 'Department Name', 'Department ID', 'Actions'],
+                  columns: const [
+                    '#',
+                    'Department Name',
+                    'Department ID',
+                    'Actions'
+                  ],
                   rows: departments.asMap().entries.map((entry) {
                     final index = entry.key;
                     final department = entry.value;
@@ -142,7 +102,8 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
                             label: 'DELETE',
                             color: theme.colorScheme.error,
                             icon: Iconsax.trash,
-                            onPressed: () => _showDeleteConfirmationDialog(context, ref, department.id, department.name),
+                            onPressed: () => _showDeleteConfirmationDialog(
+                                context, ref, department.id, department.name),
                           ),
                         ),
                       ],
@@ -150,21 +111,75 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
                   }).toList(),
                 );
               },
-              loading: () => const Center(heightFactor: 5, child: CircularProgressIndicator()),
-              error: (err, stack) => Center(heightFactor: 5, child: ApiErrorWidget(error: err)),
+              loading: () =>
+              const Center(heightFactor: 5, child: CircularProgressIndicator()),
+              error: (err, stack) =>
+                  Center(heightFactor: 5, child: ApiErrorWidget(error: err)),
             ),
           ),
       ],
     );
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context, WidgetRef ref, String departmentId, String departmentName) {
+  void _showAddDepartmentDialog(BuildContext context, WidgetRef ref) {
+    final nameController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    final theme = Theme.of(context);
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Add New Department'),
+        content: Form(
+          key: formKey,
+          child: ModernTextField(
+            controller: nameController,
+            hintText: 'Department Name',
+            icon: Iconsax.folder,
+            validator: (v) => v!.trim().isEmpty ? 'Name is required' : null,
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => context.pop(), child: const Text('Cancel')),
+          PrimaryButton(
+            text: 'Add Department',
+            onPressed: () async {
+              if (formKey.currentState?.validate() ?? false) {
+                try {
+                  await ref
+                      .read(departmentsProvider.notifier)
+                      .addDepartment(name: nameController.text);
+                  await Future.delayed(const Duration(seconds: 2));
+                  if (context.mounted) context.pop();
+                } on DioException catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                            'Failed to add department: ${e.response?.data?['error'] ?? 'Please select a church first.'}'),
+                        backgroundColor: theme.colorScheme.error,
+                      ),
+                    );
+                  }
+                  throw e;
+                }
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context, WidgetRef ref,
+      String departmentId, String departmentName) {
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Confirm Deletion'),
-          content: Text('Are you sure you want to delete the department "$departmentName"? This action cannot be undone.'),
+          content: Text(
+              'Are you sure you want to delete the department "$departmentName"? This action cannot be undone.'),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
@@ -173,11 +188,14 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
               },
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.error),
               child: const Text('Delete'),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
-                ref.read(departmentsProvider.notifier).removeDepartment(departmentId);
+                ref
+                    .read(departmentsProvider.notifier)
+                    .removeDepartment(departmentId);
               },
             ),
           ],

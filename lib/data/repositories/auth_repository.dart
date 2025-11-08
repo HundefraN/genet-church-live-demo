@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:genet_church_portal/data/models/user_model.dart';
 import 'package:genet_church_portal/data/services/api_service.dart';
+import 'package:genet_church_portal/state/church_selection_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final authRepositoryProvider = Provider((ref) {
@@ -11,26 +12,35 @@ final authRepositoryProvider = Provider((ref) {
 });
 
 final authStateProvider = StateNotifierProvider<AuthStateNotifier, UserModel?>((ref) {
-  return AuthStateNotifier(ref.read(authRepositoryProvider));
+  return AuthStateNotifier(ref.read(authRepositoryProvider), ref);
 });
 
 class AuthStateNotifier extends StateNotifier<UserModel?> {
   final AuthRepository _authRepository;
-  AuthStateNotifier(this._authRepository) : super(null) {
+  final Ref _ref;
+  AuthStateNotifier(this._authRepository, this._ref) : super(null) {
     _loadUserFromStorage();
+  }
+
+  void _updateChurchContext(UserModel? user) {
+    if (user != null && user.roleEnum != UserRole.SUPER_ADMIN && user.churchId != null) {
+      _ref.read(currentChurchProvider.notifier).selectChurch(user.churchId);
+    }
   }
 
   Future<void> _loadUserFromStorage() async {
     state = await _authRepository.getCurrentUser();
+    _updateChurchContext(state);
   }
 
   Future<void> login(String email, String password, bool rememberMe) async {
-    await _authRepository.login(email, password, rememberMe);
-    state = await _authRepository.getCurrentUser();
+    state = await _authRepository.login(email, password, rememberMe);
+    _updateChurchContext(state);
   }
 
   Future<void> logout() async {
     await _authRepository.logout();
+    _ref.read(currentChurchProvider.notifier).selectChurch(null);
     state = null;
   }
 }
@@ -41,7 +51,7 @@ class AuthRepository {
 
   AuthRepository(this._dio, this._storage);
 
-  Future<void> login(String email, String password, bool rememberMe) async {
+  Future<UserModel> login(String email, String password, bool rememberMe) async {
     try {
       final response = await _dio.post('/auth/login', data: {
         'email': email,
@@ -52,7 +62,7 @@ class AuthRepository {
       final accessToken = response.data['accessToken'];
 
       await _storage.write(key: 'accessToken', value: accessToken);
-      await _storage.write(key: 'user', value: jsonEncode(user));
+      await _storage.write(key: 'user', value: jsonEncode(user.toJson()));
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('rememberMe', rememberMe);
@@ -61,8 +71,8 @@ class AuthRepository {
       } else {
         await prefs.remove('email');
       }
+      return user;
     } catch (e) {
-      print('Login failed: $e');
       rethrow;
     }
   }

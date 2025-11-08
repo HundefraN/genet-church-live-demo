@@ -6,7 +6,9 @@ import 'package:genet_church_portal/data/repositories/auth_repository.dart';
 import 'package:genet_church_portal/data/services/api_service.dart';
 import 'package:genet_church_portal/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:genet_church_portal/features/screens/activity_log_screen.dart';
+import 'package:genet_church_portal/features/screens/add_church_screen.dart';
 import 'package:genet_church_portal/features/screens/add_members_screen.dart';
+import 'package:genet_church_portal/features/screens/add_pastors_screen.dart';
 import 'package:genet_church_portal/features/screens/advanced_reports_screen.dart';
 import 'package:genet_church_portal/features/screens/permissions_screen.dart';
 import 'package:genet_church_portal/features/screens/profile_screen.dart';
@@ -31,7 +33,9 @@ final Map<String, List<String>> _routeBreadcrumbs = {
   '/profile': ['App', 'User', 'Profile'],
   '/sessions': ['App', 'User', 'Security'],
   '/report-churchs': ['App', 'Church', 'Reports'],
+  '/add-church': ['App', 'Church', 'Add Church'],
   '/report-pastors': ['App', 'Pastors', 'Reports'],
+  '/add-pastors': ['App', 'Pastors', 'Add Pastor'],
   '/report-departments': ['App', 'Departments', 'Reports'],
   '/report-servants': ['App', 'Servants', 'Reports'],
   '/add-members': ['App', 'Members', 'Add Member'],
@@ -99,8 +103,16 @@ class AppRouter {
               builder: (context, state) => const ReportChurchsScreen(),
             ),
             GoRoute(
+              path: '/add-church',
+              builder: (context, state) => const AddChurchScreen(),
+            ),
+            GoRoute(
               path: '/report-pastors',
               builder: (context, state) => const ReportPastorsScreen(),
+            ),
+            GoRoute(
+              path: '/add-pastors',
+              builder: (context, state) => const AddPastorsScreen(),
             ),
             GoRoute(
               path: '/report-departments',

@@ -76,7 +76,7 @@ class AdvancedReportsScreen extends ConsumerWidget {
                   ),
                   PrimaryButton(
                     text: 'Export Report',
-                    onPressed: () {
+                    onPressed: () async {
                       showDialog(
                         context: context,
                         builder: (context) => const ExportReportDialog(),
@@ -90,23 +90,50 @@ class AdvancedReportsScreen extends ConsumerWidget {
               LayoutBuilder(builder: (context, constraints) {
                 final statCards = [
                   if (stats is SuperAdminDashboardStats) ...[
-                    _ReportStatCard(icon: Iconsax.people, value: totalMembers.toString(), label: 'Total Members', color: theme.colorScheme.primary),
-                    _ReportStatCard(icon: Iconsax.building, value: totalChurches.toString(), label: 'Total Churches', color: theme.colorScheme.secondary),
-                    _ReportStatCard(icon: Iconsax.user_octagon, value: totalPastors.toString(), label: 'Total Pastors', color: const Color(0xFFF5A623)),
-                    _ReportStatCard(icon: Iconsax.lifebuoy, value: totalServants.toString(), label: 'Total Servants', color: theme.colorScheme.error),
+                    _ReportStatCard(
+                        icon: Iconsax.people,
+                        value: totalMembers.toString(),
+                        label: 'Total Members',
+                        color: theme.colorScheme.primary),
+                    _ReportStatCard(
+                        icon: Iconsax.building,
+                        value: totalChurches.toString(),
+                        label: 'Total Churches',
+                        color: theme.colorScheme.secondary),
+                    _ReportStatCard(
+                        icon: Iconsax.user_octagon,
+                        value: totalPastors.toString(),
+                        label: 'Total Pastors',
+                        color: const Color(0xFFF5A623)),
+                    _ReportStatCard(
+                        icon: Iconsax.lifebuoy,
+                        value: totalServants.toString(),
+                        label: 'Total Servants',
+                        color: theme.colorScheme.error),
                   ],
                   if (stats is PastorDashboardStats) ...[
-                    _ReportStatCard(icon: Iconsax.people, value: totalMembers.toString(), label: 'Total Members', color: theme.colorScheme.primary),
-                    _ReportStatCard(icon: Iconsax.lifebuoy, value: totalServants.toString(), label: 'Total Servants', color: theme.colorScheme.error),
+                    _ReportStatCard(
+                        icon: Iconsax.people,
+                        value: totalMembers.toString(),
+                        label: 'Total Members',
+                        color: theme.colorScheme.primary),
+                    _ReportStatCard(
+                        icon: Iconsax.lifebuoy,
+                        value: totalServants.toString(),
+                        label: 'Total Servants',
+                        color: theme.colorScheme.error),
                   ]
                 ];
 
-                int crossAxisCount = statCards.length <= 2 ? 2 : (constraints.maxWidth < 1200 ? 4 : 4);
+                int crossAxisCount = statCards.length <= 2
+                    ? 2
+                    : (constraints.maxWidth < 1200 ? 4 : 4);
                 if (constraints.maxWidth < 650) {
                   crossAxisCount = 2;
                 }
 
-                double childAspectRatio = constraints.maxWidth < 650 ? 1.0 : 1.25;
+                double childAspectRatio =
+                constraints.maxWidth < 650 ? 1.0 : 1.25;
 
                 return GridView.builder(
                   shrinkWrap: true,

@@ -3,28 +3,54 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
+import 'package:genet_church_portal/data/models/menu_item_model.dart';
+import 'package:genet_church_portal/data/models/user_model.dart';
 import 'package:genet_church_portal/data/repositories/auth_repository.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 
-enum UserRole {
-  SUPER_ADMIN,
-  PASTOR,
-  SERVANT,
-}
-
-UserRole mapRoleFromString(String roleString) {
-  switch (roleString.toUpperCase()) {
-    case 'SUPER_ADMIN':
-      return UserRole.SUPER_ADMIN;
-    case 'PASTOR':
-      return UserRole.PASTOR;
-    case 'SERVANT':
-      return UserRole.SERVANT;
-    default:
-      return UserRole.SERVANT;
-  }
-}
+final List<AppMenuItem> _allMenuItems = [
+  AppMenuItem(title: 'Dashboard', path: '/dashboard', icon: Iconsax.category),
+  AppMenuItem(
+    title: 'Church Admin',
+    path: '#',
+    icon: Iconsax.building_4,
+    roles: [UserRole.SUPER_ADMIN],
+    children: {
+      'Churches': '/report-churchs',
+      'Pastors': '/report-pastors',
+      'Departments': '/report-departments',
+      'Servants': '/report-servants',
+    },
+  ),
+  AppMenuItem(
+    title: 'Members',
+    path: '#',
+    icon: Iconsax.people,
+    children: {
+      'Add Member': '/add-members',
+      'Show Members': '/show-members',
+    },
+  ),
+  AppMenuItem(
+    title: 'Analytics',
+    path: '/advanced-reports',
+    icon: Iconsax.chart_21,
+    roles: [UserRole.SUPER_ADMIN],
+  ),
+  AppMenuItem(
+    title: 'Categories',
+    path: '/categories',
+    icon: Iconsax.folder_2,
+    roles: [UserRole.PASTOR],
+  ),
+  AppMenuItem(
+    title: 'Permissions',
+    path: '/permissions',
+    icon: Iconsax.shield_tick,
+    roles: [UserRole.SUPER_ADMIN],
+  ),
+];
 
 class SideMenu extends ConsumerWidget {
   final bool isCollapsed;
@@ -35,7 +61,7 @@ class SideMenu extends ConsumerWidget {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
     final user = ref.watch(authStateProvider);
-    final currentRole = user != null ? mapRoleFromString(user.role) : UserRole.SERVANT;
+    final currentRole = user?.roleEnum ?? UserRole.SERVANT;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
@@ -90,8 +116,7 @@ class SideMenu extends ConsumerWidget {
                       ),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate(
-                          _buildMenuItemsForRole(
-                              currentRole, context, isCollapsed),
+                          _buildMenuItems(currentRole, context, isCollapsed),
                         ),
                       ),
                     ),
@@ -113,86 +138,35 @@ class SideMenu extends ConsumerWidget {
         .fadeIn(duration: 400.ms, delay: 100.ms);
   }
 
-  List<Widget> _buildMenuItemsForRole(
+  List<Widget> _buildMenuItems(
       UserRole role, BuildContext context, bool collapsed) {
-    final currentRoute =
-    GoRouter.of(context).routerDelegate.currentConfiguration.uri.toString();
-    List<Widget> menuItems = [];
+    final currentRoute = GoRouter.of(context).routerDelegate.currentConfiguration.uri.toString();
+    final accessibleItems = _allMenuItems.where((item) => item.roles.contains(role));
 
-    Widget addSection(Widget item) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: item,
-      );
-    }
-
-    menuItems.add(addSection(_MenuItem(
-      title: 'Dashboard',
-      icon: Iconsax.category,
-      isSelected: currentRoute.startsWith('/dashboard'),
-      onTap: () => context.go('/dashboard'),
-      isCollapsed: collapsed,
-    )));
-
-    if (role == UserRole.SUPER_ADMIN) {
-      menuItems.add(addSection(_ExpansionMenuItem(
-        title: 'Church Admin',
-        icon: Iconsax.building_4,
-        isCollapsed: collapsed,
-        children: {
-          'Churches': '/report-churchs',
-          'Pastors': '/report-pastors',
-          'Departments': '/report-departments',
-          'Servants': '/report-servants',
-        },
-      )));
-    }
-
-    if (role == UserRole.SUPER_ADMIN ||
-        role == UserRole.PASTOR ||
-        role == UserRole.SERVANT) {
-      menuItems.add(addSection(_ExpansionMenuItem(
-        title: 'Members',
-        icon: Iconsax.people,
-        isCollapsed: collapsed,
-        children: {
-          'Add Member': '/add-members',
-          'Show Members': '/show-members',
-        },
-      )));
-    }
-
-    if (role == UserRole.SUPER_ADMIN) {
-      menuItems.add(addSection(_MenuItem(
-        title: 'Analytics',
-        icon: Iconsax.chart_21,
-        isSelected: currentRoute.startsWith('/advanced-reports'),
-        onTap: () => context.go('/advanced-reports'),
-        isCollapsed: collapsed,
-      )));
-    }
-
-    if (role == UserRole.PASTOR) {
-      menuItems.add(addSection(_MenuItem(
-        title: 'Categories',
-        icon: Iconsax.folder_2,
-        isSelected: currentRoute.startsWith('/categories'),
-        onTap: () => context.go('/categories'),
-        isCollapsed: collapsed,
-      )));
-    }
-
-    if (role == UserRole.SUPER_ADMIN) {
-      menuItems.add(addSection(_MenuItem(
-        title: 'Permissions',
-        icon: Iconsax.shield_tick,
-        isSelected: currentRoute.startsWith('/permissions'),
-        onTap: () => context.go('/permissions'),
-        isCollapsed: collapsed,
-      )));
-    }
-
-    return menuItems;
+    return accessibleItems.map((item) {
+      if (item.children != null) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: _ExpansionMenuItem(
+            title: item.title,
+            icon: item.icon,
+            isCollapsed: collapsed,
+            children: item.children!,
+          ),
+        );
+      } else {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: _MenuItem(
+            title: item.title,
+            icon: item.icon,
+            isSelected: currentRoute.startsWith(item.path),
+            onTap: () => context.go(item.path),
+            isCollapsed: collapsed,
+          ),
+        );
+      }
+    }).toList();
   }
 }
 
@@ -641,10 +615,8 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
-    final currentRoute =
-    GoRouter.of(context).routerDelegate.currentConfiguration.uri.toString();
-    final bool isExpanded =
-    widget.children.values.any((route) => currentRoute.startsWith(route));
+    final currentRoute = GoRouter.of(context).routerDelegate.currentConfiguration.uri.toString();
+    final bool isExpanded = widget.children.values.any((route) => currentRoute.startsWith(route));
 
     if (widget.isCollapsed) {
       return Tooltip(

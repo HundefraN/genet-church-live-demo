@@ -3,12 +3,11 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
 import 'package:genet_church_portal/core/theme/theme_provider.dart';
 import 'package:genet_church_portal/data/models/search_command_model.dart';
+import 'package:genet_church_portal/data/models/user_model.dart';
 import 'package:genet_church_portal/data/repositories/auth_repository.dart';
-import 'package:genet_church_portal/data/services/search_service.dart';
-import 'package:genet_church_portal/shared_widgets/search_overlay.dart';
-import 'package:genet_church_portal/shared_widgets/side_menu.dart';
 import 'package:genet_church_portal/state/church_selection_provider.dart';
 import 'package:genet_church_portal/state/providers.dart';
+import 'package:genet_church_portal/state/search_providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
@@ -90,7 +89,8 @@ class HeaderBar extends HookConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                if (!isSmallScreen) Expanded(child: _Breadcrumbs(items: breadcrumbs)),
+                if (!isSmallScreen)
+                  Expanded(child: _Breadcrumbs(items: breadcrumbs)),
                 if (isSmallScreen)
                   Text(
                     breadcrumbs.isNotEmpty ? breadcrumbs.last : 'Dashboard',
@@ -119,13 +119,14 @@ class _HeaderActions extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider);
-    final currentRole = user != null ? mapRoleFromString(user.role) : UserRole.SERVANT;
+    final currentRole = user?.roleEnum ?? UserRole.SERVANT;
 
     if (isSmallScreen) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (currentRole == UserRole.SUPER_ADMIN) const _CompactChurchSelector(),
+          if (currentRole == UserRole.SUPER_ADMIN)
+            const _CompactChurchSelector(),
           const _CompactGlobalSearch(),
           const SizedBox(width: 8),
           const _UserProfileButton(),
@@ -494,17 +495,21 @@ class ChurchSelector extends ConsumerWidget {
               isExpanded: true,
               hint: Row(
                 children: [
-                  Icon(Iconsax.building_4, size: 16, color: appColors.textSecondary),
+                  Icon(Iconsax.building_4,
+                      size: 16, color: appColors.textSecondary),
                   const SizedBox(width: 8),
                   Text(
                     'Select Church',
                     style: TextStyle(
-                        color: appColors.textSecondary, fontWeight: FontWeight.w500),
+                        color: appColors.textSecondary,
+                        fontWeight: FontWeight.w500),
                   ),
                 ],
               ),
-              icon: Icon(Iconsax.arrow_down_1, color: appColors.textSecondary, size: 18),
-              style: TextStyle(color: appColors.textPrimary, fontWeight: FontWeight.w600),
+              icon: Icon(Iconsax.arrow_down_1,
+                  color: appColors.textSecondary, size: 18),
+              style: TextStyle(
+                  color: appColors.textPrimary, fontWeight: FontWeight.w600),
               dropdownColor: appColors.surface,
               borderRadius: BorderRadius.circular(14),
               elevation: 16,
@@ -513,7 +518,8 @@ class ChurchSelector extends ConsumerWidget {
                   value: church.id,
                   child: Row(
                     children: [
-                      Icon(Iconsax.building, size: 14, color: theme.primaryColor),
+                      Icon(Iconsax.building,
+                          size: 14, color: theme.primaryColor),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -583,14 +589,16 @@ class GlobalSearchField extends HookConsumerWidget {
         focusNode: searchFocusNode,
         onTap: () => _showSearchDialog(context, ref),
         readOnly: true,
-        style: TextStyle(color: appColors.textPrimary, fontWeight: FontWeight.w500),
+        style: TextStyle(
+            color: appColors.textPrimary, fontWeight: FontWeight.w500),
         decoration: InputDecoration(
           hintText: 'Search actions...',
-          hintStyle:
-          TextStyle(color: appColors.textSecondary, fontWeight: FontWeight.w500),
+          hintStyle: TextStyle(
+              color: appColors.textSecondary, fontWeight: FontWeight.w500),
           prefixIcon: Icon(
             Iconsax.search_normal_1,
-            color: isFocused.value ? theme.primaryColor : appColors.textSecondary,
+            color:
+            isFocused.value ? theme.primaryColor : appColors.textSecondary,
             size: 20,
           ),
           filled: true,
@@ -655,27 +663,11 @@ class _SearchDialog extends HookConsumerWidget {
     final searchController = useTextEditingController();
     final searchFocusNode = useFocusNode();
     final searchResults = ref.watch(searchResultsProvider);
-    final user = ref.watch(authStateProvider);
-    final currentRole = user != null ? mapRoleFromString(user.role) : UserRole.SERVANT;
 
     useEffect(() {
       Future.microtask(() => searchFocusNode.requestFocus());
       return null;
     }, []);
-
-    void runSearch(String query) {
-      ref.read(searchQueryProvider.notifier).state = query;
-      if (query.isEmpty) {
-        ref.read(searchResultsProvider.notifier).state = [];
-      } else {
-        final allCommands =
-        ref.read(searchServiceProvider).getCommandsForRole(currentRole);
-        final results = allCommands
-            .where((cmd) => cmd.title.toLowerCase().contains(query.toLowerCase()))
-            .toList();
-        ref.read(searchResultsProvider.notifier).state = results;
-      }
-    }
 
     void handleCommandSelection(SearchCommand command) {
       context.go(command.path);
@@ -695,7 +687,8 @@ class _SearchDialog extends HookConsumerWidget {
               child: TextField(
                 controller: searchController,
                 focusNode: searchFocusNode,
-                onChanged: runSearch,
+                onChanged: (value) =>
+                ref.read(rawSearchQueryProvider.notifier).state = value,
                 autofocus: true,
                 decoration: InputDecoration(
                   hintText: 'Search actions or pages...',
@@ -710,18 +703,25 @@ class _SearchDialog extends HookConsumerWidget {
               ),
             ),
             Expanded(
-              child: searchResults.isEmpty && searchController.text.isNotEmpty
-                  ? const Center(child: Text('No results found.'))
-                  : ListView.builder(
-                itemCount: searchResults.length,
-                itemBuilder: (context, index) {
-                  final command = searchResults[index];
-                  return ListTile(
-                    leading: Icon(command.icon),
-                    title: Text(command.title),
-                    onTap: () => handleCommandSelection(command),
+              child: searchResults.when(
+                data: (results) {
+                  if (results.isEmpty && searchController.text.isNotEmpty) {
+                    return const Center(child: Text('No results found.'));
+                  }
+                  return ListView.builder(
+                    itemCount: results.length,
+                    itemBuilder: (context, index) {
+                      final command = results[index];
+                      return ListTile(
+                        leading: Icon(command.icon),
+                        title: Text(command.title),
+                        onTap: () => handleCommandSelection(command),
+                      );
+                    },
                   );
                 },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, s) => const Center(child: Text('Error searching.')),
               ),
             ),
           ],
@@ -742,7 +742,8 @@ class _Breadcrumbs extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final bool isCompact = screenWidth < 1200;
 
-    String title = items.lastWhere((item) => item.isNotEmpty, orElse: () => 'Dashboard');
+    String title =
+    items.lastWhere((item) => item.isNotEmpty, orElse: () => 'Dashboard');
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -779,19 +780,24 @@ class _Breadcrumbs extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (index == 0)
-                        Icon(Iconsax.home, size: 14, color: appColors.textSecondary),
+                        Icon(Iconsax.home,
+                            size: 14, color: appColors.textSecondary),
                       if (index == 0) const SizedBox(width: 8),
                       Text(
                         items[index],
                         style: TextStyle(
-                          color: isLast ? theme.primaryColor : appColors.textSecondary,
+                          color: isLast
+                              ? theme.primaryColor
+                              : appColors.textSecondary,
                           fontSize: 13,
-                          fontWeight: isLast ? FontWeight.w700 : FontWeight.w500,
+                          fontWeight:
+                          isLast ? FontWeight.w700 : FontWeight.w500,
                         ),
                       ),
                       if (!isLast) ...[
                         const SizedBox(width: 8),
-                        Icon(Iconsax.arrow_right_3, color: appColors.textSecondary, size: 14),
+                        Icon(Iconsax.arrow_right_3,
+                            color: appColors.textSecondary, size: 14),
                         const SizedBox(width: 8),
                       ],
                     ],

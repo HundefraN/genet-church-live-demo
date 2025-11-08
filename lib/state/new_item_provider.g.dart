@@ -1,26 +1,26 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'church_selection_provider.dart';
+part of 'new_item_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$currentChurchHash() => r'905839059d89eecdaf48737cef04ea7cdc82098b';
+String _$newlyAddedItemIdHash() => r'1248a93a38302f7c1feba7a5055b589bd19a87f1';
 
-/// See also [CurrentChurch].
-@ProviderFor(CurrentChurch)
-final currentChurchProvider =
-    AutoDisposeNotifierProvider<CurrentChurch, String?>.internal(
-      CurrentChurch.new,
-      name: r'currentChurchProvider',
+/// See also [NewlyAddedItemId].
+@ProviderFor(NewlyAddedItemId)
+final newlyAddedItemIdProvider =
+    NotifierProvider<NewlyAddedItemId, String?>.internal(
+      NewlyAddedItemId.new,
+      name: r'newlyAddedItemIdProvider',
       debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
           ? null
-          : _$currentChurchHash,
+          : _$newlyAddedItemIdHash,
       dependencies: null,
       allTransitiveDependencies: null,
     );
 
-typedef _$CurrentChurch = AutoDisposeNotifier<String?>;
+typedef _$NewlyAddedItemId = Notifier<String?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

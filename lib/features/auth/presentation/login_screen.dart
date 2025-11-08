@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
+import 'package:genet_church_portal/shared_widgets/responsive_layout.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
@@ -29,25 +30,6 @@ final bibleVerseProvider = FutureProvider.autoDispose<BibleVerse>((ref) async {
   final response = await dio.get('https://bible-api.com/random');
   return BibleVerse.fromJson(response.data);
 });
-
-class ResponsiveLayout extends StatelessWidget {
-  final Widget mobileBody;
-  final Widget desktopBody;
-  const ResponsiveLayout(
-      {super.key, required this.mobileBody, required this.desktopBody});
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < 850) {
-          return mobileBody;
-        } else {
-          return desktopBody;
-        }
-      },
-    );
-  }
-}
 
 class LoginScreen extends StatefulHookConsumerWidget {
   const LoginScreen({super.key});
@@ -121,6 +103,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: ResponsiveLayout(
+        mobileBreakpoint: 850,
         mobileBody: _LoginSmallScreenView(
           fadeAnimation: _fadeAnimation,
           slideAnimation: _slideAnimation,
@@ -217,12 +200,12 @@ class _LoginDesktopView extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 50),
-                          Row(
+                          Wrap(
+                            spacing: 20,
+                            runSpacing: 12,
                             children: [
                               _buildFeatureIndicator('Secure Access'),
-                              const SizedBox(width: 20),
                               _buildFeatureIndicator('Admin Portal'),
-                              const SizedBox(width: 20),
                               _buildFeatureIndicator('Data Driven Ministry'),
                             ],
                           ),
@@ -603,16 +586,30 @@ class _LoginForm extends HookConsumerWidget {
         if (context.mounted) {
           context.go('/dashboard');
         }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Login Failed: Invalid credentials'),
-              backgroundColor: Colors.red,
-            ),
-          );
+      } on DioException catch (e) {
+        if (!context.mounted) return;
+        String message = 'Login Failed: An unknown error occurred.';
+        if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
+          message = 'The server is not responding. Please try again later.';
+        } else if (e.response?.statusCode == 401) {
+          message = 'Login Failed: Invalid credentials provided.';
         }
-      } finally {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } catch (e) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Login Failed: An unexpected error occurred.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      finally {
         if (context.mounted) {
           isLoading.value = false;
           buttonController.reverse();
@@ -729,7 +726,13 @@ class _LoginForm extends HookConsumerWidget {
                           ],
                         ),
                         TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Forgot Password feature is coming soon.'),
+                              ),
+                            );
+                          },
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 4, vertical: 4),
