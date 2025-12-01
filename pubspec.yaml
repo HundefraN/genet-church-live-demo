@@ -30,6 +30,7 @@ dependencies:
   timeago: ^3.7.1
   csv: ^6.0.0
   google_fonts: ^6.2.1
+  abushakir: ^1.0.0
 
 dev_dependencies:
   flutter_test:

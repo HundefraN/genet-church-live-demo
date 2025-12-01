@@ -1,28 +1,26 @@
-
 import 'dashboard_base_model.dart';
+import 'dashboard_model.dart';
 
 class PastorDashboardStats extends DashboardStatsBase {
-  final int totalMembers;
-  final int totalServants;
-  final Map<String, int> membersByStatus;
-  final Map<String, int> membersByGender;
-  final Map<String, int> membersByBaptismStatus;
+  final String timeframe;
+  final DashboardTotals totals;
+  final DashboardNewInTimeframe newInTimeframe;
+  final DashboardDistributions distributions;
 
   PastorDashboardStats({
-    required this.totalMembers,
-    required this.totalServants,
-    required this.membersByStatus,
-    required this.membersByGender,
-    required this.membersByBaptismStatus,
+    required this.timeframe,
+    required this.totals,
+    required this.newInTimeframe,
+    required this.distributions,
   });
 
   factory PastorDashboardStats.fromJson(Map<String, dynamic> json) {
     return PastorDashboardStats(
-      totalMembers: json['totalMembers'] as int? ?? 0,
-      totalServants: json['totalServants'] as int? ?? 0,
-      membersByStatus: Map<String, int>.from(json['membersByStatus'] ?? {}),
-      membersByGender: Map<String, int>.from(json['membersByGender'] ?? {}),
-      membersByBaptismStatus: Map<String, int>.from(json['membersByBaptismStatus'] ?? {}),
+      timeframe: json['timeframe'] as String? ?? 'all',
+      // FIX: Map directly from root JSON to support flat structure
+      totals: DashboardTotals.fromJson(json),
+      newInTimeframe: DashboardNewInTimeframe.fromJson(json),
+      distributions: DashboardDistributions.fromJson(json),
     );
   }
 }

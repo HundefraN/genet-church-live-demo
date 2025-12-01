@@ -9,46 +9,58 @@ class ApiErrorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appColors = Theme.of(context).extension<AppColors>()!;
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
     String title = 'An Error Occurred';
     String message = 'Failed to load data. Please try again later.';
     IconData icon = Iconsax.warning_2;
 
     if (error is DioException) {
       final dioError = error as DioException;
-      if (dioError.response?.statusCode == 403) {
+      final statusCode = dioError.response?.statusCode;
+
+      if (statusCode == 403) {
         title = 'Access Denied';
-        message =
-        'Your user role does not have permission to view this content.';
+        message = 'You do not have permission to view this content.';
         icon = Iconsax.lock;
-      } else if (dioError.response?.statusCode == 404) {
+      } else if (statusCode == 404) {
         title = 'Not Found';
-        message = 'The requested resource could not be found.';
+        message = 'The requested resource could not be found on the server.';
         icon = Iconsax.search_zoom_out;
-      } else if (dioError.response?.statusCode == 500) {
+      } else if (statusCode != null && statusCode >= 500) {
         title = 'Server Error';
         message =
-        'There was a problem with the server. Please contact support.';
+        'There was a problem communicating with the server.';
         icon = Iconsax.danger;
       }
     }
 
     return Center(
       heightFactor: 5,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: appColors.textSecondary, size: 32),
-          const SizedBox(height: 16),
-          Text(title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: appColors.textSecondary),
-          ),
-        ],
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        constraints: const BoxConstraints(maxWidth: 400),
+        decoration: BoxDecoration(
+            color: theme.colorScheme.error.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: theme.colorScheme.error.withOpacity(0.2))
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: theme.colorScheme.error, size: 32),
+            const SizedBox(height: 16),
+            Text(title,
+                style: theme.textTheme.titleLarge?.copyWith(color: appColors.textPrimary)),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: appColors.textSecondary),
+            ),
+          ],
+        ),
       ),
     );
   }

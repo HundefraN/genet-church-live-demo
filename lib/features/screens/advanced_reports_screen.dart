@@ -7,7 +7,7 @@ import 'package:genet_church_portal/data/models/dashboard_model.dart';
 import 'package:genet_church_portal/data/models/pastor_dashboard_model.dart';
 import 'package:genet_church_portal/shared_widgets/export_report_dialog.dart';
 import 'package:genet_church_portal/state/providers.dart';
-import 'package:genet_church_portal/shared_widgets/primary_button.dart';
+import 'package:genet_church_portal/shared_widgets/modern_button.dart';
 import 'package:iconsax/iconsax.dart';
 import 'dart:math';
 
@@ -31,17 +31,17 @@ class AdvancedReportsScreen extends ConsumerWidget {
         Map<String, int> membersByStatus = {};
 
         if (stats is SuperAdminDashboardStats) {
-          totalMembers = stats.totalMembers;
-          totalChurches = stats.totalChurches;
-          totalPastors = stats.totalPastors;
-          totalServants = stats.totalServants;
-          membersByGender = stats.membersByGender;
-          membersByStatus = stats.membersByStatus;
+          totalMembers = stats.totals.totalMembers;
+          totalChurches = stats.totals.totalChurches;
+          totalPastors = stats.totals.totalPastors;
+          totalServants = stats.totals.totalServants;
+          membersByGender = stats.distributions.membersByGender;
+          membersByStatus = stats.distributions.membersByStatus;
         } else if (stats is PastorDashboardStats) {
-          totalMembers = stats.totalMembers;
-          totalServants = stats.totalServants;
-          membersByGender = stats.membersByGender;
-          membersByStatus = stats.membersByStatus;
+          totalMembers = stats.totals.totalMembers;
+          totalServants = stats.totals.totalServants;
+          membersByGender = stats.distributions.membersByGender;
+          membersByStatus = stats.distributions.membersByStatus;
         }
 
         return Container(
@@ -50,8 +50,8 @@ class AdvancedReportsScreen extends ConsumerWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                theme.colorScheme.background,
-                theme.colorScheme.background.withOpacity(0.8),
+                theme.colorScheme.surface,
+                theme.colorScheme.surface.withOpacity(0.8),
               ],
             ),
           ),
@@ -76,7 +76,7 @@ class AdvancedReportsScreen extends ConsumerWidget {
                   ),
                   PrimaryButton(
                     text: 'Export Report',
-                    onPressed: () async {
+                    onPressed: () {
                       showDialog(
                         context: context,
                         builder: (context) => const ExportReportDialog(),
@@ -87,67 +87,75 @@ class AdvancedReportsScreen extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              LayoutBuilder(builder: (context, constraints) {
-                final statCards = [
-                  if (stats is SuperAdminDashboardStats) ...[
-                    _ReportStatCard(
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final statCards = [
+                    if (stats is SuperAdminDashboardStats) ...[
+                      _ReportStatCard(
                         icon: Iconsax.people,
                         value: totalMembers.toString(),
                         label: 'Total Members',
-                        color: theme.colorScheme.primary),
-                    _ReportStatCard(
+                        color: theme.colorScheme.primary,
+                      ),
+                      _ReportStatCard(
                         icon: Iconsax.building,
                         value: totalChurches.toString(),
                         label: 'Total Churches',
-                        color: theme.colorScheme.secondary),
-                    _ReportStatCard(
+                        color: theme.colorScheme.secondary,
+                      ),
+                      _ReportStatCard(
                         icon: Iconsax.user_octagon,
                         value: totalPastors.toString(),
                         label: 'Total Pastors',
-                        color: const Color(0xFFF5A623)),
-                    _ReportStatCard(
+                        color: const Color(0xFFF5A623),
+                      ),
+                      _ReportStatCard(
                         icon: Iconsax.lifebuoy,
                         value: totalServants.toString(),
                         label: 'Total Servants',
-                        color: theme.colorScheme.error),
-                  ],
-                  if (stats is PastorDashboardStats) ...[
-                    _ReportStatCard(
+                        color: theme.colorScheme.error,
+                      ),
+                    ],
+                    if (stats is PastorDashboardStats) ...[
+                      _ReportStatCard(
                         icon: Iconsax.people,
                         value: totalMembers.toString(),
                         label: 'Total Members',
-                        color: theme.colorScheme.primary),
-                    _ReportStatCard(
+                        color: theme.colorScheme.primary,
+                      ),
+                      _ReportStatCard(
                         icon: Iconsax.lifebuoy,
                         value: totalServants.toString(),
                         label: 'Total Servants',
-                        color: theme.colorScheme.error),
-                  ]
-                ];
+                        color: theme.colorScheme.error,
+                      ),
+                    ],
+                  ];
 
-                int crossAxisCount = statCards.length <= 2
-                    ? 2
-                    : (constraints.maxWidth < 1200 ? 4 : 4);
-                if (constraints.maxWidth < 650) {
-                  crossAxisCount = 2;
-                }
+                  int crossAxisCount = statCards.length <= 2
+                      ? 2
+                      : (constraints.maxWidth < 1200 ? 4 : 4);
+                  if (constraints.maxWidth < 650) {
+                    crossAxisCount = 2;
+                  }
 
-                double childAspectRatio =
-                constraints.maxWidth < 650 ? 1.0 : 1.25;
+                  double childAspectRatio =
+                  constraints.maxWidth < 650 ? 1.0 : 1.25;
 
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    crossAxisSpacing: isSmallScreen ? 16 : 24,
-                    mainAxisSpacing: isSmallScreen ? 16 : 24,
-                    childAspectRatio: childAspectRatio,
-                  ),
-                  itemCount: statCards.length,
-                  itemBuilder: (context, index) => statCards[index],
-                );
-              }),
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: isSmallScreen ? 16 : 24,
+                      mainAxisSpacing: isSmallScreen ? 16 : 24,
+                      childAspectRatio: childAspectRatio,
+                    ),
+                    itemCount: statCards.length,
+                    itemBuilder: (context, index) => statCards[index],
+                  );
+                },
+              ),
               const SizedBox(height: 24),
               _ResponsiveChartLayout(
                 genderData: membersByGender,
@@ -264,108 +272,118 @@ class _ReportStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appColors = Theme.of(context).extension<AppColors>()!;
-    return LayoutBuilder(builder: (context, constraints) {
-      final isSmall = constraints.maxWidth < 200;
-      return Container(
-        padding: EdgeInsets.all(isSmall ? 16 : 24),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              appColors.surface,
-              appColors.surface.withOpacity(0.9),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isSmall = constraints.maxWidth < 200;
+        return Container(
+          padding: EdgeInsets.all(isSmall ? 16 : 24),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                appColors.surface,
+                appColors.surface.withOpacity(0.9),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(isSmall ? 16 : 24),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+                spreadRadius: 5,
+              ),
+              BoxShadow(
+                color: appColors.shadow.withOpacity(0.05),
+                blurRadius: 30,
+                offset: const Offset(0, 15),
+              ),
+            ],
+            border: Border.all(color: color.withOpacity(0.1), width: 1.5),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(isSmall ? 8 : 12),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(
+                        isSmall ? 12 : 16,
+                      ),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: color,
+                      size: isSmall ? 20 : 24,
+                    ),
+                  ),
+                  Container(
+                    height: isSmall ? 30 : 40,
+                    width: 3,
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: appColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                      fontSize: isSmall ? 14 : null,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    value,
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w800,
+                      height: 1,
+                      fontSize: isSmall ? 28 : null,
+                    ),
+                  ),
+                ],
+              ),
+              if (!isSmall) const Spacer(),
+              if (isSmall) const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: 0.7,
+                  backgroundColor: color.withOpacity(0.1),
+                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                  minHeight: isSmall ? 4 : 6,
+                ),
+              ),
             ],
           ),
-          borderRadius: BorderRadius.circular(isSmall ? 16 : 24),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-              spreadRadius: 5,
-            ),
-            BoxShadow(
-              color: appColors.shadow.withOpacity(0.05),
-              blurRadius: 30,
-              offset: const Offset(0, 15),
-            ),
-          ],
-          border: Border.all(
-            color: color.withOpacity(0.1),
-            width: 1.5,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(isSmall ? 8 : 12),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(isSmall ? 12 : 16),
-                  ),
-                  child: Icon(icon, color: color, size: isSmall ? 20 : 24),
-                ),
-                Container(
-                  height: isSmall ? 30 : 40,
-                  width: 3,
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: appColors.textSecondary,
-                    fontWeight: FontWeight.w500,
-                    fontSize: isSmall ? 14 : null,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  value,
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w800,
-                    height: 1,
-                    fontSize: isSmall ? 28 : null,
-                  ),
-                ),
-              ],
-            ),
-            if (!isSmall) const Spacer(),
-            if (isSmall) const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: LinearProgressIndicator(
-                value: 0.7,
-                backgroundColor: color.withOpacity(0.1),
-                valueColor: AlwaysStoppedAnimation<Color>(color),
-                minHeight: isSmall ? 4 : 6,
-              ),
-            ),
-          ],
-        ),
-      )
-          .animate()
-          .fade(duration: 400.ms)
-          .slideY(begin: 0.2, end: 0, duration: 400.ms, curve: Curves.easeOutQuint);
-    });
+        )
+            .animate()
+            .fade(duration: 400.ms)
+            .slideY(
+          begin: 0.2,
+          end: 0,
+          duration: 400.ms,
+          curve: Curves.easeOutQuint,
+        );
+      },
+    );
   }
 }
 
@@ -383,197 +401,223 @@ class GenderDistributionCard extends StatelessWidget {
     final malePercentage = total > 0 ? (maleCount / total * 100).round() : 0;
     final femalePercentage = total > 0 ? (femaleCount / total * 100).round() : 0;
 
-    return LayoutBuilder(builder: (context, constraints) {
-      final isSmall = constraints.maxWidth < 450;
-      final barWidth = isSmall ? 40.0 : 60.0;
-      final chartHeight = isSmall ? 240.0 : 260.0;
-      final maxCount = (maleCount > femaleCount ? maleCount : femaleCount) * 1.2;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isSmall = constraints.maxWidth < 450;
+        final barWidth = isSmall ? 40.0 : 60.0;
+        final chartHeight = isSmall ? 240.0 : 260.0;
+        final maxCount =
+            (maleCount > femaleCount ? maleCount : femaleCount) * 1.2;
 
-      return Container(
-        padding: EdgeInsets.all(isSmall ? 20 : 28),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              appColors.surface,
-              appColors.surface.withOpacity(0.9),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: theme.colorScheme.primary.withOpacity(0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-              spreadRadius: 5,
-            ),
-            BoxShadow(
-              color: appColors.shadow.withOpacity(0.05),
-              blurRadius: 30,
-              offset: const Offset(0, 15),
-            ),
-          ],
-          border: Border.all(
-            color: theme.colorScheme.primary.withOpacity(0.1),
-            width: 1.5,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Wrap(
-              spacing: 16,
-              runSpacing: 8,
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Text(
-                  'Member Gender Distribution',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.5,
-                    fontSize: isSmall ? 18 : null,
-                  ),
-                ),
-                Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Iconsax.people,
-                        color: theme.colorScheme.primary,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Total: $total',
-                        style: TextStyle(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: isSmall ? 12 : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+        return Container(
+          padding: EdgeInsets.all(isSmall ? 20 : 28),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                appColors.surface,
+                appColors.surface.withOpacity(0.9),
               ],
             ),
-            const SizedBox(height: 32),
-            SizedBox(
-              height: chartHeight,
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY: maxCount > 0 ? maxCount : 1,
-                  gridData: const FlGridData(show: false),
-                  borderData: FlBorderData(show: false),
-                  barGroups: [
-                    BarChartGroupData(
-                      x: 0,
-                      barRods: [
-                        BarChartRodData(
-                          toY: maleCount.toDouble(),
-                          width: barWidth,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.primary.withOpacity(0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+                spreadRadius: 5,
+              ),
+              BoxShadow(
+                color: appColors.shadow.withOpacity(0.05),
+                blurRadius: 30,
+                offset: const Offset(0, 15),
+              ),
+            ],
+            border: Border.all(
+              color: theme.colorScheme.primary.withOpacity(0.1),
+              width: 1.5,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: 16,
+                runSpacing: 8,
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    'Member Gender Distribution',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.5,
+                      fontSize: isSmall ? 18 : null,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Iconsax.people,
                           color: theme.colorScheme.primary,
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(8),
-                            topRight: Radius.circular(8),
-                          ),
-                          backDrawRodData: BackgroundBarChartRodData(
-                            show: true,
-                            toY: maxCount > 0 ? maxCount : 1,
-                            color: theme.colorScheme.primary.withOpacity(0.1),
+                          size: 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Total: $total',
+                          style: TextStyle(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: isSmall ? 12 : null,
                           ),
                         ),
                       ],
                     ),
-                    BarChartGroupData(
-                      x: 1,
-                      barRods: [
-                        BarChartRodData(
-                          toY: femaleCount.toDouble(),
-                          width: barWidth,
-                          color: theme.colorScheme.secondary,
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(8),
-                            topRight: Radius.circular(8),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                height: chartHeight,
+                child: BarChart(
+                  BarChartData(
+                    alignment: BarChartAlignment.spaceAround,
+                    maxY: maxCount > 0 ? maxCount : 1,
+                    gridData: const FlGridData(show: false),
+                    borderData: FlBorderData(show: false),
+                    barGroups: [
+                      BarChartGroupData(
+                        x: 0,
+                        barRods: [
+                          BarChartRodData(
+                            toY: maleCount.toDouble(),
+                            width: barWidth,
+                            color: theme.colorScheme.primary,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            backDrawRodData: BackgroundBarChartRodData(
+                              show: true,
+                              toY: maxCount > 0 ? maxCount : 1,
+                              color: theme.colorScheme.primary.withOpacity(
+                                0.1,
+                              ),
+                            ),
                           ),
-                          backDrawRodData: BackgroundBarChartRodData(
-                            show: true,
-                            toY: maxCount > 0 ? maxCount : 1,
-                            color: theme.colorScheme.secondary.withOpacity(0.1),
+                        ],
+                      ),
+                      BarChartGroupData(
+                        x: 1,
+                        barRods: [
+                          BarChartRodData(
+                            toY: femaleCount.toDouble(),
+                            width: barWidth,
+                            color: theme.colorScheme.secondary,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            backDrawRodData: BackgroundBarChartRodData(
+                              show: true,
+                              toY: maxCount > 0 ? maxCount : 1,
+                              color: theme.colorScheme.secondary.withOpacity(0.1),
+                            ),
                           ),
+                        ],
+                      ),
+                    ],
+                    titlesData: FlTitlesData(
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      leftTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 110,
+                          getTitlesWidget: (value, meta) {
+                            Widget content;
+                            switch (value.toInt()) {
+                              case 0:
+                                content = _GenderIndicator(
+                                  isSmall: isSmall,
+                                  icon: Iconsax.man,
+                                  label: 'Male',
+                                  percentage: malePercentage,
+                                  color: theme.colorScheme.primary,
+                                );
+                                break;
+                              case 1:
+                                content = _GenderIndicator(
+                                  isSmall: isSmall,
+                                  icon: Iconsax.woman,
+                                  label: 'Female',
+                                  percentage: femalePercentage,
+                                  color: theme.colorScheme.secondary,
+                                );
+                                break;
+                              default:
+                                content = const SizedBox();
+                                break;
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: content,
+                            );
+                          },
                         ),
-                      ],
+                      ),
                     ),
-                  ],
-                  titlesData: FlTitlesData(
-                    topTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    leftTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 110,
-                        getTitlesWidget: (value, meta) {
-                          Widget content;
-                          switch (value.toInt()) {
-                            case 0:
-                              content = _GenderIndicator(isSmall: isSmall, icon: Iconsax.man, label: 'Male', percentage: malePercentage, color: theme.colorScheme.primary);
-                              break;
-                            case 1:
-                              content = _GenderIndicator(isSmall: isSmall, icon: Iconsax.woman, label: 'Female', percentage: femalePercentage, color: theme.colorScheme.secondary);
-                              break;
-                            default:
-                              content = const SizedBox();
-                              break;
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: content,
+                    barTouchData: BarTouchData(
+                      enabled: true,
+                      touchTooltipData: BarTouchTooltipData(
+                        tooltipPadding: const EdgeInsets.all(12),
+                        tooltipMargin: 8,
+                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                          return BarTooltipItem(
+                            '${group.x == 0 ? 'Male' : 'Female'}: ${rod.toY.toInt()}',
+                            TextStyle(
+                              color: appColors.textPrimary,
+                              fontWeight: FontWeight.bold,
+                            ),
                           );
                         },
                       ),
                     ),
                   ),
-                  barTouchData: BarTouchData(
-                    enabled: true,
-                    touchTooltipData: BarTouchTooltipData(
-                      tooltipPadding: const EdgeInsets.all(12),
-                      tooltipMargin: 8,
-                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                        return BarTooltipItem(
-                          '${group.x == 0 ? 'Male' : 'Female'}: ${rod.toY.toInt()}',
-                          TextStyle(
-                            color: appColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ).animate().fade(duration: 500.ms, delay: 200.ms).slideY(
+            ],
+          ),
+        )
+            .animate()
+            .fade(duration: 500.ms, delay: 200.ms)
+            .slideY(
           begin: 0.1,
           end: 0,
           duration: 500.ms,
           curve: Curves.easeOutQuint,
-          delay: 200.ms);
-    });
+          delay: 200.ms,
+        );
+      },
+    );
   }
 }
 
@@ -606,12 +650,14 @@ class _GenderIndicator extends StatelessWidget {
           child: Icon(icon, color: color, size: isSmall ? 20 : 24),
         ),
         const SizedBox(height: 8),
-        Text(label,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: isSmall ? 12 : 14,
-              color: Theme.of(context).textTheme.bodyLarge?.color,
-            )),
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: isSmall ? 12 : 14,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
+          ),
+        ),
         Text(
           '$percentage%',
           style: TextStyle(
@@ -643,183 +689,202 @@ class MemberStatusCard extends StatelessWidget {
     ];
     final statusEntries =
     statusData.entries.where((entry) => entry.value > 0).toList();
-    final totalMembers =
-    statusEntries.fold(0, (sum, entry) => sum + entry.value);
+    final totalMembers = statusEntries.fold(
+      0,
+          (sum, entry) => sum + entry.value,
+    );
 
-    return LayoutBuilder(builder: (context, constraints) {
-      final isSmall = constraints.maxWidth < 350;
-      final chartSize = min(constraints.maxWidth * 0.6, isSmall ? 180.0 : 220.0);
-      final radius = chartSize / 2;
-      final centerSpaceRadius = radius * 0.6;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isSmall = constraints.maxWidth < 350;
+        final chartSize = min(
+          constraints.maxWidth * 0.6,
+          isSmall ? 180.0 : 220.0,
+        );
+        final radius = chartSize / 2;
+        final centerSpaceRadius = radius * 0.6;
 
-      return Container(
-        padding: EdgeInsets.all(isSmall ? 20 : 28),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              appColors.surface,
-              appColors.surface.withOpacity(0.9),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: theme.colorScheme.secondary.withOpacity(0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-              spreadRadius: 5,
-            ),
-            BoxShadow(
-              color: appColors.shadow.withOpacity(0.05),
-              blurRadius: 30,
-              offset: const Offset(0, 15),
-            ),
-          ],
-          border: Border.all(
-            color: theme.colorScheme.secondary.withOpacity(0.1),
-            width: 1.5,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Wrap(
-              spacing: 16,
-              runSpacing: 8,
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Text(
-                  'Member Status',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.5,
-                    fontSize: isSmall ? 18 : null,
-                  ),
-                ),
-                if (totalMembers > 0)
-                  Container(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.secondary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Iconsax.chart,
-                          color: theme.colorScheme.secondary,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Total: $totalMembers',
-                          style: TextStyle(
-                            color: theme.colorScheme.secondary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: isSmall ? 12 : null,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+        return Container(
+          padding: EdgeInsets.all(isSmall ? 20 : 28),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                appColors.surface,
+                appColors.surface.withOpacity(0.9),
               ],
             ),
-            const SizedBox(height: 32),
-            if (totalMembers == 0)
-              SizedBox(
-                height: chartSize,
-                child: Center(
-                    child: Text('No data available.',
-                        style: TextStyle(color: appColors.textSecondary))),
-              )
-            else
-              SizedBox(
-                height: chartSize,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    PieChart(
-                      PieChartData(
-                        sectionsSpace: 2,
-                        centerSpaceRadius: centerSpaceRadius,
-                        sections: List.generate(statusEntries.length, (i) {
-                          final entry = statusEntries[i];
-                          return PieChartSectionData(
-                            color: colors[i % colors.length],
-                            value: entry.value.toDouble(),
-                            title: '',
-                            radius: (radius - centerSpaceRadius) * 0.9,
-                          );
-                        }),
-                        borderData: FlBorderData(show: false),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.secondary.withOpacity(0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+                spreadRadius: 5,
+              ),
+              BoxShadow(
+                color: appColors.shadow.withOpacity(0.05),
+                blurRadius: 30,
+                offset: const Offset(0, 15),
+              ),
+            ],
+            border: Border.all(
+              color: theme.colorScheme.secondary.withOpacity(0.1),
+              width: 1.5,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: 16,
+                runSpacing: 8,
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    'Member Status',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.5,
+                      fontSize: isSmall ? 18 : null,
+                    ),
+                  ),
+                  if (totalMembers > 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.secondary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Iconsax.chart,
+                            color: theme.colorScheme.secondary,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Total: $totalMembers',
+                            style: TextStyle(
+                              color: theme.colorScheme.secondary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: isSmall ? 12 : null,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '$totalMembers',
-                          style: theme.textTheme.headlineLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: appColors.textPrimary,
-                            fontSize: isSmall ? 28 : null,
-                          ),
-                        ),
-                        Text(
-                          'Members',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: appColors.textSecondary,
-                            fontSize: isSmall ? 10 : null,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                ],
               ),
-            const SizedBox(height: 24),
-            if (totalMembers > 0)
-              Column(
-                children: List.generate(statusEntries.length, (i) {
-                  final entry = statusEntries[i];
-                  final percentage =
-                  (entry.value / totalMembers * 100).toStringAsFixed(1);
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Row(
-                      children: [
-                        _Indicator(
+              const SizedBox(height: 32),
+              if (totalMembers == 0)
+                SizedBox(
+                  height: chartSize,
+                  child: Center(
+                    child: Text(
+                      'No data available.',
+                      style: TextStyle(color: appColors.textSecondary),
+                    ),
+                  ),
+                )
+              else
+                SizedBox(
+                  height: chartSize,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      PieChart(
+                        PieChartData(
+                          sectionsSpace: 2,
+                          centerSpaceRadius: centerSpaceRadius,
+                          sections: List.generate(statusEntries.length, (
+                              i,
+                              ) {
+                            final entry = statusEntries[i];
+                            return PieChartSectionData(
+                              color: colors[i % colors.length],
+                              value: entry.value.toDouble(),
+                              title: '',
+                              radius: (radius - centerSpaceRadius) * 0.9,
+                            );
+                          }),
+                          borderData: FlBorderData(show: false),
+                        ),
+                      ),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '$totalMembers',
+                            style: theme.textTheme.headlineLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: appColors.textPrimary,
+                              fontSize: isSmall ? 28 : null,
+                            ),
+                          ),
+                          Text(
+                            'Members',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: appColors.textSecondary,
+                              fontSize: isSmall ? 10 : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 24),
+              if (totalMembers > 0)
+                Column(
+                  children: List.generate(statusEntries.length, (i) {
+                    final entry = statusEntries[i];
+                    final percentage =
+                    (entry.value / totalMembers * 100).toStringAsFixed(1);
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Row(
+                        children: [
+                          _Indicator(
                             color: colors[i % colors.length],
                             text: entry.key,
-                            isSmall: isSmall),
-                        const Spacer(),
-                        Text(
-                          '${entry.value} ($percentage%)',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: colors[i % colors.length],
-                            fontSize: isSmall ? 12 : null,
+                            isSmall: isSmall,
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-              ),
-          ],
-        ),
-      ).animate().fade(duration: 500.ms, delay: 400.ms).slideY(
+                          const Spacer(),
+                          Text(
+                            '${entry.value} ($percentage%)',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: colors[i % colors.length],
+                              fontSize: isSmall ? 12 : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ),
+            ],
+          ),
+        )
+            .animate()
+            .fade(duration: 500.ms, delay: 400.ms)
+            .slideY(
           begin: 0.1,
           end: 0,
           duration: 500.ms,
           curve: Curves.easeOutQuint,
-          delay: 400.ms);
-    });
+          delay: 400.ms,
+        );
+      },
+    );
   }
 }
 
@@ -828,14 +893,18 @@ class _Indicator extends StatelessWidget {
   final String text;
   final bool isSmall;
 
-  const _Indicator(
-      {required this.color, required this.text, this.isSmall = false});
+  const _Indicator({
+    required this.color,
+    required this.text,
+    this.isSmall = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     String formattedText = text.toLowerCase();
     formattedText =
-        formattedText.substring(0, 1).toUpperCase() + formattedText.substring(1);
+        formattedText.substring(0, 1).toUpperCase() +
+            formattedText.substring(1);
 
     return Row(
       children: <Widget>[

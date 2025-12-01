@@ -6,7 +6,7 @@ part of 'church_selection_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$currentChurchHash() => r'905839059d89eecdaf48737cef04ea7cdc82098b';
+String _$currentChurchHash() => r'fd6ab35e9b9e54b8a023f4ff640892b096f5c425';
 
 /// See also [CurrentChurch].
 @ProviderFor(CurrentChurch)

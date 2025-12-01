@@ -4,7 +4,8 @@
 set -e
 
 echo "Building Flutter web app..."
-flutter build web --release --base-href "/genet-church-live-demo/" --no-tree-shake-icons
+# Added --no-wasm-dry-run to suppress the harmless WebAssembly compatibility warnings.
+flutter build web --release --base-href "/genet-church-live-demo/" --no-tree-shake-icons --no-wasm-dry-run
 
 echo "Navigating to build directory..."
 cd build/web

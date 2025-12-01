@@ -31,7 +31,7 @@ class ModernDropdown<T> extends StatelessWidget {
     final T? currentValue = isValueInItems ? value : null;
 
     return DropdownButtonFormField<T>(
-      value: currentValue,
+      initialValue: currentValue,
       items: items,
       onChanged: onChanged,
       validator: validator,
@@ -62,11 +62,7 @@ class ModernDropdown<T> extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            icon,
-            color: appColors.textSecondary,
-            size: 20,
-          ),
+          child: Icon(icon, color: appColors.textSecondary, size: 20),
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -81,24 +77,15 @@ class ModernDropdown<T> extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(
-            color: theme.colorScheme.primary,
-            width: 2,
-          ),
+          borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(
-            color: theme.colorScheme.error,
-            width: 1.5,
-          ),
+          borderSide: BorderSide(color: theme.colorScheme.error, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(
-            color: theme.colorScheme.error,
-            width: 2,
-          ),
+          borderSide: BorderSide(color: theme.colorScheme.error, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
           vertical: 20,

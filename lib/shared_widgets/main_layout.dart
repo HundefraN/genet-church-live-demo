@@ -7,23 +7,19 @@ class MainLayout extends HookWidget {
   final Widget child;
   final List<String> breadcrumbs;
 
-  MainLayout({
-    super.key,
-    required this.child,
-    required this.breadcrumbs,
-  });
+  const MainLayout({super.key, required this.child, required this.breadcrumbs});
 
   @override
   Widget build(BuildContext context) {
     final scaffoldKey = useMemoized(() => GlobalKey<ScaffoldState>());
     final isMobile = MediaQuery.of(context).size.width < 900;
     final isCollapsed = useState(isMobile ? true : false);
-    const double headerHeight = 130.0;
 
+    // FIX: Using CustomScrollView for the body content allows SliverAppBar to work correctly
+    // without crashing inside a Column/Expanded setup.
     Widget buildBody(bool mobile) {
       return CustomScrollView(
-        physics:
-        const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        physics: const BouncingScrollPhysics(),
         slivers: [
           HeaderBar(
             breadcrumbs: breadcrumbs,
@@ -39,9 +35,9 @@ class MainLayout extends HookWidget {
             snap: true,
             stretch: true,
           ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(mobile ? 16.0 : 32.0),
+          SliverPadding(
+            padding: EdgeInsets.all(mobile ? 16.0 : 32.0),
+            sliver: SliverToBoxAdapter(
               child: child,
             ),
           ),
@@ -61,9 +57,13 @@ class MainLayout extends HookWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // FIX: SideMenu needs to be outside the scroll view to stay fixed
           SideMenu(isCollapsed: isCollapsed.value),
-          Expanded(child: buildBody(false)),
+          Expanded(
+            child: buildBody(false),
+          ),
         ],
       ),
     );

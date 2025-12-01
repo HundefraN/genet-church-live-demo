@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
-import 'package:genet_church_portal/shared_widgets/content_card.dart';
+import 'package:genet_church_portal/shared_widgets/modern_card.dart';
 import 'package:genet_church_portal/shared_widgets/page_header.dart';
-import 'package:genet_church_portal/shared_widgets/primary_button.dart';
+import 'package:genet_church_portal/shared_widgets/modern_button.dart';
 import 'package:iconsax/iconsax.dart';
 
 class PermissionsScreen extends StatelessWidget {
@@ -12,71 +12,73 @@ class PermissionsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        PageHeader(
-          title: 'Role Permissions',
-          description: 'Configure access levels for different user roles.',
-          action: PrimaryButton(
-            text: 'Save Changes',
-            onPressed: () async {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Permissions saved! (Simulation)'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            icon: Iconsax.save_2,
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          PageHeader(
+            title: 'Role Permissions',
+            description: 'Configure access levels for different user roles.',
+            action: PrimaryButton(
+              text: 'Save Changes',
+              onPressed: () async {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Permissions saved! (Simulation)'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+              icon: Iconsax.save_2,
+            ),
           ),
-        ),
-        const SizedBox(height: 24),
-        const _PermissionRoleCard(
-          roleName: 'Super Admin',
-          roleDescription:
-          'Has unrestricted access to all features, including system settings and user management.',
-          icon: Iconsax.crown_1,
-          iconColor: Color(0xFFF5A623),
-          initialPermissions: {
-            'Create, Read, Update, Delete Churches': true,
-            'Manage All Pastors & Users': true,
-            'View Financial Reports': true,
-            'Configure System Settings': true,
-            'Send Global Communications': true,
-          },
-          isLocked: true,
-        ),
-        const SizedBox(height: 24),
-        _PermissionRoleCard(
-          roleName: 'Pastor',
-          roleDescription:
-          'Manages members, events, and departments within their assigned church.',
-          icon: Iconsax.user_octagon,
-          iconColor: theme.colorScheme.primary,
-          initialPermissions: const {
-            'Add & Manage Church Members': true,
-            'Create & Manage Departments': true,
-            'View Own Church Reports': true,
-            'Send Church-level Communications': true,
-            'Manage Servants & Volunteers': false,
-          },
-        ),
-        const SizedBox(height: 24),
-        _PermissionRoleCard(
-          roleName: 'Servant',
-          roleDescription:
-          'Assists with managing members and activities within their assigned department.',
-          icon: Iconsax.lifebuoy,
-          iconColor: theme.colorScheme.secondary,
-          initialPermissions: const {
-            'View Members in Own Department': true,
-            'Mark Member Attendance': true,
-            'View Departmental Reports': false,
-            'Edit Member Profiles': false,
-          },
-        ),
-      ],
+          const SizedBox(height: 24),
+          const _PermissionRoleCard(
+            roleName: 'Super Admin',
+            roleDescription:
+            'Has unrestricted access to all features, including system settings and user management.',
+            icon: Iconsax.crown_1,
+            iconColor: Color(0xFFF5A623),
+            initialPermissions: {
+              'Create, Read, Update, Delete Churches': true,
+              'Manage All Pastors & Users': true,
+              'View Financial Reports': true,
+              'Configure System Settings': true,
+              'Send Global Communications': true,
+            },
+            isLocked: true,
+          ),
+          const SizedBox(height: 24),
+          _PermissionRoleCard(
+            roleName: 'Pastor',
+            roleDescription:
+            'Manages members, events, and departments within their assigned church.',
+            icon: Iconsax.user_octagon,
+            iconColor: theme.colorScheme.primary,
+            initialPermissions: const {
+              'Add & Manage Church Members': true,
+              'Create & Manage Departments': true,
+              'View Own Church Reports': true,
+              'Send Church-level Communications': true,
+              'Manage Servants & Volunteers': false,
+            },
+          ),
+          const SizedBox(height: 24),
+          _PermissionRoleCard(
+            roleName: 'Servant',
+            roleDescription:
+            'Assists with managing members and activities within their assigned department.',
+            icon: Iconsax.lifebuoy,
+            iconColor: theme.colorScheme.secondary,
+            initialPermissions: const {
+              'View Members in Own Department': true,
+              'Mark Member Attendance': true,
+              'View Departmental Reports': false,
+              'Edit Member Profiles': false,
+            },
+          ),
+        ],
+      ),
     );
   }
 }
@@ -103,7 +105,7 @@ class _PermissionRoleCard extends HookWidget {
     final permissionsState = useState(initialPermissions);
     final appColors = Theme.of(context).extension<AppColors>()!;
 
-    return ContentCard(
+    return ModernCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -122,18 +124,22 @@ class _PermissionRoleCard extends HookWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(roleName,
-                        style: Theme.of(context).textTheme.headlineSmall),
+                    Text(
+                      roleName,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
                     const SizedBox(height: 4),
-                    Text(roleDescription,
-                        style: Theme.of(context).textTheme.bodyMedium),
+                    Text(
+                      roleDescription,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                   ],
                 ),
               ),
               if (isLocked) ...[
                 const SizedBox(width: 16),
                 Icon(Iconsax.lock, color: appColors.textSecondary, size: 20),
-              ]
+              ],
             ],
           ),
           const Divider(height: 40),
@@ -144,13 +150,14 @@ class _PermissionRoleCard extends HookWidget {
               onChanged: isLocked
                   ? null
                   : (newValue) {
-                final newPermissions =
-                Map<String, bool>.from(permissionsState.value);
+                final newPermissions = Map<String, bool>.from(
+                  permissionsState.value,
+                );
                 newPermissions[entry.key] = newValue;
                 permissionsState.value = newPermissions;
               },
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -171,7 +178,7 @@ class _PermissionToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final appColors = theme.extension<AppColors>()!;
+    final appColors = Theme.of(context).extension<AppColors>()!;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -192,7 +199,7 @@ class _PermissionToggle extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: theme.colorScheme.primary,
+            activeThumbColor: theme.colorScheme.primary,
             inactiveThumbColor: appColors.border,
           ),
         ],

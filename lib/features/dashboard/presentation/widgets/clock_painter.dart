@@ -2,9 +2,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 class ClockPainter extends CustomPainter {
-  final double animationProgress;
+  final DateTime dateTime;
 
-  ClockPainter({this.animationProgress = 1.0});
+  ClockPainter({required this.dateTime});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -63,9 +63,13 @@ class ClockPainter extends CustomPainter {
     final minuteHandLength = radius * 0.65;
     final hourHandLength = radius * 0.45;
 
-    final hourHandAngle = (2.5 * 30 - 90) * pi / 180;
-    final minuteHandAngle = (6 * 30 - 90) * pi / 180;
-    final secondHandAngle = (animationProgress * 360 - 90) * pi / 180;
+    final hour = dateTime.hour % 12;
+    final minute = dateTime.minute;
+    final second = dateTime.second;
+
+    final hourHandAngle = (hour * 30 + minute * 0.5 - 90) * pi / 180;
+    final minuteHandAngle = (minute * 6 - 90) * pi / 180;
+    final secondHandAngle = (second * 6 - 90) * pi / 180;
 
     _drawHandWithShadow(
       canvas,

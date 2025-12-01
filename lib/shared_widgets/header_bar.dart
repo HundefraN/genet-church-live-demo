@@ -52,22 +52,22 @@ class HeaderBar extends HookConsumerWidget {
       leadingWidth: isSmallScreen ? 72 : 0,
       leading: isSmallScreen
           ? Center(
-        child: Container(
-          margin: const EdgeInsets.only(left: 16),
-          decoration: BoxDecoration(
-            color: theme.primaryColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: theme.primaryColor.withOpacity(0.2),
-              width: 1,
-            ),
-          ),
-          child: IconButton(
-            icon: Icon(Iconsax.menu, color: theme.primaryColor),
-            onPressed: onMenuPressed,
-          ),
-        ),
-      )
+              child: Container(
+                margin: const EdgeInsets.only(left: 16),
+                decoration: BoxDecoration(
+                  color: theme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: theme.primaryColor.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: IconButton(
+                  icon: Icon(Iconsax.menu, color: theme.primaryColor),
+                  onPressed: onMenuPressed,
+                ),
+              ),
+            )
           : const SizedBox.shrink(),
       titleSpacing: 0,
       title: ClipRRect(
@@ -75,9 +75,7 @@ class HeaderBar extends HookConsumerWidget {
           filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
           child: Container(
             height: 80,
-            padding: EdgeInsets.symmetric(
-              horizontal: isSmallScreen ? 16 : 32,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 16 : 32),
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
@@ -169,13 +167,9 @@ class _UserProfileButtonState extends ConsumerState<_UserProfileButton>
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.05,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
+    );
   }
 
   @override
@@ -191,8 +185,9 @@ class _UserProfileButtonState extends ConsumerState<_UserProfileButton>
     final destructiveRed = theme.colorScheme.error;
     final currentTheme = ref.watch(appThemeNotifierProvider);
     final user = ref.watch(authStateProvider);
-    final userInitial =
-    user?.fullName.isNotEmpty == true ? user!.fullName[0].toUpperCase() : '?';
+    final userInitial = user?.fullName.isNotEmpty == true
+        ? user!.fullName[0].toUpperCase()
+        : '?';
     final screenWidth = MediaQuery.of(context).size.width;
     final isCompact = screenWidth < 950;
 
@@ -210,254 +205,287 @@ class _UserProfileButtonState extends ConsumerState<_UserProfileButton>
         builder: (context, child) {
           return Transform.scale(
             scale: _scaleAnimation.value,
-            child: PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'profile') {
-                  context.go('/profile');
-                } else if (value == 'logout') {
-                  ref.read(authStateProvider.notifier).logout();
-                  context.go('/login');
-                } else if (value == 'light_mode') {
-                  ref
-                      .read(appThemeNotifierProvider.notifier)
-                      .setTheme(ThemeMode.light);
-                } else if (value == 'dark_mode') {
-                  ref
-                      .read(appThemeNotifierProvider.notifier)
-                      .setTheme(ThemeMode.dark);
-                }
-              },
-              tooltip: 'Profile Settings',
-              offset: const Offset(0, 60),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 16,
-              color: appColors.surface,
-              shadowColor: appColors.shadow.withOpacity(0.2),
-              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                PopupMenuItem<String>(
-                  value: 'profile',
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: theme.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Iconsax.user,
-                            color: theme.primaryColor,
-                            size: 16,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'My Profile',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: appColors.textPrimary,
-                          ),
-                        ),
-                      ],
+            child: ref.watch(isLoggingOutProvider)
+                ? const Center(child: CircularProgressIndicator())
+                : PopupMenuButton<String>(
+                    onSelected: (value) async {
+                      if (value == 'profile') {
+                        context.go('/profile');
+                      } else if (value == 'logout') {
+                        await ref.read(authStateProvider.notifier).logout();
+                        if (mounted) {
+                          context.go('/login');
+                        }
+                      } else if (value == 'light_mode') {
+                        ref
+                            .read(appThemeNotifierProvider.notifier)
+                            .setTheme(ThemeMode.light);
+                      } else if (value == 'dark_mode') {
+                        ref
+                            .read(appThemeNotifierProvider.notifier)
+                            .setTheme(ThemeMode.dark);
+                      } else if (value == 'system_mode') {
+                        ref
+                            .read(appThemeNotifierProvider.notifier)
+                            .setTheme(ThemeMode.system);
+                      }
+                    },
+                    tooltip: 'Profile Settings',
+                    offset: const Offset(0, 60),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                  ),
-                ),
-                const PopupMenuDivider(),
-                PopupMenuItem<String>(
-                  value: 'light_mode',
-                  child: Row(
-                    children: [
-                      Icon(Iconsax.sun_1, size: 16, color: appColors.textSecondary),
-                      const SizedBox(width: 12),
-                      const Text("Light Mode"),
-                      const Spacer(),
-                      if (currentTheme == ThemeMode.light)
-                        Icon(Iconsax.tick_circle,
-                            color: theme.primaryColor, size: 20),
-                    ],
-                  ),
-                ),
-                PopupMenuItem<String>(
-                  value: 'dark_mode',
-                  child: Row(
-                    children: [
-                      Icon(Iconsax.moon, size: 16, color: appColors.textSecondary),
-                      const SizedBox(width: 12),
-                      const Text("Dark Mode"),
-                      const Spacer(),
-                      if (currentTheme == ThemeMode.dark)
-                        Icon(Iconsax.tick_circle,
-                            color: theme.primaryColor, size: 20),
-                    ],
-                  ),
-                ),
-                const PopupMenuDivider(),
-                PopupMenuItem<String>(
-                  value: 'logout',
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: destructiveRed.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                    elevation: 16,
+                    color: appColors.surface,
+                    shadowColor: appColors.shadow.withOpacity(0.2),
+                    itemBuilder: (BuildContext context) =>
+                        <PopupMenuEntry<String>>[
+                          PopupMenuItem<String>(
+                            value: 'profile',
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: theme.primaryColor.withOpacity(
+                                        0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Iconsax.user,
+                                      color: theme.primaryColor,
+                                      size: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'My Profile',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: appColors.textPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          child: Icon(
-                            Iconsax.logout,
-                            color: destructiveRed,
-                            size: 16,
+                          const PopupMenuDivider(),
+                          PopupMenuItem<String>(
+                            value: 'light_mode',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Iconsax.sun_1,
+                                  size: 16,
+                                  color: appColors.textSecondary,
+                                ),
+                                const SizedBox(width: 12),
+                                const Text("Light Mode"),
+                                const Spacer(),
+                                if (currentTheme == ThemeMode.light)
+                                  Icon(
+                                    Iconsax.tick_circle,
+                                    color: theme.primaryColor,
+                                    size: 20,
+                                  ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Logout',
-                          style: TextStyle(
-                            color: destructiveRed,
-                            fontWeight: FontWeight.w600,
+                          PopupMenuItem<String>(
+                            value: 'dark_mode',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Iconsax.moon,
+                                  size: 16,
+                                  color: appColors.textSecondary,
+                                ),
+                                const SizedBox(width: 12),
+                                const Text("Dark Mode"),
+                                const Spacer(),
+                                if (currentTheme == ThemeMode.dark)
+                                  Icon(
+                                    Iconsax.tick_circle,
+                                    color: theme.primaryColor,
+                                    size: 20,
+                                  ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: isCompact
-                    ? const EdgeInsets.all(4)
-                    : const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: _isHovered
-                      ? LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      theme.primaryColor.withOpacity(0.1),
-                      theme.primaryColor.withOpacity(0.05),
-                    ],
-                  )
-                      : null,
-                  border: Border.all(
-                    color: _isHovered
-                        ? theme.primaryColor.withOpacity(0.3)
-                        : appColors.border.withOpacity(0.6),
-                    width: 1,
-                  ),
-                  borderRadius: BorderRadius.circular(isCompact ? 12 : 24),
-                  boxShadow: _isHovered
-                      ? [
-                    BoxShadow(
-                      color: theme.primaryColor.withOpacity(0.1),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                      : null,
-                ),
-                child: isCompact
-                    ? Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        theme.primaryColor,
-                        theme.primaryColor.withOpacity(0.8),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.primaryColor.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      userInitial,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                )
-                    : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            theme.primaryColor,
-                            theme.primaryColor.withOpacity(0.8),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: theme.primaryColor.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          userInitial,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Flexible(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            user?.fullName ?? "User",
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: appColors.textPrimary,
-                              fontSize: 14,
-                              letterSpacing: -0.2,
+                          const PopupMenuDivider(),
+                          PopupMenuItem<String>(
+                            value: 'logout',
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: destructiveRed.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Iconsax.logout,
+                                      color: destructiveRed,
+                                      size: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Logout',
+                                    style: TextStyle(
+                                      color: destructiveRed,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: isCompact
+                          ? const EdgeInsets.all(4)
+                          : const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                      decoration: BoxDecoration(
+                        gradient: _isHovered
+                            ? LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  theme.primaryColor.withOpacity(0.1),
+                                  theme.primaryColor.withOpacity(0.05),
+                                ],
+                              )
+                            : null,
+                        border: Border.all(
+                          color: _isHovered
+                              ? theme.primaryColor.withOpacity(0.3)
+                              : appColors.border.withOpacity(0.6),
+                          width: 1,
+                        ),
+                        borderRadius: BorderRadius.circular(
+                          isCompact ? 12 : 24,
+                        ),
+                        boxShadow: _isHovered
+                            ? [
+                                BoxShadow(
+                                  color: theme.primaryColor.withOpacity(0.1),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ]
+                            : null,
                       ),
+                      child: isCompact
+                          ? Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    theme.primaryColor,
+                                    theme.primaryColor.withOpacity(0.8),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(10),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: theme.primaryColor.withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: Text(
+                                  userInitial,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        theme.primaryColor,
+                                        theme.primaryColor.withOpacity(0.8),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: theme.primaryColor.withOpacity(
+                                          0.3,
+                                        ),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      userInitial,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Flexible(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        user?.fullName ?? "User",
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          color: appColors.textPrimary,
+                                          fontSize: 14,
+                                          letterSpacing: -0.2,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Iconsax.arrow_down_1,
+                                  size: 16,
+                                  color: appColors.textSecondary,
+                                ),
+                              ],
+                            ),
                     ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      Iconsax.arrow_down_1,
-                      size: 16,
-                      color: appColors.textSecondary,
-                    ),
-                  ],
-                ),
-              ),
-            ),
+                  ),
           );
         },
       ),
@@ -495,21 +523,30 @@ class ChurchSelector extends ConsumerWidget {
               isExpanded: true,
               hint: Row(
                 children: [
-                  Icon(Iconsax.building_4,
-                      size: 16, color: appColors.textSecondary),
+                  Icon(
+                    Iconsax.building_4,
+                    size: 16,
+                    color: appColors.textSecondary,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Select Church',
                     style: TextStyle(
-                        color: appColors.textSecondary,
-                        fontWeight: FontWeight.w500),
+                      color: appColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
-              icon: Icon(Iconsax.arrow_down_1,
-                  color: appColors.textSecondary, size: 18),
+              icon: Icon(
+                Iconsax.arrow_down_1,
+                color: appColors.textSecondary,
+                size: 18,
+              ),
               style: TextStyle(
-                  color: appColors.textPrimary, fontWeight: FontWeight.w600),
+                color: appColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
               dropdownColor: appColors.surface,
               borderRadius: BorderRadius.circular(14),
               elevation: 16,
@@ -518,8 +555,11 @@ class ChurchSelector extends ConsumerWidget {
                   value: church.id,
                   child: Row(
                     children: [
-                      Icon(Iconsax.building,
-                          size: 14, color: theme.primaryColor),
+                      Icon(
+                        Iconsax.building,
+                        size: 14,
+                        color: theme.primaryColor,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -576,12 +616,12 @@ class GlobalSearchField extends HookConsumerWidget {
         ),
         boxShadow: isFocused.value
             ? [
-          BoxShadow(
-            color: theme.primaryColor.withOpacity(0.1),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          )
-        ]
+                BoxShadow(
+                  color: theme.primaryColor.withOpacity(0.1),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ]
             : null,
       ),
       child: TextField(
@@ -590,15 +630,20 @@ class GlobalSearchField extends HookConsumerWidget {
         onTap: () => _showSearchDialog(context, ref),
         readOnly: true,
         style: TextStyle(
-            color: appColors.textPrimary, fontWeight: FontWeight.w500),
+          color: appColors.textPrimary,
+          fontWeight: FontWeight.w500,
+        ),
         decoration: InputDecoration(
           hintText: 'Search actions...',
           hintStyle: TextStyle(
-              color: appColors.textSecondary, fontWeight: FontWeight.w500),
+            color: appColors.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
           prefixIcon: Icon(
             Iconsax.search_normal_1,
-            color:
-            isFocused.value ? theme.primaryColor : appColors.textSecondary,
+            color: isFocused.value
+                ? theme.primaryColor
+                : appColors.textSecondary,
             size: 20,
           ),
           filled: true,
@@ -616,13 +661,15 @@ class _CompactGlobalSearch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer(builder: (context, ref, _) {
-      return IconButton(
-        icon: const Icon(Iconsax.search_normal_1),
-        onPressed: () => _showSearchDialog(context, ref),
-        tooltip: 'Search',
-      );
-    });
+    return Consumer(
+      builder: (context, ref, _) {
+        return IconButton(
+          icon: const Icon(Iconsax.search_normal_1),
+          onPressed: () => _showSearchDialog(context, ref),
+          tooltip: 'Search',
+        );
+      },
+    );
   }
 }
 
@@ -649,10 +696,7 @@ class _CompactChurchSelector extends ConsumerWidget {
 }
 
 void _showSearchDialog(BuildContext context, WidgetRef ref) {
-  showDialog(
-    context: context,
-    builder: (context) => const _SearchDialog(),
-  );
+  showDialog(context: context, builder: (context) => const _SearchDialog());
 }
 
 class _SearchDialog extends HookConsumerWidget {
@@ -688,7 +732,7 @@ class _SearchDialog extends HookConsumerWidget {
                 controller: searchController,
                 focusNode: searchFocusNode,
                 onChanged: (value) =>
-                ref.read(rawSearchQueryProvider.notifier).state = value,
+                    ref.read(rawSearchQueryProvider.notifier).state = value,
                 autofocus: true,
                 decoration: InputDecoration(
                   hintText: 'Search actions or pages...',
@@ -742,8 +786,10 @@ class _Breadcrumbs extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final bool isCompact = screenWidth < 1200;
 
-    String title =
-    items.lastWhere((item) => item.isNotEmpty, orElse: () => 'Dashboard');
+    String title = items.lastWhere(
+      (item) => item.isNotEmpty,
+      orElse: () => 'Dashboard',
+    );
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -780,8 +826,11 @@ class _Breadcrumbs extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (index == 0)
-                        Icon(Iconsax.home,
-                            size: 14, color: appColors.textSecondary),
+                        Icon(
+                          Iconsax.home,
+                          size: 14,
+                          color: appColors.textSecondary,
+                        ),
                       if (index == 0) const SizedBox(width: 8),
                       Text(
                         items[index],
@@ -790,14 +839,18 @@ class _Breadcrumbs extends StatelessWidget {
                               ? theme.primaryColor
                               : appColors.textSecondary,
                           fontSize: 13,
-                          fontWeight:
-                          isLast ? FontWeight.w700 : FontWeight.w500,
+                          fontWeight: isLast
+                              ? FontWeight.w700
+                              : FontWeight.w500,
                         ),
                       ),
                       if (!isLast) ...[
                         const SizedBox(width: 8),
-                        Icon(Iconsax.arrow_right_3,
-                            color: appColors.textSecondary, size: 14),
+                        Icon(
+                          Iconsax.arrow_right_3,
+                          color: appColors.textSecondary,
+                          size: 14,
+                        ),
                         const SizedBox(width: 8),
                       ],
                     ],

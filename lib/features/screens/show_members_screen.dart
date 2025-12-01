@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
+import 'package:genet_church_portal/data/models/member_model.dart';
+import 'package:genet_church_portal/data/models/user_model.dart';
+import 'package:genet_church_portal/data/repositories/auth_repository.dart';
 import 'package:genet_church_portal/shared_widgets/api_error_widget.dart';
-import 'package:genet_church_portal/shared_widgets/content_card.dart';
-import 'package:genet_church_portal/shared_widgets/modern_text_field.dart';
+import 'package:genet_church_portal/shared_widgets/modern_button.dart';
+import 'package:genet_church_portal/shared_widgets/modern_card.dart';
+import 'package:genet_church_portal/shared_widgets/modern_input.dart';
+import 'package:genet_church_portal/shared_widgets/notification_system.dart';
 import 'package:genet_church_portal/shared_widgets/page_header.dart';
 import 'package:genet_church_portal/shared_widgets/styled_data_table.dart';
-import 'package:genet_church_portal/shared_widgets/table_action_button.dart';
 import 'package:genet_church_portal/shared_widgets/table_shimmer_loader.dart';
 import 'package:genet_church_portal/state/church_selection_provider.dart';
 import 'package:genet_church_portal/state/providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
-
-import '../../shared_widgets/primary_button.dart';
 
 class ShowMembersScreen extends HookConsumerWidget {
   const ShowMembersScreen({super.key});
@@ -25,6 +27,7 @@ class ShowMembersScreen extends HookConsumerWidget {
     final appColors = theme.extension<AppColors>()!;
     final selectedChurchId = ref.watch(currentChurchProvider);
     final membersAsync = ref.watch(membersListProvider);
+    final userRole = ref.watch(authStateProvider)?.roleEnum;
     final searchQuery = useState('');
     final scrollController = useScrollController();
 
@@ -44,6 +47,9 @@ class ShowMembersScreen extends HookConsumerWidget {
       return () => scrollController.removeListener(listener);
     }, [scrollController]);
 
+    final canManageMembers =
+        userRole == UserRole.PASTOR || userRole == UserRole.SERVANT;
+
     return SingleChildScrollView(
       controller: scrollController,
       child: Column(
@@ -52,15 +58,17 @@ class ShowMembersScreen extends HookConsumerWidget {
             title: 'Member Records',
             description:
             'A searchable and filterable list of all registered members in the church.',
-            action: PrimaryButton(
+            action: canManageMembers
+                ? PrimaryButton(
               text: 'Add New Member',
               icon: Iconsax.add,
-              onPressed: () async => context.go('/add-members'),
-            ),
+              onPressed: () => context.go('/add-members'),
+            )
+                : null,
           ),
           const SizedBox(height: 24),
           if (selectedChurchId == null)
-            ContentCard(
+            ModernCard(
               child: Center(
                 heightFactor: 5,
                 child: Column(
@@ -80,15 +88,15 @@ class ShowMembersScreen extends HookConsumerWidget {
               ),
             )
           else
-            ContentCard(
+            ModernCard(
               padding: EdgeInsets.zero,
               child: Column(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(24.0),
-                    child: ModernTextField(
-                      hintText: 'Search by name or phone number...',
-                      icon: Iconsax.search_normal_1,
+                    child: ModernInput(
+                      label: 'Search by name or phone number...',
+                      prefixIcon: Iconsax.search_normal_1,
                       onChanged: (value) => searchQuery.value = value,
                     ),
                   ),
@@ -154,19 +162,30 @@ class ShowMembersScreen extends HookConsumerWidget {
                                 ),
                                 DataCell(Row(
                                   children: [
-                                    TableActionButton(
-                                      label: 'VIEW',
-                                      color: theme.colorScheme.primary,
+                                    ModernButton(
+                                      text: 'VIEW',
+                                      variant: ButtonVariant.outline,
+                                      size: ButtonSize.small,
+                                      customColor: theme.colorScheme.primary,
                                       icon: Iconsax.eye,
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        if (member.id != null) {
+                                          context.go(
+                                              '/show-members/${member.id}');
+                                        }
+                                      },
                                     ),
-                                    const SizedBox(width: 8),
-                                    TableActionButton(
-                                      label: 'DELETE',
-                                      color: theme.colorScheme.error,
-                                      icon: Iconsax.trash,
-                                      onPressed: () {},
-                                    ),
+                                    if (canManageMembers) ...[
+                                      const SizedBox(width: 8),
+                                      DestructiveButton(
+                                        text: 'DELETE',
+                                        size: ButtonSize.small,
+                                        icon: Iconsax.trash,
+                                        onPressed: () =>
+                                            _showDeleteMemberConfirmationDialog(
+                                                context, ref, member),
+                                      ),
+                                    ]
                                   ],
                                 )),
                               ]);
@@ -206,6 +225,50 @@ class ShowMembersScreen extends HookConsumerWidget {
             ),
         ],
       ),
+    );
+  }
+
+  void _showDeleteMemberConfirmationDialog(
+      BuildContext context, WidgetRef ref, Member member) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Confirm Deletion'),
+          content: Text(
+              'Are you sure you want to delete member "${member.fullName}"? This action cannot be undone.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.error),
+              child: const Text('Delete'),
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                if (member.id == null) return;
+                try {
+                  await ref
+                      .read(membersListProvider.notifier)
+                      .removeMember(member.id!);
+                  if (context.mounted) {
+                    context.showSuccessNotification(
+                        title: 'Success',
+                        message: 'Member deleted successfully.');
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    context.showErrorNotification(
+                        title: 'Error', message: 'Failed to delete member.');
+                  }
+                }
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

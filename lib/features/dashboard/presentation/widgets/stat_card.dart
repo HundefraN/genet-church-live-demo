@@ -18,9 +18,11 @@ class ChurchesStatCard extends ConsumerWidget {
       data: (stats) {
         if (stats is! SuperAdminDashboardStats) return const SizedBox.shrink();
         return _StatCard(
-          gradient: const LinearGradient(colors: [Color(0xFF667eea), Color(0xFF764ba2)]),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+          ),
           onTap: () => context.go('/report-churchs'),
-          value: stats.totalChurches.toString(),
+          value: stats.totals.totalChurches.toString(),
           label: 'Total Churches',
           icon: Iconsax.building,
           chart: _buildPieChart(),
@@ -41,12 +43,15 @@ class PastorsStatCard extends ConsumerWidget {
       data: (stats) {
         if (stats is! SuperAdminDashboardStats) return const SizedBox.shrink();
         return _StatCard(
-          gradient: const LinearGradient(colors: [Color(0xFF11998e), Color(0xFF38ef7d)]),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF11998e), Color(0xFF38ef7d)],
+          ),
           onTap: () => context.go('/report-pastors'),
-          value: stats.totalPastors.toString(),
+          value: '${stats.totals.totalPastors}',
+          subtitle: '${stats.totals.totalChurches} Churches Assigned',
           label: 'Total Pastors',
           icon: Iconsax.user_octagon,
-          chart: _buildBarChart(stats.totalPastors.toDouble()),
+          chart: _buildBarChart(stats.totals.totalPastors.toDouble()),
         );
       },
       loading: () => const _StatCardLoading(),
@@ -66,15 +71,17 @@ class MembersStatCard extends ConsumerWidget {
         String label = 'Members';
 
         if (stats is SuperAdminDashboardStats) {
-          value = stats.totalMembers.toString();
+          value = stats.totals.totalMembers.toString();
           label = 'Total Members';
         } else if (stats is PastorDashboardStats) {
-          value = stats.totalMembers.toString();
+          value = stats.totals.totalMembers.toString();
           label = 'Your Members';
         }
 
         return _StatCard(
-          gradient: const LinearGradient(colors: [Color(0xFFf093fb), Color(0xFFf5576c)]),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFf093fb), Color(0xFFf5576c)],
+          ),
           onTap: () => context.go('/show-members'),
           value: value,
           label: label,
@@ -99,15 +106,17 @@ class ServantsStatCard extends ConsumerWidget {
         String label = 'Servants';
 
         if (stats is SuperAdminDashboardStats) {
-          value = stats.totalServants.toString();
+          value = stats.totals.totalServants.toString();
           label = 'Total Servants';
         } else if (stats is PastorDashboardStats) {
-          value = stats.totalServants.toString();
+          value = stats.totals.totalServants.toString();
           label = 'Your Servants';
         }
 
         return _StatCard(
-          gradient: const LinearGradient(colors: [Color(0xFFf5a623), Color(0xFFf76b1c)]),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFf5a623), Color(0xFFf76b1c)],
+          ),
           onTap: () => context.go('/report-servants'),
           value: value,
           label: label,
@@ -121,6 +130,14 @@ class ServantsStatCard extends ConsumerWidget {
   }
 }
 
+class DepartmentsStatCard extends ConsumerWidget {
+  const DepartmentsStatCard({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return const SizedBox.shrink();
+  }
+}
+
 Widget _buildPieChart() {
   return SizedBox(
     width: 80,
@@ -131,10 +148,30 @@ Widget _buildPieChart() {
         centerSpaceRadius: 28,
         startDegreeOffset: -90,
         sections: [
-          PieChartSectionData(color: Colors.white.withOpacity(0.9), value: 35, showTitle: false, radius: 12),
-          PieChartSectionData(color: Colors.white.withOpacity(0.7), value: 25, showTitle: false, radius: 12),
-          PieChartSectionData(color: Colors.white.withOpacity(0.5), value: 20, showTitle: false, radius: 12),
-          PieChartSectionData(color: Colors.white.withOpacity(0.3), value: 20, showTitle: false, radius: 12),
+          PieChartSectionData(
+            color: Colors.white.withOpacity(0.9),
+            value: 35,
+            showTitle: false,
+            radius: 12,
+          ),
+          PieChartSectionData(
+            color: Colors.white.withOpacity(0.7),
+            value: 25,
+            showTitle: false,
+            radius: 12,
+          ),
+          PieChartSectionData(
+            color: Colors.white.withOpacity(0.5),
+            value: 20,
+            showTitle: false,
+            radius: 12,
+          ),
+          PieChartSectionData(
+            color: Colors.white.withOpacity(0.3),
+            value: 20,
+            showTitle: false,
+            radius: 12,
+          ),
         ],
       ),
     ),
@@ -153,9 +190,39 @@ Widget _buildBarChart(double total) {
         borderData: FlBorderData(show: false),
         gridData: const FlGridData(show: false),
         barGroups: [
-          BarChartGroupData(x: 0, barRods: [BarChartRodData(toY: total * 0.8, color: Colors.white.withOpacity(0.9), width: 10, borderRadius: const BorderRadius.all(Radius.circular(6)))]),
-          BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: total * 0.6, color: Colors.white.withOpacity(0.7), width: 10, borderRadius: const BorderRadius.all(Radius.circular(6)))]),
-          BarChartGroupData(x: 2, barRods: [BarChartRodData(toY: total * 0.9, color: Colors.white.withOpacity(0.8), width: 10, borderRadius: const BorderRadius.all(Radius.circular(6)))]),
+          BarChartGroupData(
+            x: 0,
+            barRods: [
+              BarChartRodData(
+                toY: total * 0.8,
+                color: Colors.white.withOpacity(0.9),
+                width: 10,
+                borderRadius: const BorderRadius.all(Radius.circular(6)),
+              ),
+            ],
+          ),
+          BarChartGroupData(
+            x: 1,
+            barRods: [
+              BarChartRodData(
+                toY: total * 0.6,
+                color: Colors.white.withOpacity(0.7),
+                width: 10,
+                borderRadius: const BorderRadius.all(Radius.circular(6)),
+              ),
+            ],
+          ),
+          BarChartGroupData(
+            x: 2,
+            barRods: [
+              BarChartRodData(
+                toY: total * 0.9,
+                color: Colors.white.withOpacity(0.8),
+                width: 10,
+                borderRadius: const BorderRadius.all(Radius.circular(6)),
+              ),
+            ],
+          ),
         ],
       ),
     ),
@@ -173,7 +240,13 @@ Widget _buildLineChart() {
         borderData: FlBorderData(show: false),
         lineBarsData: [
           LineChartBarData(
-            spots: const [FlSpot(0, 3), FlSpot(1, 1.5), FlSpot(2.5, 4), FlSpot(4, 2.8), FlSpot(5, 3.5)],
+            spots: const [
+              FlSpot(0, 3),
+              FlSpot(1, 1.5),
+              FlSpot(2.5, 4),
+              FlSpot(4, 2.8),
+              FlSpot(5, 3.5),
+            ],
             isCurved: true,
             curveSmoothness: 0.4,
             color: Colors.white,
@@ -181,14 +254,23 @@ Widget _buildLineChart() {
             isStrokeCapRound: true,
             dotData: FlDotData(
               show: true,
-              getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(radius: 3, color: Colors.white, strokeWidth: 2, strokeColor: Colors.white.withOpacity(0.5)),
+              getDotPainter: (spot, percent, barData, index) =>
+                  FlDotCirclePainter(
+                    radius: 3,
+                    color: Colors.white,
+                    strokeWidth: 2,
+                    strokeColor: Colors.white.withOpacity(0.5),
+                  ),
             ),
             belowBarData: BarAreaData(
               show: true,
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.white.withOpacity(0.3), Colors.white.withOpacity(0.1)],
+                colors: [
+                  Colors.white.withOpacity(0.3),
+                  Colors.white.withOpacity(0.1),
+                ],
               ),
             ),
           ),
@@ -202,6 +284,7 @@ class _StatCard extends StatefulWidget {
   final Gradient gradient;
   final VoidCallback onTap;
   final String value;
+  final String? subtitle;
   final String label;
   final Widget chart;
   final IconData icon;
@@ -210,6 +293,7 @@ class _StatCard extends StatefulWidget {
     required this.gradient,
     required this.onTap,
     required this.value,
+    this.subtitle,
     required this.label,
     required this.chart,
     required this.icon,
@@ -222,7 +306,6 @@ class _StatCard extends StatefulWidget {
 class _StatCardState extends State<_StatCard> with TickerProviderStateMixin {
   late AnimationController _hoverController;
   late AnimationController _pulseController;
-  bool _isHovered = false;
 
   @override
   void initState() {
@@ -248,13 +331,12 @@ class _StatCardState extends State<_StatCard> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 350,
+      height: 170, // Increased height slightly to prevent overflow
       child: MouseRegion(
         onEnter: (_) {
-          setState(() => _isHovered = true);
           _hoverController.forward();
         },
         onExit: (_) {
-          setState(() => _isHovered = false);
           _hoverController.reverse();
         },
         child: AnimatedBuilder(
@@ -263,14 +345,14 @@ class _StatCardState extends State<_StatCard> with TickerProviderStateMixin {
             return Transform.scale(
               scale: 1.0 + (_hoverController.value * 0.02),
               child: Container(
-                height: 140,
                 decoration: BoxDecoration(
                   gradient: widget.gradient,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black
-                          .withOpacity(0.1 + (_hoverController.value * 0.1)),
+                      color: Colors.black.withOpacity(
+                        0.1 + (_hoverController.value * 0.1),
+                      ),
                       blurRadius: 20 + (_hoverController.value * 10),
                       offset: Offset(0, 8 + (_hoverController.value * 4)),
                     ),
@@ -289,6 +371,7 @@ class _StatCardState extends State<_StatCard> with TickerProviderStateMixin {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Row(
                                   children: [
@@ -296,8 +379,7 @@ class _StatCardState extends State<_StatCard> with TickerProviderStateMixin {
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
                                         color: Colors.white.withOpacity(0.2),
-                                        borderRadius:
-                                        BorderRadius.circular(12),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Icon(
                                         widget.icon,
@@ -315,20 +397,41 @@ class _StatCardState extends State<_StatCard> with TickerProviderStateMixin {
                                           fontWeight: FontWeight.w500,
                                           letterSpacing: 0.5,
                                         ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
                                       ),
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 12),
-                                Text(
-                                  widget.value,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: -0.5,
+                                Flexible(
+                                  child: Text(
+                                    widget.value,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 32, // Adjusted font size
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: -0.5,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
                                   ),
                                 ),
+                                if (widget.subtitle != null) ...[
+                                  const SizedBox(height: 4),
+                                  Flexible(
+                                    child: Text(
+                                      widget.subtitle!,
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.8),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
@@ -369,7 +472,7 @@ class _StatCardLoading extends StatelessWidget {
       baseColor: appColors.shimmerBase,
       highlightColor: appColors.shimmerHighlight,
       child: Container(
-        height: 140,
+        height: 170, // Matched height
         width: 350,
         padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
@@ -382,6 +485,7 @@ class _StatCardLoading extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(
                     children: [
@@ -439,7 +543,7 @@ class _StatCardError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 140,
+      height: 170, // Matched height
       width: 350,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.5),
@@ -449,8 +553,11 @@ class _StatCardError extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline,
-                color: Theme.of(context).colorScheme.onErrorContainer, size: 32),
+            Icon(
+              Icons.error_outline,
+              color: Theme.of(context).colorScheme.onErrorContainer,
+              size: 32,
+            ),
             const SizedBox(height: 8),
             Text(
               'Could not load\n$label data',

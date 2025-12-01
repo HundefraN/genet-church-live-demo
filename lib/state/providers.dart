@@ -1,96 +1,231 @@
-import 'package:genet_church_portal/data/models/paginated_response.dart';
-import 'package:genet_church_portal/data/repositories/auth_repository.dart';
-import 'package:genet_church_portal/state/church_selection_provider.dart';
-import 'package:genet_church_portal/state/new_item_provider.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genet_church_portal/data/models/activity_log_model.dart';
 import 'package:genet_church_portal/data/models/church_model.dart';
-import 'package:genet_church_portal/data/models/dashboard_model.dart';
+import 'package:genet_church_portal/data/models/dashboard_base_model.dart';
 import 'package:genet_church_portal/data/models/department_model.dart';
 import 'package:genet_church_portal/data/models/member_model.dart';
-import 'package:genet_church_portal/data/models/pastor_dashboard_model.dart';
 import 'package:genet_church_portal/data/models/pastor_model.dart';
 import 'package:genet_church_portal/data/models/servant_model.dart';
+import 'package:genet_church_portal/data/models/user_model.dart';
 import 'package:genet_church_portal/data/repositories/api_repository.dart';
-
-import '../data/models/dashboard_base_model.dart';
+import 'package:genet_church_portal/data/repositories/auth_repository.dart';
+import 'package:genet_church_portal/state/church_selection_provider.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'providers.g.dart';
 
-final dashboardStatsProvider =
-FutureProvider.autoDispose<DashboardStatsBase?>((ref) async {
+final dashboardTimeframeProvider = StateProvider<String>((ref) => 'all');
+
+final dashboardStatsProvider = FutureProvider.autoDispose<DashboardStatsBase?>((ref) async {
   final user = ref.watch(authStateProvider);
   final api = ref.watch(apiRepositoryProvider);
+
+  final timeframe = ref.watch(dashboardTimeframeProvider);
 
   if (user == null) {
     return null;
   }
 
-  switch (user.role.toUpperCase()) {
-    case 'SUPER_ADMIN':
-      return await api.getSuperAdminDashboardStats();
-    case 'PASTOR':
-      return await api.getPastorDashboardStats() as DashboardStatsBase?;
+  await Future.delayed(const Duration(milliseconds: 200));
+
+  switch (user.roleEnum) {
+    case UserRole.SUPER_ADMIN:
+      return await api.getSuperAdminDashboardStats(timeframe: timeframe);
+    case UserRole.PASTOR:
+      final churchId = ref.read(currentChurchProvider);
+      if (churchId == null) {
+        return null;
+      }
+      return await api.getPastorDashboardStats(
+        churchId,
+        timeframe: timeframe,
+      );
     default:
       return null;
   }
 });
 
 @riverpod
-class Pastors extends _$Pastors {
-  @override
-  Future<List<Pastor>> build() {
-    return ref.watch(apiRepositoryProvider).getPastors();
+Future<List<UserModel>> users(UsersRef ref) async {
+  try {
+    final users = await ref.watch(apiRepositoryProvider).getUsers();
+    return users.data;
+  } catch (e) {
+    return [];
+  }
+}
+
+@riverpod
+Future<Pastor?> currentPastor(CurrentPastorRef ref) async {
+  final user = ref.watch(authStateProvider);
+
+  if (user == null || user.roleEnum != UserRole.PASTOR) {
+    return null;
   }
 
-  Future<Pastor> addPastor(
-      {required String fullName,
-        required String email,
-        required String password}) async {
+  if (user.pastorDetails != null) {
+    return Pastor(
+      id: user.pastorDetails!['id'] ?? '',
+      userId: user.id,
+      churchId: user.pastorDetails!['churchId'],
+      user: user,
+    );
+  }
+
+  return null;
+}
+
+@riverpod
+class Pastors extends _$Pastors {
+  @override
+  Future<List<Pastor>> build() async {
+    final user = ref.watch(authStateProvider);
+    if (user?.roleEnum != UserRole.SUPER_ADMIN) {
+      return [];
+    }
+    final pastorsResult = await ref.watch(apiRepositoryProvider).getPastors();
+    return pastorsResult.data;
+  }
+
+  Future<Pastor> addPastor({
+    required String fullName,
+    required String email,
+    required String password,
+  }) async {
     final api = ref.read(apiRepositoryProvider);
-    final newPastor =
-    await api.addPastor(fullName: fullName, email: email, password: password);
+    final newPastor = await api.addPastor(
+      fullName: fullName,
+      email: email,
+      password: password,
+    );
     ref.invalidateSelf();
     await future;
     return newPastor;
   }
 
-  Future<void> updatePastor(
-      {required String pastorId,
-        required String fullName,
-        required String email}) async {
+  Future<void> updatePastor({
+    required String pastorId,
+    required String fullName,
+    required String email,
+  }) async {
     final api = ref.read(apiRepositoryProvider);
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final previousState = await future;
+
+    state = AsyncValue.data(
+      previousState.map((pastor) {
+        if (pastor.id == pastorId) {
+          final updatedUser = UserModel(
+            id: pastor.userId,
+            fullName: fullName,
+            email: email,
+            role: pastor.user?.role ?? 'PASTOR',
+            isActive: pastor.user?.isActive ?? true,
+            createdAt: pastor.user?.createdAt ?? '',
+          );
+          return Pastor(
+            id: pastor.id,
+            userId: pastor.userId,
+            churchId: pastor.churchId,
+            user: updatedUser,
+          );
+        }
+        return pastor;
+      }).toList(),
+    );
+
+    try {
       await api.updatePastor(
-          pastorId: pastorId, fullName: fullName, email: email);
-      return api.getPastors();
-    });
+        pastorId: pastorId,
+        fullName: fullName,
+        email: email,
+      );
+      ref.invalidateSelf();
+    } catch (e) {
+      state = AsyncValue.data(previousState);
+      rethrow;
+    }
   }
 
-  Future<void> assignChurchToPastor(
-      {required String pastorId, required String churchId}) async {
+  Future<void> assignChurchToPastor({
+    required String pastorId,
+    required String? churchId,
+  }) async {
     final api = ref.read(apiRepositoryProvider);
-    await api.assignChurchToPastor(pastorId: pastorId, churchId: churchId);
-    ref.invalidateSelf();
-    await future;
+    final previousState = await future;
+
+    state = AsyncValue.data(
+      previousState.map((p) {
+        if (p.id == pastorId) {
+          return Pastor(
+            id: p.id,
+            userId: p.userId,
+            churchId: churchId,
+            user: p.user,
+          );
+        }
+        return p;
+      }).toList(),
+    );
+
+    try {
+      await api.assignChurchToPastor(pastorId: pastorId, churchId: churchId);
+      ref.invalidateSelf();
+    } catch (e) {
+      state = AsyncValue.data(previousState);
+      rethrow;
+    }
+  }
+
+  Future<void> unassignChurch({required String pastorId}) async {
+    final api = ref.read(apiRepositoryProvider);
+    final previousState = await future;
+
+    state = AsyncValue.data(
+      previousState.map((p) {
+        if (p.id == pastorId) {
+          return Pastor(
+            id: p.id,
+            userId: p.userId,
+            churchId: null,
+            user: p.user,
+          );
+        }
+        return p;
+      }).toList(),
+    );
+
+    try {
+      await api.unassignChurchFromPastor(pastorId);
+      ref.invalidateSelf();
+    } catch (e) {
+      state = AsyncValue.data(previousState);
+      rethrow;
+    }
   }
 
   Future<void> removePastor(String pastorId) async {
     final api = ref.read(apiRepositoryProvider);
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final previousState = await future;
+
+    state = AsyncValue.data(
+      previousState.where((p) => p.id != pastorId).toList(),
+    );
+
+    try {
       await api.removePastor(pastorId);
-      return api.getPastors();
-    });
+    } catch (e) {
+      state = AsyncValue.data(previousState);
+      rethrow;
+    }
   }
 }
 
 @riverpod
 class Churches extends _$Churches {
   @override
-  Future<List<Church>> build() {
-    return ref.watch(apiRepositoryProvider).getChurches();
+  Future<List<Church>> build() async {
+    final churches = await ref.watch(apiRepositoryProvider).getChurches();
+    return churches.data;
   }
 
   Future<Church> addChurch(Church church) async {
@@ -101,23 +236,35 @@ class Churches extends _$Churches {
     return newChurch;
   }
 
-  Future<void> updateChurch(
-      {required String churchId, required Church church}) async {
+  Future<void> updateChurch({
+    required String churchId,
+    required Church church,
+  }) async {
     final api = ref.read(apiRepositoryProvider);
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final previousState = await future;
+    state = AsyncValue.data(
+      previousState.map((c) => c.id == churchId ? church : c).toList(),
+    );
+
+    try {
       await api.updateChurch(churchId: churchId, church: church);
-      return api.getChurches();
-    });
+    } catch (e) {
+      state = AsyncValue.data(previousState);
+      rethrow;
+    }
   }
 
   Future<void> removeChurch(String id) async {
     final api = ref.read(apiRepositoryProvider);
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final previousState = await future;
+    state = AsyncValue.data(previousState.where((c) => c.id != id).toList());
+
+    try {
       await api.removeChurch(id);
-      return api.getChurches();
-    });
+    } catch (e) {
+      state = AsyncValue.data(previousState);
+      rethrow;
+    }
   }
 }
 
@@ -131,95 +278,149 @@ class Departments extends _$Departments {
   }
 
   Future<void> addDepartment({required String name}) async {
-    final churchId = ref.read(currentChurchProvider);
-    if (churchId == null) throw Exception('A church must be selected.');
     final api = ref.read(apiRepositoryProvider);
-    await api.addDepartment(name: name, churchId: churchId);
+    await api.addDepartment(name: name);
     ref.invalidateSelf();
     await future;
   }
 
-  Future<void> updateDepartment(
-      {required String departmentId, required String name}) async {
-    final churchId = ref.read(currentChurchProvider);
-    if (churchId == null) throw Exception('A church must be selected.');
+  Future<void> updateDepartment({
+    required String departmentId,
+    required String name,
+  }) async {
     final api = ref.read(apiRepositoryProvider);
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final previousState = await future;
+    state = AsyncValue.data(
+      previousState.map((d) {
+        if (d.id == departmentId) {
+          return Department(id: d.id, name: name, churchId: d.churchId);
+        }
+        return d;
+      }).toList(),
+    );
+
+    try {
       await api.updateDepartment(departmentId: departmentId, name: name);
-      return api.getDepartments(churchId);
-    });
+    } catch (e) {
+      state = AsyncValue.data(previousState);
+      rethrow;
+    }
   }
 
   Future<void> removeDepartment(String id) async {
-    final churchId = ref.read(currentChurchProvider);
-    if (churchId == null) throw Exception('A church must be selected.');
     final api = ref.read(apiRepositoryProvider);
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final previousState = await future;
+    state = AsyncValue.data(previousState.where((d) => d.id != id).toList());
+
+    try {
       await api.removeDepartment(id);
-      return api.getDepartments(churchId);
-    });
+    } catch (e) {
+      state = AsyncValue.data(previousState);
+      rethrow;
+    }
   }
 }
 
 @riverpod
 class Servants extends _$Servants {
   @override
-  Future<List<Servant>> build() {
+  Future<List<Servant>> build() async {
     final churchId = ref.watch(currentChurchProvider);
-    if (churchId == null) return Future.value([]);
-    return ref.watch(apiRepositoryProvider).getServants(churchId);
+    if (churchId == null) return [];
+    final servantsResult = await ref
+        .watch(apiRepositoryProvider)
+        .getServants(churchId);
+    return servantsResult.data;
   }
 
-  Future<Servant> addServant(
-      {required String fullName,
-        required String email,
-        required String password}) async {
+  Future<Servant> addServant({
+    required String fullName,
+    required String email,
+    required String password,
+  }) async {
     final churchId = ref.read(currentChurchProvider);
     if (churchId == null) throw Exception('A church must be selected.');
     final api = ref.read(apiRepositoryProvider);
     final newServant = await api.addServant(
-        fullName: fullName, email: email, password: password, churchId: churchId);
+      fullName: fullName,
+      email: email,
+      password: password,
+      churchId: churchId,
+    );
     ref.invalidateSelf();
     await future;
     return newServant;
   }
 
-  Future<void> updateServant(
-      {required String servantId, required String fullName}) async {
-    final churchId = ref.read(currentChurchProvider);
-    if (churchId == null) throw Exception('A church must be selected.');
+  Future<void> updateServant({
+    required String servantId,
+    required String fullName,
+  }) async {
     final api = ref.read(apiRepositoryProvider);
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await api.updateServant(servantId: servantId, fullName: fullName);
-      return api.getServants(churchId);
-    });
+    final previousState = await future;
+
+    try {
+      final updatedServant = await api.updateServant(
+        servantId: servantId,
+        fullName: fullName,
+      );
+      state = AsyncValue.data(
+        previousState.map((s) {
+          if (s.id == servantId) {
+            return updatedServant;
+          }
+          return s;
+        }).toList(),
+      );
+    } catch (e) {
+      state = AsyncValue.data(previousState);
+      rethrow;
+    }
   }
 
-  Future<void> assignToDepartment(
-      {required String departmentId, required String servantId}) async {
-    final churchId = ref.read(currentChurchProvider);
-    if (churchId == null) throw Exception('A church must be selected.');
+  Future<void> assignToDepartment({
+    required String departmentId,
+    required String servantId,
+  }) async {
     final api = ref.read(apiRepositoryProvider);
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final previousState = await future;
+    state = AsyncValue.data(
+      previousState.map((s) {
+        if (s.id == servantId) {
+          return Servant(
+            id: s.id,
+            userId: s.userId,
+            churchId: s.churchId,
+            departmentId: departmentId,
+            user: s.user,
+          );
+        }
+        return s;
+      }).toList(),
+    );
+
+    try {
       await api.assignServantToDepartment(
-          departmentId: departmentId, servantId: servantId);
-      return api.getServants(churchId);
-    });
+        departmentId: departmentId,
+        servantId: servantId,
+      );
+    } catch (e) {
+      state = AsyncValue.data(previousState);
+      rethrow;
+    }
   }
 
   Future<void> removeServant(String id) async {
-    final churchId = ref.read(currentChurchProvider);
-    if (churchId == null) throw Exception('A church must be selected.');
     final api = ref.read(apiRepositoryProvider);
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final previousState = await future;
+    state = AsyncValue.data(previousState.where((s) => s.id != id).toList());
+
+    try {
       await api.removeServant(id);
-      return api.getServants(churchId);
-    });
+    } catch (e) {
+      state = AsyncValue.data(previousState);
+      rethrow;
+    }
   }
 }
 
@@ -275,8 +476,19 @@ class MembersList extends _$MembersList {
   @override
   Future<MemberListState> build() async {
     final churchId = ref.watch(currentChurchProvider);
-    if (churchId == null)
+    final user = ref.watch(authStateProvider);
+
+    if (user == null) {
       return const MemberListState(hasMore: false, members: []);
+    }
+
+    if (user.roleEnum != UserRole.PASTOR && user.roleEnum != UserRole.SERVANT) {
+      return const MemberListState(hasMore: false, members: []);
+    }
+
+    if (churchId == null) {
+      return const MemberListState(hasMore: false, members: []);
+    }
 
     final result = await ref
         .read(apiRepositoryProvider)
@@ -292,7 +504,9 @@ class MembersList extends _$MembersList {
     final currentState = state.value;
     if (currentState == null ||
         !currentState.hasMore ||
-        currentState.isFetchingNextPage) return;
+        currentState.isFetchingNextPage) {
+      return;
+    }
 
     final churchId = ref.read(currentChurchProvider);
     if (churchId == null) return;
@@ -313,8 +527,28 @@ class MembersList extends _$MembersList {
           isFetchingNextPage: false,
         ),
       );
-    } catch (e, s) {
+    } catch (e) {
       state = AsyncData(currentState.copyWith(isFetchingNextPage: false));
+    }
+  }
+
+  Future<void> removeMember(String memberId) async {
+    final churchId = ref.read(currentChurchProvider);
+    if (churchId == null) throw Exception("No church selected.");
+
+    final currentState = state.value;
+    if (currentState == null) return;
+
+    final updatedMembers = currentState.members
+        .where((m) => m.id != memberId)
+        .toList();
+    state = AsyncData(currentState.copyWith(members: updatedMembers));
+
+    try {
+      await ref.read(apiRepositoryProvider).removeMember(memberId, churchId);
+    } catch (e) {
+      state = AsyncData(currentState);
+      rethrow;
     }
   }
 }
@@ -324,32 +558,59 @@ class ActivityLog extends _$ActivityLog {
   @override
   Future<List<ActivityLogItem>> build() async {
     final user = ref.watch(authStateProvider);
-    if (user?.role.toUpperCase() != 'SUPER_ADMIN') {
+    if (user == null || user.roleEnum != UserRole.SUPER_ADMIN) {
       return [];
     }
-    final churches = await ref.watch(churchesProvider.future);
-    final pastors = await ref.watch(pastorsProvider.future);
+
+    List<Church> churches = [];
+    List<Pastor> pastors = [];
+
+    try {
+      churches = await ref.watch(churchesProvider.future);
+    } catch (_) {}
+
+    try {
+      pastors = await ref.watch(pastorsProvider.future);
+    } catch (_) {}
 
     final List<ActivityLogItem> activities = [];
 
-    activities.addAll(pastors.map((p) => ActivityLogItem(
-      title: 'New Pastor Added',
-      subtitle: '${p.user.fullName} joined the pastoral team.',
-      timestamp: DateTime.parse(p.user.createdAt),
-      type: ActivityType.pastor,
-      path: '/report-pastors',
-    )));
+    for (var p in pastors) {
+      if (p.user != null) {
+        activities.add(
+          ActivityLogItem(
+            title: 'New Pastor Added',
+            subtitle: '${p.user!.fullName} joined the pastoral team.',
+            timestamp: DateTime.tryParse(p.user!.createdAt) ?? DateTime.now(),
+            type: ActivityType.pastor,
+            path: '/report-pastors',
+          ),
+        );
+      }
+    }
 
-    activities.addAll(churches.map((c) => ActivityLogItem(
-      title: 'New Church Registered',
-      subtitle: '${c.name} is now part of the network.',
-      timestamp:
-      DateTime.parse(c.dateCreated ?? DateTime.now().toIso8601String()),
-      type: ActivityType.church,
-      path: '/report-churchs',
-    )));
+    for (var c in churches) {
+      activities.add(
+        ActivityLogItem(
+          title: 'New Church Registered',
+          subtitle: '${c.name} is now part of the network.',
+          timestamp: DateTime.tryParse(c.dateCreated ?? '') ?? DateTime.now(),
+          type: ActivityType.church,
+          path: '/report-churchs',
+        ),
+      );
+    }
 
     activities.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return activities;
   }
+}
+
+@riverpod
+Future<Member> memberDetails(MemberDetailsRef ref, String memberId) {
+  final churchId = ref.watch(currentChurchProvider);
+  if (churchId == null) {
+    throw Exception('A church must be selected to view member details.');
+  }
+  return ref.watch(apiRepositoryProvider).getMemberById(memberId, churchId);
 }

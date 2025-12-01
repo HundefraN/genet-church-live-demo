@@ -1,8 +1,4 @@
-enum UserRole {
-  SUPER_ADMIN,
-  PASTOR,
-  SERVANT,
-}
+enum UserRole { SUPER_ADMIN, PASTOR, SERVANT }
 
 UserRole mapRoleFromString(String? roleString) {
   switch (roleString?.toUpperCase()) {
@@ -22,32 +18,31 @@ class UserModel {
   final String fullName;
   final String email;
   final String role;
-  final String? churchId;
+  final bool isActive;
+  final String createdAt;
+  final Map<String, dynamic>? pastorDetails;
 
   UserModel({
     required this.id,
     required this.fullName,
     required this.email,
     required this.role,
-    this.churchId,
+    required this.isActive,
+    required this.createdAt,
+    this.pastorDetails,
   });
 
   UserRole get roleEnum => mapRoleFromString(role);
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
-    String? assignedChurchId;
-    if (json['Pastor'] != null && json['Pastor']['churchId'] != null) {
-      assignedChurchId = json['Pastor']['churchId'];
-    } else if (json['Servant'] != null && json['Servant']['churchId'] != null) {
-      assignedChurchId = json['Servant']['churchId'];
-    }
-
     return UserModel(
       id: json['id'] as String,
       fullName: json['fullName'] as String,
       email: json['email'] as String,
       role: json['role'] as String,
-      churchId: assignedChurchId,
+      isActive: json['isActive'] as bool? ?? false,
+      createdAt: json['createdAt'] as String? ?? '',
+      pastorDetails: json['Pastor'] as Map<String, dynamic>?,
     );
   }
 
@@ -57,7 +52,9 @@ class UserModel {
       'fullName': fullName,
       'email': email,
       'role': role,
-      'churchId': churchId,
+      'isActive': isActive,
+      'createdAt': createdAt,
+      if (pastorDetails != null) 'Pastor': pastorDetails,
     };
   }
 }

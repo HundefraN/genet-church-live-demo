@@ -1,11 +1,11 @@
-import 'dart:convert';
 import 'dart:math';
-import 'dart:ui';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
+import 'package:genet_church_portal/shared_widgets/modern_input.dart';
 import 'package:genet_church_portal/shared_widgets/responsive_layout.dart';
+import 'package:genet_church_portal/shared_widgets/notification_system.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
@@ -71,11 +71,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _fadeController, curve: Curves.easeOutCubic),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(-0.3, 0),
-      end: Offset.zero,
-    ).animate(
-        CurvedAnimation(parent: _slideController, curve: Curves.easeOutBack));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(-0.3, 0), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutBack),
+        );
     _scaleAnimation = Tween<double>(begin: 0.9, end: 1.0).animate(
       CurvedAnimation(parent: _scaleController, curve: Curves.easeOutBack),
     );
@@ -146,16 +145,15 @@ class _LoginDesktopView extends ConsumerWidget {
         Expanded(
           flex: 5,
           child: Container(
-            decoration: BoxDecoration(
-              gradient: appColors.primaryGradient,
-            ),
+            decoration: BoxDecoration(gradient: appColors.primaryGradient),
             child: Stack(
               children: [
                 AnimatedBuilder(
                   animation: backgroundController,
                   builder: (context, child) => CustomPaint(
-                    painter:
-                    _ModernBackgroundPainter(backgroundController.value),
+                    painter: _ModernBackgroundPainter(
+                      backgroundController.value,
+                    ),
                     size: Size.infinite,
                   ),
                 ),
@@ -177,8 +175,9 @@ class _LoginDesktopView extends ConsumerWidget {
                   child: SlideTransition(
                     position: slideAnimation,
                     child: Padding(
-                      padding:
-                      EdgeInsets.symmetric(horizontal: size.width * 0.06),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: size.width * 0.06,
+                      ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,12 +190,14 @@ class _LoginDesktopView extends ConsumerWidget {
                               text: verse.text,
                             ),
                             loading: () => const Center(
-                                child: CircularProgressIndicator(
-                                    color: Colors.white)),
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                              ),
+                            ),
                             error: (e, s) => const _VerseDisplay(
                               reference: 'John 3:16',
                               text:
-                              'For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life.',
+                                  'For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life.',
                             ),
                           ),
                           const SizedBox(height: 50),
@@ -204,9 +205,9 @@ class _LoginDesktopView extends ConsumerWidget {
                             spacing: 20,
                             runSpacing: 12,
                             children: [
-                              _buildFeatureIndicator('Secure Access'),
-                              _buildFeatureIndicator('Admin Portal'),
-                              _buildFeatureIndicator('Data Driven Ministry'),
+                              _buildFeatureIndicator('Role-Based Access'),
+                              _buildFeatureIndicator('Centralized Management'),
+                              _buildFeatureIndicator('Insightful Analytics'),
                             ],
                           ),
                         ],
@@ -267,8 +268,7 @@ class _LoginDesktopView extends ConsumerWidget {
             ),
           ),
           child: Center(
-            child:
-            Image.asset('assets/images/logo.png', height: 50, width: 50),
+            child: Image.asset('assets/images/logo.png', height: 50, width: 50),
           ),
         ),
       ),
@@ -359,7 +359,8 @@ class _VerseDisplay extends StatelessWidget {
         SizedBox(height: gapHeight),
         Container(
           constraints: BoxConstraints(
-              maxWidth: boxMaxWidth ?? MediaQuery.of(context).size.width),
+            maxWidth: boxMaxWidth ?? MediaQuery.of(context).size.width,
+          ),
           padding: boxPadding,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
@@ -420,17 +421,16 @@ class _LoginSmallScreenView extends ConsumerWidget {
             height: headerHeight,
             width: double.infinity,
             clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              gradient: appColors.primaryGradient,
-            ),
+            decoration: BoxDecoration(gradient: appColors.primaryGradient),
             child: Stack(
               children: [
                 AnimatedBuilder(
                   animation: backgroundController,
                   builder: (context, child) {
                     return CustomPaint(
-                      painter:
-                      _ModernBackgroundPainter(backgroundController.value),
+                      painter: _ModernBackgroundPainter(
+                        backgroundController.value,
+                      ),
                       size: Size.infinite,
                     );
                   },
@@ -441,7 +441,8 @@ class _LoginSmallScreenView extends ConsumerWidget {
                     position: slideAnimation,
                     child: Padding(
                       padding: EdgeInsets.symmetric(
-                          horizontal: isTablet ? 32.0 : 20.0),
+                        horizontal: isTablet ? 32.0 : 20.0,
+                      ),
                       child: SafeArea(
                         bottom: false,
                         child: Column(
@@ -455,11 +456,14 @@ class _LoginSmallScreenView extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(16),
                                 color: Colors.white.withOpacity(0.15),
                                 border: Border.all(
-                                    color: Colors.white.withOpacity(0.3)),
+                                  color: Colors.white.withOpacity(0.3),
+                                ),
                               ),
                               child: Center(
-                                child: Image.asset('assets/images/logo.png',
-                                    height: logoIconSize),
+                                child: Image.asset(
+                                  'assets/images/logo.png',
+                                  height: logoIconSize,
+                                ),
                               ),
                             ),
                             SizedBox(height: isTablet ? 24 : 16),
@@ -473,21 +477,23 @@ class _LoginSmallScreenView extends ConsumerWidget {
                                       reference: verse.reference,
                                       text: verse.text,
                                       bookFontSize: isTablet ? 42 : 32,
-                                      chapterVerseFontSize:
-                                      isTablet ? 24 : 20,
+                                      chapterVerseFontSize: isTablet ? 24 : 20,
                                       textFontSize: isTablet ? 15 : 13.5,
                                       boxPadding: EdgeInsets.all(
-                                          isTablet ? 20 : 16),
+                                        isTablet ? 20 : 16,
+                                      ),
                                       boxMaxWidth: size.width * 0.85,
                                       gapHeight: isTablet ? 20 : 12,
                                     ),
                                     loading: () => const Center(
                                       child: SizedBox(
-                                          height: 40,
-                                          width: 40,
-                                          child: CircularProgressIndicator(
-                                              color: Colors.white,
-                                              strokeWidth: 2)),
+                                        height: 40,
+                                        width: 40,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
                                     ),
                                     error: (e, s) => _VerseDisplay(
                                       reference: 'Ethiopian Genet Church',
@@ -496,7 +502,8 @@ class _LoginSmallScreenView extends ConsumerWidget {
                                       chapterVerseFontSize: 0,
                                       textFontSize: isTablet ? 15 : 14,
                                       boxPadding: EdgeInsets.all(
-                                          isTablet ? 20 : 16),
+                                        isTablet ? 20 : 16,
+                                      ),
                                       boxMaxWidth: size.width * 0.85,
                                       gapHeight: 10,
                                     ),
@@ -517,7 +524,9 @@ class _LoginSmallScreenView extends ConsumerWidget {
             color: appColors.scaffold,
             constraints: BoxConstraints(minHeight: size.height * 0.55),
             padding: EdgeInsets.symmetric(
-                vertical: isTablet ? 40 : 24, horizontal: 16),
+              vertical: isTablet ? 40 : 24,
+              horizontal: 16,
+            ),
             child: _LoginForm(
               scaleAnimation: scaleAnimation,
               fadeAnimation: fadeAnimation,
@@ -532,8 +541,7 @@ class _LoginSmallScreenView extends ConsumerWidget {
 class _LoginForm extends HookConsumerWidget {
   final Animation<double> scaleAnimation;
   final Animation<double> fadeAnimation;
-  const _LoginForm(
-      {required this.scaleAnimation, required this.fadeAnimation});
+  const _LoginForm({required this.scaleAnimation, required this.fadeAnimation});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -545,10 +553,8 @@ class _LoginForm extends HookConsumerWidget {
     final formKey = useMemoized(() => GlobalKey<FormState>());
     final isLoading = useState(false);
     final rememberMe = useState(false);
-    final isPasswordVisible = useState(false);
     final emailController = useTextEditingController();
     final passwordController = useTextEditingController();
-    final emailFocusNode = useFocusNode();
     final passwordFocusNode = useFocusNode();
     final buttonController = useAnimationController(
       duration: const Duration(milliseconds: 150),
@@ -579,37 +585,38 @@ class _LoginForm extends HookConsumerWidget {
       buttonController.forward();
       try {
         await ref.read(authStateProvider.notifier).login(
-          emailController.text,
-          passwordController.text,
-          rememberMe.value,
-        );
+              emailController.text,
+              passwordController.text,
+              rememberMe.value,
+            );
         if (context.mounted) {
+          final user = ref.read(authStateProvider);
+          final firstName = user?.fullName.split(' ').first ?? '';
+          context.showSuccessNotification(
+            title: 'Welcome Back, $firstName!',
+            message: 'Login successful. Redirecting to dashboard...',
+          );
+          // Small delay to show the notification before navigation
+          await Future.delayed(const Duration(milliseconds: 500));
           context.go('/dashboard');
         }
       } on DioException catch (e) {
         if (!context.mounted) return;
         String message = 'Login Failed: An unknown error occurred.';
-        if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
+        if (e.type == DioExceptionType.connectionTimeout ||
+            e.type == DioExceptionType.receiveTimeout) {
           message = 'The server is not responding. Please try again later.';
         } else if (e.response?.statusCode == 401) {
           message = 'Login Failed: Invalid credentials provided.';
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: Colors.red,
-          ),
-        );
+        context.showErrorNotification(title: 'Login Failed', message: message);
       } catch (e) {
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login Failed: An unexpected error occurred.'),
-            backgroundColor: Colors.red,
-          ),
+        context.showErrorNotification(
+          title: 'Login Failed',
+          message: 'An unexpected error occurred. Please try again.',
         );
-      }
-      finally {
+      } finally {
         if (context.mounted) {
           isLoading.value = false;
           buttonController.reverse();
@@ -632,67 +639,43 @@ class _LoginForm extends HookConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Welcome Back',
-                        style: theme.textTheme.headlineLarge?.copyWith(
-                          color: appColors.textPrimary,
-                          fontSize: isSmall ? 26 : null,
-                        )),
+                    Text(
+                      'Welcome Back',
+                      style: theme.textTheme.headlineLarge?.copyWith(
+                        color: appColors.textPrimary,
+                        fontSize: isSmall ? 26 : null,
+                      ),
+                    ),
                     SizedBox(height: isSmall ? 4 : 8),
-                    Text('Sign in to access your portal',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: appColors.textSecondary,
-                          fontSize: isSmall ? 14 : null,
-                        )),
+                    Text(
+                      'Sign in to access your portal',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: appColors.textSecondary,
+                        fontSize: isSmall ? 14 : null,
+                      ),
+                    ),
                     SizedBox(height: isSmall ? 32 : 48),
-                    _buildModernTextField(
-                      context: context,
+                    EmailInput(
                       controller: emailController,
-                      focusNode: emailFocusNode,
-                      hintText: 'Username or Email',
-                      icon: Iconsax.user,
-                      isSmall: isSmall,
-                      textInputAction: TextInputAction.next,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
-                        }
-                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
-                      onFieldSubmitted: (_) {
-                        FocusScope.of(context).requestFocus(passwordFocusNode);
-                      },
+                      size: isSmall ? InputSize.medium : InputSize.large,
+                      label: 'Username or Email',
+                      onFieldSubmitted: (_) => FocusScope.of(
+                        context,
+                      ).requestFocus(passwordFocusNode),
                     ),
                     SizedBox(height: isSmall ? 16 : 20),
-                    _buildModernTextField(
-                      context: context,
+                    PasswordInput(
                       controller: passwordController,
                       focusNode: passwordFocusNode,
-                      hintText: 'Password',
-                      icon: Iconsax.lock_1,
-                      isSmall: isSmall,
-                      obscureText: !isPasswordVisible.value,
+                      size: isSmall ? InputSize.medium : InputSize.large,
+                      onFieldSubmitted: (_) => submitForm(),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your password';
                         }
                         return null;
                       },
-                      onFieldSubmitted: (_) => submitForm(),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          isPasswordVisible.value
-                              ? Iconsax.eye
-                              : Iconsax.eye_slash,
-                          color: appColors.textSecondary,
-                          size: isSmall ? 20 : 24,
-                        ),
-                        onPressed: () =>
-                        isPasswordVisible.value = !isPasswordVisible.value,
-                      ),
                     ),
                     SizedBox(height: isSmall ? 16 : 24),
                     Row(
@@ -708,7 +691,7 @@ class _LoginForm extends HookConsumerWidget {
                                 child: Checkbox(
                                   value: rememberMe.value,
                                   onChanged: (val) =>
-                                  rememberMe.value = val ?? false,
+                                      rememberMe.value = val ?? false,
                                   activeColor: theme.colorScheme.primary,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(4),
@@ -717,34 +700,40 @@ class _LoginForm extends HookConsumerWidget {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Text('Remember me',
-                                style: TextStyle(
-                                  fontSize: isSmall ? 13 : 14,
-                                  color: appColors.textSecondary,
-                                  fontWeight: FontWeight.w500,
-                                )),
+                            Text(
+                              'Remember me',
+                              style: TextStyle(
+                                fontSize: isSmall ? 13 : 14,
+                                color: appColors.textSecondary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ],
                         ),
                         TextButton(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Forgot Password feature is coming soon.'),
-                              ),
+                            context.showInfoNotification(
+                              title: 'Coming Soon',
+                              message:
+                                  'Forgot Password feature is currently being developed.',
                             );
                           },
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 4, vertical: 4),
+                              horizontal: 4,
+                              vertical: 4,
+                            ),
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child: Text('Forgot password?',
-                              style: TextStyle(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: isSmall ? 13 : 14,
-                              )),
+                          child: Text(
+                            'Forgot password?',
+                            style: TextStyle(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: isSmall ? 13 : 14,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -773,22 +762,25 @@ class _LoginForm extends HookConsumerWidget {
                             child: Center(
                               child: isLoading.value
                                   ? SizedBox(
-                                height: isSmall ? 20 : 24,
-                                width: isSmall ? 20 : 24,
-                                child: const CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  valueColor:
-                                  AlwaysStoppedAnimation<Color>(
-                                      Colors.white),
-                                ),
-                              )
-                                  : Text('Sign In',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: isSmall ? 15 : 16,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.5,
-                                  )),
+                                      height: isSmall ? 20 : 24,
+                                      width: isSmall ? 20 : 24,
+                                      child: const CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                      ),
+                                    )
+                                  : Text(
+                                      'Sign In',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: isSmall ? 15 : 16,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
                             ),
                           ),
                         ),
@@ -801,12 +793,16 @@ class _LoginForm extends HookConsumerWidget {
                         color: theme.colorScheme.primary.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color: theme.colorScheme.primary.withOpacity(0.2)),
+                          color: theme.colorScheme.primary.withOpacity(0.2),
+                        ),
                       ),
                       child: Row(
                         children: [
-                          Icon(Iconsax.message_question,
-                              color: theme.colorScheme.primary, size: 20),
+                          Icon(
+                            Iconsax.message_question,
+                            color: theme.colorScheme.primary,
+                            size: 20,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
@@ -830,95 +826,6 @@ class _LoginForm extends HookConsumerWidget {
       ),
     );
   }
-
-  Widget _buildModernTextField({
-    required BuildContext context,
-    required String hintText,
-    required IconData icon,
-    bool obscureText = false,
-    bool isSmall = false,
-    Widget? suffixIcon,
-    TextEditingController? controller,
-    FocusNode? focusNode,
-    String? Function(String?)? validator,
-    void Function(String)? onFieldSubmitted,
-    TextInputAction? textInputAction,
-  }) {
-    final theme = Theme.of(context);
-    final appColors = theme.extension<AppColors>()!;
-    final borderRadius = BorderRadius.circular(isSmall ? 12 : 16);
-
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: borderRadius,
-        color: appColors.surface,
-        boxShadow: [
-          BoxShadow(
-            color: appColors.shadow.withOpacity(0.5),
-            blurRadius: isSmall ? 10 : 15,
-            offset: Offset(0, isSmall ? 2 : 4),
-          ),
-        ],
-      ),
-      child: TextFormField(
-        controller: controller,
-        focusNode: focusNode,
-        obscureText: obscureText,
-        validator: validator,
-        onFieldSubmitted: onFieldSubmitted,
-        textInputAction: textInputAction ?? TextInputAction.done,
-        style: TextStyle(
-          fontSize: isSmall ? 14 : 16,
-          fontWeight: FontWeight.w500,
-          color: appColors.textPrimary,
-        ),
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: TextStyle(
-            color: appColors.textSecondary,
-            fontWeight: FontWeight.w400,
-            fontSize: isSmall ? 14 : 16,
-          ),
-          prefixIcon: Container(
-            margin: EdgeInsets.all(isSmall ? 8 : 12),
-            padding: EdgeInsets.all(isSmall ? 6 : 8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(isSmall ? 6 : 8),
-            ),
-            child: Icon(icon,
-                color: theme.colorScheme.primary, size: isSmall ? 18 : 20),
-          ),
-          suffixIcon: suffixIcon,
-          filled: true,
-          fillColor: appColors.surface,
-          border: OutlineInputBorder(
-            borderRadius: borderRadius,
-            borderSide: BorderSide(color: appColors.border),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: borderRadius,
-            borderSide: BorderSide(color: appColors.border),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: borderRadius,
-            borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: borderRadius,
-            borderSide: const BorderSide(color: Colors.red, width: 1.5),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: borderRadius,
-            borderSide: const BorderSide(color: Colors.red, width: 2),
-          ),
-          contentPadding: EdgeInsets.symmetric(
-              horizontal: isSmall ? 16 : 20, vertical: isSmall ? 16 : 20),
-          isDense: isSmall,
-        ),
-      ),
-    );
-  }
 }
 
 class _ModernBackgroundPainter extends CustomPainter {
@@ -936,7 +843,8 @@ class _ModernBackgroundPainter extends CustomPainter {
           size.height * (0.3 + sin(animationValue * 2 * pi + i) * 0.2);
       final radius = 40 + sin(animationValue * pi + i) * 20;
       path.addOval(
-          Rect.fromCircle(center: Offset(centerX, centerY), radius: radius));
+        Rect.fromCircle(center: Offset(centerX, centerY), radius: radius),
+      );
       canvas.drawPath(path, paint);
     }
     final linePaint = Paint()

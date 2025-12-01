@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
 import 'package:genet_church_portal/data/models/activity_log_model.dart';
-import 'package:genet_church_portal/shared_widgets/info_card.dart';
+import 'package:genet_church_portal/shared_widgets/modern_card.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:genet_church_portal/state/providers.dart';
@@ -61,16 +61,26 @@ class RecentActivityCard extends ConsumerWidget {
               ],
             ),
           ),
-          child: InfoCard(
-            title: 'Recent Activity',
-            description: '',
+          child: ModernCard(
+            padding: const EdgeInsets.all(24),
             child: activityAsync.when(
               data: (allActivities) {
                 final recentActivities = allActivities.take(4).toList();
                 return Column(
                   children: [
+                    Row(
+                      children: [
+                        Icon(Iconsax.activity,
+                            color: appColors.textSecondary, size: 20),
+                        const SizedBox(width: 12),
+                        Text('Recent Activity',
+                            style: theme.textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                    const Divider(height: 32),
                     if (recentActivities.isEmpty)
-                      Container(
+                      SizedBox(
                         height: 200,
                         child: Center(
                           child: Column(
@@ -85,7 +95,8 @@ class RecentActivityCard extends ConsumerWidget {
                                 child: Icon(
                                   Iconsax.activity,
                                   size: 32,
-                                  color: appColors.textSecondary.withOpacity(0.5),
+                                  color:
+                                  appColors.textSecondary.withOpacity(0.5),
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -112,7 +123,7 @@ class RecentActivityCard extends ConsumerWidget {
                       }),
                     const SizedBox(height: 20),
                     if (allActivities.length > 4)
-                      Container(
+                      SizedBox(
                         width: double.infinity,
                         child: TextButton.icon(
                           onPressed: () => context.go('/activity-log'),
@@ -142,7 +153,7 @@ class RecentActivityCard extends ConsumerWidget {
                 );
               },
               loading: () => const _ActivityShimmer(),
-              error: (error, stack) => Container(
+              error: (error, stack) => SizedBox(
                 height: 200,
                 child: Center(
                   child: Column(

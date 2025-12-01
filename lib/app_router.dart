@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:genet_church_portal/data/models/user_model.dart';
 import 'package:genet_church_portal/data/repositories/auth_repository.dart';
 import 'package:genet_church_portal/data/services/api_service.dart';
 import 'package:genet_church_portal/features/dashboard/presentation/dashboard_screen.dart';
@@ -20,6 +21,7 @@ import 'package:genet_church_portal/features/screens/show_members_screen.dart';
 import 'package:genet_church_portal/shared_widgets/main_layout.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/categories_screen.dart';
+import 'features/screens/members_detail_screen.dart';
 import 'features/screens/sessions_screen.dart';
 
 final routerAuthRepositoryProvider = Provider((ref) => AuthRepository(
@@ -40,10 +42,30 @@ final Map<String, List<String>> _routeBreadcrumbs = {
   '/report-servants': ['App', 'Servants', 'Reports'],
   '/add-members': ['App', 'Members', 'Add Member'],
   '/show-members': ['App', 'Members', 'Show Members'],
+  '/show-members/:memberId': ['App', 'Members', 'Member Details'],
   '/categories': ['App', 'Members', 'Categories'],
   '/advanced-reports': ['App', 'Analytics'],
   '/activity-log': ['App', 'System', 'Activity Log'],
 };
+
+const _superAdminOnlyRoutes = [
+  '/permissions',
+  '/report-churchs',
+  '/add-church',
+  '/report-pastors',
+  '/add-pastors',
+  '/advanced-reports',
+  '/activity-log',
+];
+
+const _pastorOnlyRoutes = [
+  '/categories',
+];
+
+const _pastorAndServantRoutes = [
+  '/add-members',
+];
+
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -55,17 +77,36 @@ class AppRouter {
       navigatorKey: _rootNavigatorKey,
       redirect: (BuildContext context, GoRouterState state) async {
         final authRepository = ref.read(routerAuthRepositoryProvider);
-        final user = await authRepository.getCurrentUser();
-        final isLoggedIn = user != null;
+        final userFromRepo = await authRepository.getCurrentUser();
+        final userFromState = ref.read(authStateProvider);
 
+        final user = userFromState ?? userFromRepo;
+        final isLoggedIn = user != null;
         final isLoggingIn = state.matchedLocation == '/login';
 
-        if (ref.read(authStateProvider) == null && isLoggedIn) {
-          ref.read(authStateProvider.notifier).state = user;
+        if (userFromState == null && userFromRepo != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ref.read(authStateProvider.notifier).updateUser(userFromRepo);
+          });
         }
 
         if (!isLoggedIn && !isLoggingIn) return '/login';
         if (isLoggedIn && isLoggingIn) return '/dashboard';
+
+        if(isLoggedIn) {
+          final role = user.roleEnum;
+          final path = state.matchedLocation;
+
+          if (role != UserRole.SUPER_ADMIN && _superAdminOnlyRoutes.any((route) => path.startsWith(route))) {
+            return '/dashboard';
+          }
+          if (role != UserRole.PASTOR && _pastorOnlyRoutes.any((route) => path.startsWith(route))) {
+            return '/dashboard';
+          }
+          if (role == UserRole.SUPER_ADMIN && _pastorAndServantRoutes.any((route) => path.startsWith(route))) {
+            return '/dashboard';
+          }
+        }
 
         return null;
       },
@@ -129,6 +170,13 @@ class AppRouter {
             GoRoute(
               path: '/show-members',
               builder: (context, state) => const ShowMembersScreen(),
+            ),
+            GoRoute(
+              path: '/show-members/:memberId',
+              builder: (context, state) {
+                final memberId = state.pathParameters['memberId']!;
+                return MemberDetailsScreen(memberId: memberId);
+              },
             ),
             GoRoute(
               path: '/categories',

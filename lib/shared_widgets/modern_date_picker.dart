@@ -31,7 +31,11 @@ class ModernDatePicker extends HookWidget {
           ? DateFormat.yMMMMd().format(selectedDate!)
           : '';
       if (controller.text != newText) {
-        controller.text = newText;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) {
+            controller.text = newText;
+          }
+        });
       }
       return null;
     }, [selectedDate]);
@@ -53,7 +57,6 @@ class ModernDatePicker extends HookWidget {
                   onPrimary: Colors.white,
                   onSurface: appColors.textPrimary,
                 ),
-                dialogBackgroundColor: appColors.surface,
                 dialogTheme: DialogThemeData(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16.0),
@@ -94,8 +97,7 @@ class ModernDatePicker extends HookWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide:
-          BorderSide(color: theme.colorScheme.primary, width: 1.5),
+          borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -105,8 +107,10 @@ class ModernDatePicker extends HookWidget {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: theme.colorScheme.error, width: 2),
         ),
-        contentPadding:
-        const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 16,
+          horizontal: 20,
+        ),
       ),
     );
   }

@@ -5,11 +5,7 @@ class StyledDataTable extends StatelessWidget {
   final List<String> columns;
   final List<DataRow> rows;
 
-  const StyledDataTable({
-    super.key,
-    required this.columns,
-    required this.rows,
-  });
+  const StyledDataTable({super.key, required this.columns, required this.rows});
 
   @override
   Widget build(BuildContext context) {
@@ -22,16 +18,10 @@ class StyledDataTable extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            appColors.surface,
-            appColors.surface.withOpacity(0.98),
-          ],
+          colors: [appColors.surface, appColors.surface.withOpacity(0.98)],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: appColors.border.withOpacity(0.2),
-          width: 1,
-        ),
+        border: Border.all(color: appColors.border.withOpacity(0.2), width: 1),
         boxShadow: [
           BoxShadow(
             color: appColors.shadow.withOpacity(0.06),
@@ -53,11 +43,7 @@ class StyledDataTable extends StatelessWidget {
           return LinearGradient(
             begin: Alignment.centerRight,
             end: Alignment.centerLeft,
-            colors: <Color>[
-              Colors.transparent,
-              Colors.black,
-              Colors.black,
-            ],
+            colors: <Color>[Colors.transparent, Colors.black, Colors.black],
             stops: const [0.0, 0.05, 1.0],
           ).createShader(bounds);
         },
@@ -83,9 +69,7 @@ class StyledDataTable extends StatelessWidget {
                       ],
                     ),
                   ),
-                  headingRowColor: MaterialStateProperty.all(
-                    Colors.transparent,
-                  ),
+                  headingRowColor: WidgetStateProperty.all(Colors.transparent),
                   headingTextStyle: TextStyle(
                     fontWeight: FontWeight.w800,
                     color: appColors.textPrimary,
@@ -101,57 +85,63 @@ class StyledDataTable extends StatelessWidget {
                     letterSpacing: 0.2,
                   ),
                   columns: columns
-                      .map((col) => DataColumn(
-                    label: Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            theme.colorScheme.primary.withOpacity(0.08),
-                            theme.colorScheme.primary.withOpacity(0.04),
-                          ],
+                      .map(
+                        (col) => DataColumn(
+                          label: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 16,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  theme.colorScheme.primary.withOpacity(0.08),
+                                  theme.colorScheme.primary.withOpacity(0.04),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: theme.colorScheme.primary.withOpacity(
+                                  0.1,
+                                ),
+                              ),
+                            ),
+                            child: Text(col),
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: theme.colorScheme.primary
-                              .withOpacity(0.1),
-                        ),
-                      ),
-                      child: Text(col),
-                    ),
-                  ))
+                      )
                       .toList(),
                   rows: rows
                       .asMap()
                       .entries
-                      .map((entry) => DataRow(
-                    color: MaterialStateProperty.resolveWith<Color?>(
-                          (Set<MaterialState> states) {
-                        if (states.contains(MaterialState.hovered)) {
-                          return theme.colorScheme.primary
-                              .withOpacity(0.04);
-                        }
-                        if (entry.key % 2 != 0) {
-                          return appColors.scaffold.withOpacity(0.3);
-                        }
-                        return Colors.transparent;
-                      },
-                    ),
-                    cells: entry.value.cells.map((cell) {
-                      return DataCell(
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 8,
-                            horizontal: 4,
-                          ),
-                          child: cell.child,
+                      .map(
+                        (entry) => DataRow(
+                          color: WidgetStateProperty.resolveWith<Color?>((
+                            Set<WidgetState> states,
+                          ) {
+                            if (states.contains(WidgetState.hovered)) {
+                              return theme.colorScheme.primary.withOpacity(
+                                0.04,
+                              );
+                            }
+                            if (entry.key % 2 != 0) {
+                              return appColors.scaffold.withOpacity(0.3);
+                            }
+                            return Colors.transparent;
+                          }),
+                          cells: entry.value.cells.map((cell) {
+                            return DataCell(
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                  horizontal: 4,
+                                ),
+                                child: cell.child,
+                              ),
+                            );
+                          }).toList(),
                         ),
-                      );
-                    }).toList(),
-                  ))
+                      )
                       .toList(),
                 ),
               ),
