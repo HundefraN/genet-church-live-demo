@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genet_church_portal/app_router.dart';
 import 'package:genet_church_portal/core/theme/app_theme.dart';
@@ -11,6 +13,11 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(appThemeNotifierProvider);
+
+    // Remove splash screen when the widget tree is built
+    if (!kIsWeb) {
+      FlutterNativeSplash.remove();
+    }
 
     return MaterialApp.router(
       title: 'Genet Church Portal',

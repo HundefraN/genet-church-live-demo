@@ -24,10 +24,9 @@ import 'features/categories_screen.dart';
 import 'features/screens/members_detail_screen.dart';
 import 'features/screens/sessions_screen.dart';
 
-final routerAuthRepositoryProvider = Provider((ref) => AuthRepository(
-  ref.watch(dioProvider),
-  const FlutterSecureStorage(),
-));
+final routerAuthRepositoryProvider = Provider(
+  (ref) => AuthRepository(ref.watch(dioProvider), const FlutterSecureStorage()),
+);
 
 final Map<String, List<String>> _routeBreadcrumbs = {
   '/dashboard': ['App', 'Dashboard'],
@@ -38,7 +37,7 @@ final Map<String, List<String>> _routeBreadcrumbs = {
   '/add-church': ['App', 'Church', 'Add Church'],
   '/report-pastors': ['App', 'Pastors', 'Reports'],
   '/add-pastors': ['App', 'Pastors', 'Add Pastor'],
-  '/report-departments': ['App', 'Departments', 'Reports'],
+  '/departments': ['App', 'Departments', 'Reports'],
   '/report-servants': ['App', 'Servants', 'Reports'],
   '/add-members': ['App', 'Members', 'Add Member'],
   '/show-members': ['App', 'Members', 'Show Members'],
@@ -55,17 +54,11 @@ const _superAdminOnlyRoutes = [
   '/report-pastors',
   '/add-pastors',
   '/advanced-reports',
-  '/activity-log',
 ];
 
-const _pastorOnlyRoutes = [
-  '/categories',
-];
+const _pastorOnlyRoutes = ['/categories'];
 
-const _pastorAndServantRoutes = [
-  '/add-members',
-];
-
+const _pastorAndServantRoutes = ['/add-members'];
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -93,17 +86,20 @@ class AppRouter {
         if (!isLoggedIn && !isLoggingIn) return '/login';
         if (isLoggedIn && isLoggingIn) return '/dashboard';
 
-        if(isLoggedIn) {
+        if (isLoggedIn) {
           final role = user.roleEnum;
           final path = state.matchedLocation;
 
-          if (role != UserRole.SUPER_ADMIN && _superAdminOnlyRoutes.any((route) => path.startsWith(route))) {
+          if (role != UserRole.SUPER_ADMIN &&
+              _superAdminOnlyRoutes.any((route) => path.startsWith(route))) {
             return '/dashboard';
           }
-          if (role != UserRole.PASTOR && _pastorOnlyRoutes.any((route) => path.startsWith(route))) {
+          if (role != UserRole.PASTOR &&
+              _pastorOnlyRoutes.any((route) => path.startsWith(route))) {
             return '/dashboard';
           }
-          if (role == UserRole.SUPER_ADMIN && _pastorAndServantRoutes.any((route) => path.startsWith(route))) {
+          if (role == UserRole.SUPER_ADMIN &&
+              _pastorAndServantRoutes.any((route) => path.startsWith(route))) {
             return '/dashboard';
           }
         }
@@ -156,7 +152,7 @@ class AppRouter {
               builder: (context, state) => const AddPastorsScreen(),
             ),
             GoRoute(
-              path: '/report-departments',
+              path: '/departments',
               builder: (context, state) => const ReportDepartmentsScreen(),
             ),
             GoRoute(

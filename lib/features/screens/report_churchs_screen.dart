@@ -31,17 +31,36 @@ class ReportChurchsScreen extends HookConsumerWidget {
     final searchQuery = useState('');
     final isDeleting = useState<String?>(null);
     final urlLauncher = UrlLauncherService();
+    final hasLocationFilter = useState(false);
+    final sortOption = useState<String>('name_asc');
 
-    useEffect(() {
-      if (newlyAddedItemId != null) {
-        Future.delayed(const Duration(seconds: 3), () {
-          if (context.mounted) {
-            ref.read(newlyAddedItemIdProvider.notifier).set(null);
-          }
-        });
-      }
-      return null;
-    }, [newlyAddedItemId]);
+    // ... (existing useEffect)
+
+    // Build sort dropdown
+    final sortDropdowns = <FilterDropdownConfig>[
+      FilterDropdownConfig(
+        label: 'Sort By',
+        icon: Iconsax.sort,
+        options: [
+          const FilterOption(label: 'Name (A-Z)', value: 'name_asc'),
+          const FilterOption(label: 'Name (Z-A)', value: 'name_desc'),
+          const FilterOption(label: 'Newest First', value: 'date_desc'),
+          const FilterOption(label: 'Oldest First', value: 'date_asc'),
+        ],
+        selectedValue: sortOption.value,
+        onChanged: (val) => sortOption.value = val!,
+      ),
+    ];
+
+    // Build filter chips
+    final filterChips = <FilterOption>[
+      FilterOption(
+        label: 'Has Location',
+        value: 'has_location',
+        icon: Iconsax.location,
+        isSelected: hasLocationFilter.value,
+      ),
+    ];
 
     return SingleChildScrollView(
       child: Column(
@@ -101,18 +120,69 @@ class ReportChurchsScreen extends HookConsumerWidget {
             searchHint: 'Search by church name...',
             searchValue: searchQuery.value,
             onSearchChanged: (val) => searchQuery.value = val,
-            onClearAll: () => searchQuery.value = '',
+            filterDropdowns: sortDropdowns,
+            filterChips: filterChips,
+            onChipToggled: (chip) {
+              if (chip.value == 'has_location') {
+                hasLocationFilter.value = !hasLocationFilter.value;
+              }
+            },
+            onClearAll: () {
+              searchQuery.value = '';
+              hasLocationFilter.value = false;
+              sortOption.value = 'name_asc';
+            },
           ),
           const SizedBox(height: 24),
           // Content
           churchesAsync.when(
             data: (churches) {
-              final filteredChurches = churches.where((church) {
-                if (searchQuery.value.isEmpty) return true;
-                return church.name.toLowerCase().contains(
-                  searchQuery.value.toLowerCase(),
-                );
+              var filteredChurches = churches.where((church) {
+                // Search filter
+                if (searchQuery.value.isNotEmpty) {
+                  if (!church.name.toLowerCase().contains(
+                    searchQuery.value.toLowerCase(),
+                  )) {
+                    return false;
+                  }
+                }
+                // Location filter
+                if (hasLocationFilter.value) {
+                  if (church.locationLink == null ||
+                      church.locationLink!.isEmpty) {
+                    return false;
+                  }
+                }
+                return true;
               }).toList();
+
+              // Sort logic
+              filteredChurches.sort((a, b) {
+                switch (sortOption.value) {
+                  case 'name_asc':
+                    return a.name.compareTo(b.name);
+                  case 'name_desc':
+                    return b.name.compareTo(a.name);
+                  case 'date_desc':
+                    final dateA =
+                        DateTime.tryParse(a.dateCreated ?? '') ??
+                        DateTime(1970);
+                    final dateB =
+                        DateTime.tryParse(b.dateCreated ?? '') ??
+                        DateTime(1970);
+                    return dateB.compareTo(dateA);
+                  case 'date_asc':
+                    final dateA =
+                        DateTime.tryParse(a.dateCreated ?? '') ??
+                        DateTime(1970);
+                    final dateB =
+                        DateTime.tryParse(b.dateCreated ?? '') ??
+                        DateTime(1970);
+                    return dateA.compareTo(dateB);
+                  default:
+                    return 0;
+                }
+              });
 
               if (filteredChurches.isEmpty) {
                 return _EmptyState(

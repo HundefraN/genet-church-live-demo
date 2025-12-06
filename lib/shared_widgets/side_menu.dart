@@ -22,7 +22,7 @@ final List<AppMenuItem> _allMenuItems = [
     children: {
       'Churches': '/report-churchs',
       'Pastors': '/report-pastors',
-      'Departments': '/report-departments',
+      'Departments': '/departments',
       'Servants': '/report-servants',
     },
   ),
@@ -68,94 +68,94 @@ class SideMenu extends ConsumerWidget {
     }
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeInOutCubicEmphasized,
-      width: isCollapsed ? 85 : 300,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            appColors.surface.withOpacity(0.95),
-            appColors.surface.withOpacity(0.85),
-            appColors.surface.withOpacity(0.90),
-            appColors.surface.withOpacity(0.95),
-          ],
-          stops: const [0.0, 0.3, 0.7, 1.0],
-        ),
-        border: Border(
-          right: BorderSide(
-            color: appColors.glowPrimary.withOpacity(0.15),
-            width: 1.5,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: appColors.shadow.withOpacity(0.12),
-            blurRadius: 48,
-            offset: const Offset(8, 0),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: appColors.glowPrimary.withOpacity(0.03),
-            blurRadius: 80,
-            offset: const Offset(16, 0),
-            spreadRadius: 0,
-          ),
-          // Subtle inner glow
-          BoxShadow(
-            color: appColors.glowPrimary.withOpacity(0.02),
-            blurRadius: 24,
-            offset: const Offset(-2, 0),
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Column(
-            children: [
-              _Header(isCollapsed: isCollapsed),
-              Expanded(
-                child: CustomScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  slivers: [
-                    SliverPadding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 32,
-                      ),
-                      sliver: SliverList(
-                        delegate: SliverChildListDelegate(
-                          _buildMenuItems(user, context, ref, isCollapsed),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOutCubicEmphasized,
+          width: isCollapsed ? 85 : 300,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                appColors.surface.withOpacity(0.95),
+                appColors.surface.withOpacity(0.85),
+                appColors.surface.withOpacity(0.90),
+                appColors.surface.withOpacity(0.95),
+              ],
+              stops: const [0.0, 0.3, 0.7, 1.0],
+            ),
+            border: Border(
+              right: BorderSide(
+                color: appColors.glowPrimary.withOpacity(0.15),
+                width: 1.5,
               ),
-              const SizedBox(height: 24),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: appColors.shadow.withOpacity(0.12),
+                blurRadius: 48,
+                offset: const Offset(8, 0),
+                spreadRadius: 0,
+              ),
+              BoxShadow(
+                color: appColors.glowPrimary.withOpacity(0.03),
+                blurRadius: 80,
+                offset: const Offset(16, 0),
+                spreadRadius: 0,
+              ),
+              // Subtle inner glow
+              BoxShadow(
+                color: appColors.glowPrimary.withOpacity(0.02),
+                blurRadius: 24,
+                offset: const Offset(-2, 0),
+                spreadRadius: 0,
+              ),
             ],
           ),
-        ),
-      ),
-    )
+          child: ClipRRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: Column(
+                children: [
+                  _Header(isCollapsed: isCollapsed),
+                  Expanded(
+                    child: CustomScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      slivers: [
+                        SliverPadding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 32,
+                          ),
+                          sliver: SliverList(
+                            delegate: SliverChildListDelegate(
+                              _buildMenuItems(user, context, ref, isCollapsed),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          ),
+        )
         .animate()
         .slideX(
-      begin: -1,
-      duration: 600.ms,
-      curve: Curves.easeInOutCubicEmphasized,
-    )
+          begin: -1,
+          duration: 600.ms,
+          curve: Curves.easeInOutCubicEmphasized,
+        )
         .fadeIn(duration: 400.ms, delay: 100.ms);
   }
 
   List<Widget> _buildMenuItems(
-      UserModel user,
-      BuildContext context,
-      WidgetRef ref,
-      bool collapsed,
-      ) {
+    UserModel user,
+    BuildContext context,
+    WidgetRef ref,
+    bool collapsed,
+  ) {
     final currentRole = user.roleEnum;
     final pastor = ref.watch(currentPastorProvider);
     final isPastorUnassigned =
@@ -164,7 +164,7 @@ class SideMenu extends ConsumerWidget {
       context,
     ).routerDelegate.currentConfiguration.uri.toString();
     final accessibleItems = _allMenuItems.where(
-          (item) => item.roles.contains(currentRole),
+      (item) => item.roles.contains(currentRole),
     );
 
     return accessibleItems.map((item) {
@@ -172,7 +172,7 @@ class SideMenu extends ConsumerWidget {
           (item.title == 'Members' ||
               item.title == 'Categories' ||
               item.title == 'Church Admin') &&
-              isPastorUnassigned;
+          isPastorUnassigned;
 
       if (isProtected) {
         return _DisabledMenuItem(
@@ -192,7 +192,7 @@ class SideMenu extends ConsumerWidget {
         } else if (currentRole == UserRole.PASTOR) {
           if (item.title == 'Church Admin') {
             accessibleChildren.removeWhere(
-                  (key, value) => key == 'Churches' || key == 'Pastors',
+              (key, value) => key == 'Churches' || key == 'Pastors',
             );
           }
         }
@@ -252,92 +252,92 @@ class _Header extends StatelessWidget {
       child: Center(
         child: isCollapsed
             ? Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: theme.primaryColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: theme.primaryColor.withOpacity(0.2),
-              width: 1,
-            ),
-          ),
-          child: Image.asset('assets/images/logo.png', height: 32),
-        )
-            .animate()
-            .scale(
-          begin: const Offset(0.8, 0.8),
-          duration: 300.ms,
-          delay: 200.ms,
-          curve: Curves.easeOutBack,
-        )
-            .fadeIn(delay: 150.ms)
-            : Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: theme.primaryColor.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-              child: Image.asset(
-                'assets/images/logo.png',
-                height: 44,
-              ),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Ethiopian Genet Church',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: appColors.textPrimary,
-                      letterSpacing: -0.5,
-                      height: 1.0,
-                      fontSize: 16,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: theme.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'Church Management',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.primaryColor,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.2,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: theme.primaryColor.withOpacity(0.2),
+                        width: 1,
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        )
-            .animate()
-            .slideX(
-          begin: -0.3,
-          duration: 400.ms,
-          delay: 200.ms,
-          curve: Curves.easeOutCubic,
-        )
-            .fadeIn(delay: 150.ms),
+                    child: Image.asset('assets/images/logo.png', height: 32),
+                  )
+                  .animate()
+                  .scale(
+                    begin: const Offset(0.8, 0.8),
+                    duration: 300.ms,
+                    delay: 200.ms,
+                    curve: Curves.easeOutBack,
+                  )
+                  .fadeIn(delay: 150.ms)
+            : Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: theme.primaryColor.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          height: 44,
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Ethiopian Genet Church',
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: appColors.textPrimary,
+                                letterSpacing: -0.5,
+                                height: 1.0,
+                                fontSize: 16,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.primaryColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'Church Management',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.primaryColor,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.2,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                  .animate()
+                  .slideX(
+                    begin: -0.3,
+                    duration: 400.ms,
+                    delay: 200.ms,
+                    curve: Curves.easeOutCubic,
+                  )
+                  .fadeIn(delay: 150.ms),
       ),
     );
   }
@@ -438,58 +438,58 @@ class _MenuItemState extends State<_MenuItem>
                         decoration: BoxDecoration(
                           gradient: widget.isSelected
                               ? LinearGradient(
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                            colors: [
-                              theme.primaryColor.withOpacity(0.15),
-                              theme.primaryColor.withOpacity(0.08),
-                              theme.primaryColor.withOpacity(0.05),
-                            ],
-                          )
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                  colors: [
+                                    theme.primaryColor.withOpacity(0.15),
+                                    theme.primaryColor.withOpacity(0.08),
+                                    theme.primaryColor.withOpacity(0.05),
+                                  ],
+                                )
                               : _isHovered
                               ? LinearGradient(
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                            colors: [
-                              theme.primaryColor.withOpacity(0.08),
-                              theme.primaryColor.withOpacity(0.04),
-                              Colors.transparent,
-                            ],
-                          )
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                  colors: [
+                                    theme.primaryColor.withOpacity(0.08),
+                                    theme.primaryColor.withOpacity(0.04),
+                                    Colors.transparent,
+                                  ],
+                                )
                               : null,
                           borderRadius: BorderRadius.circular(16),
                           border: widget.isSelected
                               ? Border.all(
-                            color: theme.primaryColor.withOpacity(0.2),
-                            width: 1,
-                          )
+                                  color: theme.primaryColor.withOpacity(0.2),
+                                  width: 1,
+                                )
                               : _isHovered
                               ? Border.all(
-                            color: theme.primaryColor.withOpacity(0.1),
-                            width: 1,
-                          )
+                                  color: theme.primaryColor.withOpacity(0.1),
+                                  width: 1,
+                                )
                               : null,
                           boxShadow: widget.isSelected
                               ? [
-                            BoxShadow(
-                              color: theme.primaryColor.withOpacity(0.1),
-                              blurRadius: 16,
-                              offset: const Offset(0, 4),
-                            ),
-                            BoxShadow(
-                              color: theme.primaryColor.withOpacity(0.05),
-                              blurRadius: 32,
-                              offset: const Offset(0, 8),
-                            ),
-                          ]
+                                  BoxShadow(
+                                    color: theme.primaryColor.withOpacity(0.1),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                  BoxShadow(
+                                    color: theme.primaryColor.withOpacity(0.05),
+                                    blurRadius: 32,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ]
                               : _isHovered
                               ? [
-                            BoxShadow(
-                              color: theme.primaryColor.withOpacity(0.05),
-                              blurRadius: 12,
-                              offset: const Offset(0, 2),
-                            ),
-                          ]
+                                  BoxShadow(
+                                    color: theme.primaryColor.withOpacity(0.05),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
                               : null,
                         ),
                       ),
@@ -639,7 +639,7 @@ class _DisabledMenuItem extends StatelessWidget {
             context.showInfoNotification(
               title: 'Action Disabled',
               message:
-              'Please contact a Super Admin to be assigned to a church.',
+                  'Please contact a Super Admin to be assigned to a church.',
             );
           },
           borderRadius: BorderRadius.circular(16),
@@ -730,7 +730,7 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
       context,
     ).routerDelegate.currentConfiguration.uri.toString();
     final bool isExpanded = widget.children.values.any(
-          (route) => currentRoute.startsWith(route),
+      (route) => currentRoute.startsWith(route),
     );
 
     if (widget.isCollapsed) {
@@ -807,29 +807,29 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
                       decoration: BoxDecoration(
                         gradient: isExpanded
                             ? LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [
-                            theme.primaryColor.withOpacity(0.15),
-                            theme.primaryColor.withOpacity(0.05),
-                          ],
-                        )
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [
+                                  theme.primaryColor.withOpacity(0.15),
+                                  theme.primaryColor.withOpacity(0.05),
+                                ],
+                              )
                             : _isHovered
                             ? LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [
-                            theme.primaryColor.withOpacity(0.08),
-                            Colors.transparent,
-                          ],
-                        )
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [
+                                  theme.primaryColor.withOpacity(0.08),
+                                  Colors.transparent,
+                                ],
+                              )
                             : null,
                         borderRadius: BorderRadius.circular(16),
                         border: isExpanded
                             ? Border.all(
-                          color: theme.primaryColor.withOpacity(0.2),
-                          width: 1,
-                        )
+                                color: theme.primaryColor.withOpacity(0.2),
+                                width: 1,
+                              )
                             : null,
                       ),
                       child: Center(
@@ -873,30 +873,30 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
                 decoration: BoxDecoration(
                   gradient: isExpanded
                       ? LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [
-                      theme.primaryColor.withOpacity(0.1),
-                      theme.primaryColor.withOpacity(0.05),
-                      Colors.transparent,
-                    ],
-                  )
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            theme.primaryColor.withOpacity(0.1),
+                            theme.primaryColor.withOpacity(0.05),
+                            Colors.transparent,
+                          ],
+                        )
                       : _isHovered
                       ? LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [
-                      theme.primaryColor.withOpacity(0.05),
-                      Colors.transparent,
-                    ],
-                  )
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            theme.primaryColor.withOpacity(0.05),
+                            Colors.transparent,
+                          ],
+                        )
                       : null,
                   borderRadius: BorderRadius.circular(16),
                   border: isExpanded
                       ? Border.all(
-                    color: theme.primaryColor.withOpacity(0.15),
-                    width: 1,
-                  )
+                          color: theme.primaryColor.withOpacity(0.15),
+                          width: 1,
+                        )
                       : null,
                 ),
                 child: Theme(

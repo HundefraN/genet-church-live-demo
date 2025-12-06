@@ -29,8 +29,6 @@ final dashboardStatsProvider = FutureProvider.autoDispose<DashboardStatsBase?>((
     return null;
   }
 
-  await Future.delayed(const Duration(milliseconds: 200));
-
   switch (user.roleEnum) {
     case UserRole.SUPER_ADMIN:
       return await api.getSuperAdminDashboardStats(timeframe: timeframe);
@@ -482,7 +480,9 @@ class MembersList extends _$MembersList {
       return const MemberListState(hasMore: false, members: []);
     }
 
-    if (user.roleEnum != UserRole.PASTOR && user.roleEnum != UserRole.SERVANT) {
+    if (user.roleEnum != UserRole.PASTOR &&
+        user.roleEnum != UserRole.SERVANT &&
+        user.roleEnum != UserRole.SUPER_ADMIN) {
       return const MemberListState(hasMore: false, members: []);
     }
 
@@ -569,11 +569,12 @@ class ActivityLog extends _$ActivityLog {
       List<Pastor> pastors = [];
 
       try {
-        churches = await ref.watch(churchesProvider.future);
-      } catch (_) {}
-
-      try {
-        pastors = await ref.watch(pastorsProvider.future);
+        final results = await Future.wait([
+          ref.watch(churchesProvider.future),
+          ref.watch(pastorsProvider.future),
+        ]);
+        churches = results[0] as List<Church>;
+        pastors = results[1] as List<Pastor>;
       } catch (_) {}
 
       for (var p in pastors) {
@@ -626,7 +627,7 @@ class ActivityLog extends _$ActivityLog {
                 timestamp:
                     DateTime.tryParse(m.dateCreated ?? '') ?? DateTime.now(),
                 type: ActivityType.member,
-                path: '/members',
+                path: '/show-members',
               ),
             );
           }
@@ -640,7 +641,7 @@ class ActivityLog extends _$ActivityLog {
                   timestamp:
                       DateTime.tryParse(s.user!.createdAt) ?? DateTime.now(),
                   type: ActivityType.servant,
-                  path: '/servants',
+                  path: '/report-servants',
                 ),
               );
             }

@@ -134,7 +134,23 @@ class DepartmentsStatCard extends ConsumerWidget {
   const DepartmentsStatCard({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const SizedBox.shrink();
+    final departmentsAsync = ref.watch(departmentsProvider);
+    return departmentsAsync.when(
+      data: (departments) {
+        return _StatCard(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+          ),
+          onTap: () => context.go('/departments'),
+          value: departments.length.toString(),
+          label: 'Your Departments',
+          icon: Iconsax.folder_open,
+          chart: _buildBarChart(departments.length.toDouble()),
+        );
+      },
+      loading: () => const _StatCardLoading(),
+      error: (e, s) => _StatCardError(label: 'Departments'),
+    );
   }
 }
 
