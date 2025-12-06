@@ -20,9 +20,16 @@ class ActivityLogItem {
 
   IconData get icon {
     switch (type) {
-      case ActivityType.pastor: return Iconsax.user_add;
-      case ActivityType.church: return Iconsax.building;
-      default: return Iconsax.activity;
+      case ActivityType.pastor:
+        return Iconsax.user_add;
+      case ActivityType.church:
+        return Iconsax.building;
+      case ActivityType.member:
+        return Iconsax.people;
+      case ActivityType.department:
+        return Iconsax.category;
+      case ActivityType.servant:
+        return Iconsax.user_tag;
     }
   }
 }

@@ -45,7 +45,7 @@ class AddChurchScreen extends HookConsumerWidget {
         locationLink: locationLinkController.text.isNotEmpty
             ? locationLinkController.text
             : null,
-        establishmentDate: establishmentDate.value?.toIso8601String(),
+        establishmentDate: establishmentDate.value?.toUtc().toIso8601String(),
         headOfficeId: AppConstants.addisAbabaHeadOfficeId,
       );
 

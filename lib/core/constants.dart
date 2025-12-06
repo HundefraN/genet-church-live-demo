@@ -1,4 +1,5 @@
 class AppConstants {
-  static const String baseUrl = 'https://gdev-backend.onrender.com';
-  static const String addisAbabaHeadOfficeId = "030fb270-bf4c-431c-aa0c-927c8eafd76d";
+  static const String baseUrl = 'https://gdev-backend-kijr.onrender.com';
+  static const String addisAbabaHeadOfficeId =
+      "ca13d62f-1d8f-4809-9029-b18c03549b45";
 }

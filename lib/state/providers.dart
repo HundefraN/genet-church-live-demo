@@ -7,6 +7,7 @@ import 'package:genet_church_portal/data/models/member_model.dart';
 import 'package:genet_church_portal/data/models/pastor_model.dart';
 import 'package:genet_church_portal/data/models/servant_model.dart';
 import 'package:genet_church_portal/data/models/user_model.dart';
+import 'package:genet_church_portal/data/models/paginated_response.dart';
 import 'package:genet_church_portal/data/repositories/api_repository.dart';
 import 'package:genet_church_portal/data/repositories/auth_repository.dart';
 import 'package:genet_church_portal/state/church_selection_provider.dart';
@@ -16,7 +17,9 @@ part 'providers.g.dart';
 
 final dashboardTimeframeProvider = StateProvider<String>((ref) => 'all');
 
-final dashboardStatsProvider = FutureProvider.autoDispose<DashboardStatsBase?>((ref) async {
+final dashboardStatsProvider = FutureProvider.autoDispose<DashboardStatsBase?>((
+  ref,
+) async {
   final user = ref.watch(authStateProvider);
   final api = ref.watch(apiRepositoryProvider);
 
@@ -36,10 +39,7 @@ final dashboardStatsProvider = FutureProvider.autoDispose<DashboardStatsBase?>((
       if (churchId == null) {
         return null;
       }
-      return await api.getPastorDashboardStats(
-        churchId,
-        timeframe: timeframe,
-      );
+      return await api.getPastorDashboardStats(churchId, timeframe: timeframe);
     default:
       return null;
   }
@@ -558,47 +558,111 @@ class ActivityLog extends _$ActivityLog {
   @override
   Future<List<ActivityLogItem>> build() async {
     final user = ref.watch(authStateProvider);
-    if (user == null || user.roleEnum != UserRole.SUPER_ADMIN) {
+    if (user == null) {
       return [];
     }
 
-    List<Church> churches = [];
-    List<Pastor> pastors = [];
-
-    try {
-      churches = await ref.watch(churchesProvider.future);
-    } catch (_) {}
-
-    try {
-      pastors = await ref.watch(pastorsProvider.future);
-    } catch (_) {}
-
     final List<ActivityLogItem> activities = [];
 
-    for (var p in pastors) {
-      if (p.user != null) {
+    if (user.roleEnum == UserRole.SUPER_ADMIN) {
+      List<Church> churches = [];
+      List<Pastor> pastors = [];
+
+      try {
+        churches = await ref.watch(churchesProvider.future);
+      } catch (_) {}
+
+      try {
+        pastors = await ref.watch(pastorsProvider.future);
+      } catch (_) {}
+
+      for (var p in pastors) {
+        if (user.roleEnum == UserRole.SUPER_ADMIN && p.user != null) {
+          activities.add(
+            ActivityLogItem(
+              title: 'New Pastor Added',
+              subtitle: '${p.user!.fullName} joined the pastoral team.',
+              timestamp: DateTime.tryParse(p.user!.createdAt) ?? DateTime.now(),
+              type: ActivityType.pastor,
+              path: '/report-pastors',
+            ),
+          );
+        }
+      }
+
+      for (var c in churches) {
         activities.add(
           ActivityLogItem(
-            title: 'New Pastor Added',
-            subtitle: '${p.user!.fullName} joined the pastoral team.',
-            timestamp: DateTime.tryParse(p.user!.createdAt) ?? DateTime.now(),
-            type: ActivityType.pastor,
-            path: '/report-pastors',
+            title: 'New Church Registered',
+            subtitle: '${c.name} is now part of the network.',
+            timestamp: DateTime.tryParse(c.dateCreated ?? '') ?? DateTime.now(),
+            type: ActivityType.church,
+            path: '/report-churchs',
           ),
         );
       }
-    }
+    } else if (user.roleEnum == UserRole.PASTOR) {
+      final churchId = ref.watch(currentChurchProvider);
+      if (churchId != null) {
+        final api = ref.watch(apiRepositoryProvider);
 
-    for (var c in churches) {
-      activities.add(
-        ActivityLogItem(
-          title: 'New Church Registered',
-          subtitle: '${c.name} is now part of the network.',
-          timestamp: DateTime.tryParse(c.dateCreated ?? '') ?? DateTime.now(),
-          type: ActivityType.church,
-          path: '/report-churchs',
-        ),
-      );
+        try {
+          // Fetch data in parallel
+          final results = await Future.wait([
+            api.getMembers(churchId, limit: 10),
+            api.getServants(churchId, limit: 10),
+            api.getDepartments(churchId),
+          ]);
+
+          final members = (results[0] as PaginatedResult<Member>).data;
+          final servants = (results[1] as PaginatedResult<Servant>).data;
+          final departments = results[2] as List<Department>;
+
+          for (var m in members) {
+            activities.add(
+              ActivityLogItem(
+                title: 'New Member Added',
+                subtitle: '${m.fullName} joined the church.',
+                timestamp:
+                    DateTime.tryParse(m.dateCreated ?? '') ?? DateTime.now(),
+                type: ActivityType.member,
+                path: '/members',
+              ),
+            );
+          }
+
+          for (var s in servants) {
+            if (s.user != null) {
+              activities.add(
+                ActivityLogItem(
+                  title: 'New Servant Added',
+                  subtitle: '${s.user!.fullName} joined the serving team.',
+                  timestamp:
+                      DateTime.tryParse(s.user!.createdAt) ?? DateTime.now(),
+                  type: ActivityType.servant,
+                  path: '/servants',
+                ),
+              );
+            }
+          }
+
+          for (var d in departments) {
+            activities.add(
+              ActivityLogItem(
+                title: 'New Department Created',
+                subtitle: '${d.name} department was created.',
+                timestamp:
+                    DateTime.tryParse(d.dateCreated ?? '') ?? DateTime.now(),
+                type: ActivityType.department,
+                path: '/departments',
+              ),
+            );
+          }
+        } catch (e) {
+          // Silently fail for activity log or log error
+          print('Error fetching pastor activities: $e');
+        }
+      }
     }
 
     activities.sort((a, b) => b.timestamp.compareTo(a.timestamp));

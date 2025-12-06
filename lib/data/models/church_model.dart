@@ -43,7 +43,6 @@ class Church {
       'name': name,
       if (locationLink != null) 'locationLink': locationLink,
       if (establishmentDate != null) 'establishmentDate': establishmentDate,
-      if (headOfficeId != null) 'headOfficeId': headOfficeId,
     };
   }
 }
