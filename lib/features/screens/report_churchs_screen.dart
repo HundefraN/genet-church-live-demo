@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:genet_church_portal/data/models/user_model.dart';
 import 'package:genet_church_portal/data/repositories/auth_repository.dart';
+import 'package:genet_church_portal/shared_widgets/advanced_filter_bar.dart';
+import 'package:genet_church_portal/shared_widgets/card_shimmer_loader.dart';
 import 'package:genet_church_portal/shared_widgets/modern_button.dart';
 import 'package:genet_church_portal/shared_widgets/modern_card.dart';
+import 'package:genet_church_portal/shared_widgets/modern_data_card.dart';
 import 'package:genet_church_portal/state/new_item_provider.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
@@ -14,10 +16,8 @@ import 'package:genet_church_portal/state/providers.dart';
 import 'package:genet_church_portal/shared_widgets/api_error_widget.dart';
 import 'package:genet_church_portal/shared_widgets/modern_input.dart';
 import 'package:genet_church_portal/shared_widgets/notification_system.dart';
-import 'package:genet_church_portal/shared_widgets/styled_data_table.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/constants.dart';
-import '../../shared_widgets/table_shimmer_loader.dart';
 
 class ReportChurchsScreen extends HookConsumerWidget {
   const ReportChurchsScreen({super.key});
@@ -25,7 +25,6 @@ class ReportChurchsScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final appColors = theme.extension<AppColors>()!;
     final churchesAsync = ref.watch(churchesProvider);
     final newlyAddedItemId = ref.watch(newlyAddedItemIdProvider);
     final userRole = ref.watch(authStateProvider)?.roleEnum;
@@ -48,6 +47,7 @@ class ReportChurchsScreen extends HookConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header
           Container(
             margin: const EdgeInsets.only(bottom: 32),
             padding: const EdgeInsets.all(32),
@@ -92,140 +92,106 @@ class ReportChurchsScreen extends HookConsumerWidget {
                     text: 'Add New Church',
                     icon: Iconsax.add,
                   ),
-                ]
+                ],
               ],
             ),
           ),
-          ModernCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(24.0),
-                  child: ModernInput(
-                    label: 'Search by church name...',
-                    prefixIcon: Iconsax.search_normal_1,
-                    onChanged: (value) => searchQuery.value = value,
-                  ),
-                ),
-                Container(height: 1, color: appColors.border),
-                churchesAsync.when(
-                  data: (churches) {
-                    final filteredChurches = churches.where((church) {
-                      if (searchQuery.value.isEmpty) return true;
-                      return church.name
-                          .toLowerCase()
-                          .contains(searchQuery.value.toLowerCase());
-                    }).toList();
+          // Filter Bar
+          AdvancedFilterBar(
+            searchHint: 'Search by church name...',
+            searchValue: searchQuery.value,
+            onSearchChanged: (val) => searchQuery.value = val,
+            onClearAll: () => searchQuery.value = '',
+          ),
+          const SizedBox(height: 24),
+          // Content
+          churchesAsync.when(
+            data: (churches) {
+              final filteredChurches = churches.where((church) {
+                if (searchQuery.value.isEmpty) return true;
+                return church.name.toLowerCase().contains(
+                  searchQuery.value.toLowerCase(),
+                );
+              }).toList();
 
-                    if (filteredChurches.isEmpty) {
-                      return _EmptyState(
-                        searchQuery: searchQuery.value,
-                        onAddPressed: () => _showAddChurchDialog(context, ref),
-                        userCanAdd: userRole == UserRole.SUPER_ADMIN,
-                      );
-                    }
+              if (filteredChurches.isEmpty) {
+                return _EmptyState(
+                  hasFilters: searchQuery.value.isNotEmpty,
+                  onAddPressed: () => _showAddChurchDialog(context, ref),
+                  userCanAdd: userRole == UserRole.SUPER_ADMIN,
+                );
+              }
 
-                    return Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: StyledDataTable(
-                        columns: const [
-                          '#',
-                          'Church Name',
-                          'Head Office ID',
-                          'Location Link',
-                          'Actions'
-                        ],
-                        rows: filteredChurches.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final church = entry.value;
-                          final isNew = church.id == newlyAddedItemId;
-                          final rowWidget = DataRow(cells: [
-                            DataCell(Text((index + 1).toString())),
-                            DataCell(Text(church.name)),
-                            DataCell(Text(church.headOfficeId ?? 'N/A')),
-                            DataCell(
-                              church.locationLink != null &&
-                                  Uri.tryParse(church.locationLink!)
-                                      ?.isAbsolute ==
-                                      true
-                                  ? InkWell(
-                                  onTap: () => urlLauncher
-                                      .openInNewTab(church.locationLink!),
-                                  child: Text('View on Map',
-                                      style: TextStyle(
-                                          color: theme.colorScheme.primary,
-                                          decoration:
-                                          TextDecoration.underline)))
-                                  : Text(church.locationLink ?? 'N/A'),
+              return ModernDataGrid.responsive(
+                context: context,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                children: filteredChurches.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final church = entry.value;
+                  final isNew = church.id == newlyAddedItemId;
+                  final hasLocation =
+                      church.locationLink != null &&
+                      Uri.tryParse(church.locationLink!)?.isAbsolute == true;
+
+                  return ModernDataCard(
+                    index: index,
+                    isNew: isNew,
+                    leading: DataCardAvatar(
+                      icon: Iconsax.building,
+                      backgroundColor: theme.colorScheme.primary,
+                    ),
+                    title: church.name,
+                    subtitle: church.establishmentDate != null
+                        ? 'Est. ${church.establishmentDate}'
+                        : null,
+                    description: church.headOfficeId != null
+                        ? 'Head Office ID: ${church.headOfficeId}'
+                        : null,
+                    chips: [
+                      if (hasLocation)
+                        DataChip(
+                          label: 'View on Map',
+                          icon: Iconsax.location,
+                          color: theme.colorScheme.secondary,
+                        ),
+                    ],
+                    onTap: hasLocation
+                        ? () => urlLauncher.openInNewTab(church.locationLink!)
+                        : null,
+                    actions: userRole == UserRole.SUPER_ADMIN
+                        ? [
+                            DataAction(
+                              label: 'EDIT',
+                              icon: Iconsax.edit,
+                              color: theme.colorScheme.primary,
+                              onPressed: () =>
+                                  _showEditChurchDialog(context, ref, church),
                             ),
-                            DataCell(
-                              userRole == UserRole.SUPER_ADMIN
-                                  ? Row(
-                                children: [
-                                  ModernButton(
-                                    text: 'EDIT',
-                                    variant: ButtonVariant.outline,
-                                    size: ButtonSize.small,
-                                    customColor:
-                                    theme.colorScheme.primary,
-                                    icon: Iconsax.edit,
-                                    onPressed: () =>
-                                        _showEditChurchDialog(
-                                            context, ref, church),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  DestructiveButton(
-                                    text: 'DELETE',
-                                    size: ButtonSize.small,
-                                    isLoading:
-                                    isDeleting.value == church.id,
-                                    onPressed: () =>
-                                        _showDeleteConfirmationDialog(
-                                            context,
-                                            ref,
-                                            church,
-                                            isDeleting),
-                                  ),
-                                ],
-                              )
-                                  : const Text('No actions'),
+                            DataAction(
+                              label: 'DELETE',
+                              icon: Iconsax.trash,
+                              isDestructive: true,
+                              isLoading: isDeleting.value == church.id,
+                              onPressed: () => _showDeleteConfirmationDialog(
+                                context,
+                                ref,
+                                church,
+                                isDeleting,
+                              ),
                             ),
-                          ]);
-                          if (isNew) {
-                            return DataRow(
-                                cells: rowWidget.cells
-                                    .map((cell) => DataCell(
-                                    Animate(
-                                      effects: const [
-                                        FadeEffect(
-                                            duration: Duration(
-                                                milliseconds: 600)),
-                                        SlideEffect(
-                                            begin: Offset(0, 0.2),
-                                            duration: Duration(
-                                                milliseconds: 600),
-                                            curve: Curves.easeOutCubic)
-                                      ],
-                                      child: cell.child,
-                                    ),
-                                    showEditIcon: cell.showEditIcon,
-                                    placeholder: cell.placeholder,
-                                    onTap: cell.onTap))
-                                    .toList());
-                          }
-                          return rowWidget;
-                        }).toList(),
-                      ),
-                    );
-                  },
-                  loading: () => const TableShimmerLoader(columnCount: 5),
-                  error: (err, stack) => Padding(
-                    padding: const EdgeInsets.all(64.0),
-                    child: ApiErrorWidget(error: err),
-                  ),
-                ),
-              ],
+                          ]
+                        : null,
+                  );
+                }).toList(),
+              );
+            },
+            loading: () => CardGridShimmerLoader.responsive(context: context),
+            error: (err, stack) => ModernCard(
+              child: Padding(
+                padding: const EdgeInsets.all(48),
+                child: ApiErrorWidget(error: err),
+              ),
             ),
           ),
         ],
@@ -233,15 +199,20 @@ class ReportChurchsScreen extends HookConsumerWidget {
     );
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context, WidgetRef ref,
-      Church church, ValueNotifier<String?> isDeleting) {
+  void _showDeleteConfirmationDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Church church,
+    ValueNotifier<String?> isDeleting,
+  ) {
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Confirm Deletion'),
           content: Text(
-              'Are you sure you want to delete the church "${church.name}"? This action cannot be undone.'),
+            'Are you sure you want to delete the church "${church.name}"? This action cannot be undone.',
+          ),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
@@ -251,7 +222,8 @@ class ReportChurchsScreen extends HookConsumerWidget {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
               child: const Text('Delete'),
               onPressed: () async {
                 isDeleting.value = church.id;
@@ -264,7 +236,7 @@ class ReportChurchsScreen extends HookConsumerWidget {
                     context.showSuccessNotification(
                       title: 'Church Deleted',
                       message:
-                      '"${church.name}" has been successfully removed from the database.',
+                          '"${church.name}" has been successfully removed from the database.',
                     );
                   }
                 } catch (e) {
@@ -294,99 +266,104 @@ class ReportChurchsScreen extends HookConsumerWidget {
     final formKey = GlobalKey<FormState>();
 
     showDialog(
-        context: context,
-        builder: (dialogContext) {
-          return StatefulBuilder(
-            builder: (context, setState) {
-              return AlertDialog(
-                title: const Text('Add New Church'),
-                content: SingleChildScrollView(
-                  child: Form(
-                    key: formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ModernInput(
-                          controller: nameController,
-                          label: 'Church Name',
-                          prefixIcon: Iconsax.building,
-                        ),
-                        const SizedBox(height: 20),
-                        ModernInput(
-                          controller: locationController,
-                          label: 'Google Maps Link (Optional)',
-                          prefixIcon: Iconsax.map_1,
-                        ),
-                        const SizedBox(height: 20),
-                        ModernInput(
-                          controller: establishmentDateController,
-                          label: 'Establishment Date (YYYY-MM-DD)',
-                          prefixIcon: Iconsax.calendar_1,
-                        ),
-                      ],
-                    ),
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Add New Church'),
+              content: SingleChildScrollView(
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ModernInput(
+                        controller: nameController,
+                        label: 'Church Name',
+                        prefixIcon: Iconsax.building,
+                      ),
+                      const SizedBox(height: 20),
+                      ModernInput(
+                        controller: locationController,
+                        label: 'Google Maps Link (Optional)',
+                        prefixIcon: Iconsax.map_1,
+                      ),
+                      const SizedBox(height: 20),
+                      ModernInput(
+                        controller: establishmentDateController,
+                        label: 'Establishment Date (YYYY-MM-DD)',
+                        prefixIcon: Iconsax.calendar_1,
+                      ),
+                    ],
                   ),
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogContext),
-                    child: const Text('Cancel'),
-                  ),
-                  PrimaryButton(
-                      text: 'Add Church',
-                      onPressedAsync: () async {
-                        if (nameController.text.trim().isEmpty) {
-                          context.showWarningNotification(
-                            title: 'Validation Error',
-                            message: 'Church name is required.',
-                          );
-                          return;
-                        }
-                        try {
-                          final newChurchData = Church(
-                            id: '',
-                            name: nameController.text.trim(),
-                            locationLink: locationController.text.trim().isEmpty
-                                ? null
-                                : locationController.text.trim(),
-                            establishmentDate:
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Cancel'),
+                ),
+                PrimaryButton(
+                  text: 'Add Church',
+                  onPressedAsync: () async {
+                    if (nameController.text.trim().isEmpty) {
+                      context.showWarningNotification(
+                        title: 'Validation Error',
+                        message: 'Church name is required.',
+                      );
+                      return;
+                    }
+                    try {
+                      final newChurchData = Church(
+                        id: '',
+                        name: nameController.text.trim(),
+                        locationLink: locationController.text.trim().isEmpty
+                            ? null
+                            : locationController.text.trim(),
+                        establishmentDate:
                             establishmentDateController.text.trim().isEmpty
-                                ? null
-                                : establishmentDateController.text.trim(),
-                            headOfficeId: AppConstants.addisAbabaHeadOfficeId,
-                          );
-                          final newChurch = await ref
-                              .read(churchesProvider.notifier)
-                              .addChurch(newChurchData);
-                          ref
-                              .read(newlyAddedItemIdProvider.notifier)
-                              .set(newChurch.id);
-                          if (dialogContext.mounted) {
-                            Navigator.pop(dialogContext);
-                            context.showSuccessNotification(
-                              title: 'Church Added!',
-                              message:
+                            ? null
+                            : establishmentDateController.text.trim(),
+                        headOfficeId: AppConstants.addisAbabaHeadOfficeId,
+                      );
+                      final newChurch = await ref
+                          .read(churchesProvider.notifier)
+                          .addChurch(newChurchData);
+                      ref
+                          .read(newlyAddedItemIdProvider.notifier)
+                          .set(newChurch.id);
+                      if (dialogContext.mounted) {
+                        Navigator.pop(dialogContext);
+                        context.showSuccessNotification(
+                          title: 'Church Added!',
+                          message:
                               '"${nameController.text.trim()}" has been successfully added to the database.',
-                            );
-                          }
-                        } catch (e) {
-                          if (dialogContext.mounted) {
-                            context.showErrorNotification(
-                              title: 'Add Failed',
-                              message: 'Error: ${e.toString()}',
-                            );
-                          }
-                        }
-                      }),
-                ],
-              );
-            },
-          );
-        });
+                        );
+                      }
+                    } catch (e) {
+                      if (dialogContext.mounted) {
+                        context.showErrorNotification(
+                          title: 'Add Failed',
+                          message: 'Error: ${e.toString()}',
+                        );
+                      }
+                    }
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   void _showEditChurchDialog(
-      BuildContext context, WidgetRef ref, Church church) {
+    BuildContext context,
+    WidgetRef ref,
+    Church church,
+  ) {
     final nameController = TextEditingController(text: church.name);
     final locationController = TextEditingController(text: church.locationLink);
     final formKey = GlobalKey<FormState>();
@@ -446,16 +423,18 @@ class ReportChurchsScreen extends HookConsumerWidget {
                         headOfficeId: church.headOfficeId,
                         dateCreated: church.dateCreated,
                       );
-                      await ref.read(churchesProvider.notifier).updateChurch(
-                        churchId: church.id,
-                        church: updatedChurch,
-                      );
+                      await ref
+                          .read(churchesProvider.notifier)
+                          .updateChurch(
+                            churchId: church.id,
+                            church: updatedChurch,
+                          );
                       if (dialogContext.mounted) {
                         Navigator.pop(dialogContext);
                         context.showSuccessNotification(
                           title: 'Church Updated!',
                           message:
-                          'Changes to "${nameController.text.trim()}" have been saved successfully.',
+                              'Changes to "${nameController.text.trim()}" have been saved successfully.',
                         );
                       }
                     } catch (e) {
@@ -478,54 +457,75 @@ class ReportChurchsScreen extends HookConsumerWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  final String searchQuery;
+  final bool hasFilters;
   final VoidCallback onAddPressed;
   final bool userCanAdd;
 
-  const _EmptyState(
-      {required this.searchQuery,
-        required this.onAddPressed,
-        required this.userCanAdd});
+  const _EmptyState({
+    required this.hasFilters,
+    required this.onAddPressed,
+    required this.userCanAdd,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(64),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            searchQuery.isEmpty ? Iconsax.building : Iconsax.search_zoom_out,
-            size: 48,
-            color: theme.colorScheme.onSurface.withOpacity(0.4),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            searchQuery.isEmpty
-                ? 'No Churches Found'
-                : 'No Churches Match Your Search',
-            style: theme.textTheme.titleMedium
-                ?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6)),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            searchQuery.isEmpty
-                ? 'Add your first church to get started.'
-                : 'Try adjusting your search terms.',
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.4)),
-            textAlign: TextAlign.center,
-          ),
-          if (searchQuery.isEmpty && userCanAdd) ...[
-            const SizedBox(height: 24),
-            PrimaryButton(
-              onPressed: onAddPressed,
-              text: 'Add First Church',
-              icon: Iconsax.add,
+    final appColors = theme.extension<AppColors>()!;
+
+    return ModernCard(
+      child: Container(
+        padding: const EdgeInsets.all(64),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    theme.colorScheme.primary.withOpacity(0.1),
+                    theme.colorScheme.primary.withOpacity(0.05),
+                  ],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                hasFilters ? Iconsax.search_zoom_out : Iconsax.building,
+                size: 48,
+                color: theme.colorScheme.primary.withOpacity(0.6),
+              ),
             ),
-          ]
-        ],
+            const SizedBox(height: 24),
+            Text(
+              hasFilters
+                  ? 'No Churches Match Your Search'
+                  : 'No Churches Found',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: appColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              hasFilters
+                  ? 'Try adjusting your search terms.'
+                  : 'Add your first church to get started.',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: appColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (!hasFilters && userCanAdd) ...[
+              const SizedBox(height: 24),
+              PrimaryButton(
+                onPressed: onAddPressed,
+                text: 'Add First Church',
+                icon: Iconsax.add,
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

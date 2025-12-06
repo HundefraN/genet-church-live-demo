@@ -1,10 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:genet_church_portal/shared_widgets/advanced_filter_bar.dart';
+import 'package:genet_church_portal/shared_widgets/card_shimmer_loader.dart';
 import 'package:genet_church_portal/shared_widgets/modern_button.dart';
 import 'package:genet_church_portal/shared_widgets/modern_card.dart';
+import 'package:genet_church_portal/shared_widgets/modern_data_card.dart';
+import 'package:genet_church_portal/shared_widgets/modern_dropdown.dart';
 import 'package:genet_church_portal/shared_widgets/modern_input.dart';
+import 'package:genet_church_portal/shared_widgets/modern_report_list.dart';
 import 'package:genet_church_portal/shared_widgets/notification_system.dart';
 import 'package:genet_church_portal/state/new_item_provider.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -12,10 +16,7 @@ import 'package:genet_church_portal/core/theme/app_colors.dart';
 import 'package:genet_church_portal/data/models/pastor_model.dart';
 import 'package:genet_church_portal/state/providers.dart';
 import 'package:genet_church_portal/shared_widgets/api_error_widget.dart';
-import 'package:genet_church_portal/shared_widgets/modern_dropdown.dart';
-import 'package:genet_church_portal/shared_widgets/styled_data_table.dart';
 import 'package:iconsax/iconsax.dart';
-import '../../shared_widgets/table_shimmer_loader.dart';
 
 class ReportPastorsScreen extends HookConsumerWidget {
   const ReportPastorsScreen({super.key});
@@ -27,7 +28,10 @@ class ReportPastorsScreen extends HookConsumerWidget {
     final pastorsAsync = ref.watch(pastorsProvider);
     final churchesAsync = ref.watch(churchesProvider);
     final newlyAddedItemId = ref.watch(newlyAddedItemIdProvider);
+
+    // Filter states
     final searchQuery = useState('');
+    final selectedChurchFilter = useState<String?>(null);
     final isDeleting = useState<String?>(null);
 
     useEffect(() {
@@ -41,10 +45,27 @@ class ReportPastorsScreen extends HookConsumerWidget {
       return null;
     }, [newlyAddedItemId]);
 
+    // Build church filter dropdown options
+    final churches = churchesAsync.valueOrNull ?? [];
+    final churchMap = {for (var c in churches) c.id: c.name};
+
+    final filterDropdowns = <FilterDropdownConfig>[
+      FilterDropdownConfig(
+        label: 'Church',
+        icon: Iconsax.building,
+        options: churches
+            .map((c) => FilterOption(label: c.name, value: c.id))
+            .toList(),
+        selectedValue: selectedChurchFilter.value,
+        onChanged: (val) => selectedChurchFilter.value = val,
+      ),
+    ];
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header
           Container(
             margin: const EdgeInsets.only(bottom: 32),
             padding: const EdgeInsets.all(32),
@@ -91,190 +112,127 @@ class ReportPastorsScreen extends HookConsumerWidget {
               ],
             ),
           ),
-          ModernCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  child: ModernInput(
-                    label: 'Search by name or email...',
-                    prefixIcon: Iconsax.search_normal_1,
-                    onChanged: (value) => searchQuery.value = value,
-                  ),
-                ),
-                Container(height: 1, color: appColors.border),
-                churchesAsync.when(
-                  data: (churches) {
-                    final churchMap = {for (var c in churches) c.id: c.name};
-                    return pastorsAsync.when(
-                      data: (pastors) {
-                        final filteredPastors = pastors.where((pastor) {
-                          if (searchQuery.value.isEmpty) return true;
-                          final query = searchQuery.value.toLowerCase();
-                          final fullName = pastor.user?.fullName ?? '';
-                          final email = pastor.user?.email ?? '';
-                          return fullName.toLowerCase().contains(query) ||
-                              email.toLowerCase().contains(query);
-                        }).toList();
+          // Filter Bar
+          AdvancedFilterBar(
+            searchHint: 'Search by name or email...',
+            searchValue: searchQuery.value,
+            onSearchChanged: (val) => searchQuery.value = val,
+            filterDropdowns: filterDropdowns,
+            onClearAll: () {
+              searchQuery.value = '';
+              selectedChurchFilter.value = null;
+            },
+          ),
+          const SizedBox(height: 24),
+          // Content
+          churchesAsync.when(
+            data: (_) => pastorsAsync.when(
+              data: (pastors) {
+                // Apply filters
+                final filteredPastors = pastors.where((pastor) {
+                  // Search filter
+                  if (searchQuery.value.isNotEmpty) {
+                    final query = searchQuery.value.toLowerCase();
+                    final fullName = pastor.user?.fullName ?? '';
+                    final email = pastor.user?.email ?? '';
+                    if (!fullName.toLowerCase().contains(query) &&
+                        !email.toLowerCase().contains(query)) {
+                      return false;
+                    }
+                  }
+                  // Church filter
+                  if (selectedChurchFilter.value != null) {
+                    if (pastor.churchId != selectedChurchFilter.value) {
+                      return false;
+                    }
+                  }
+                  return true;
+                }).toList();
 
-                        if (filteredPastors.isEmpty) {
-                          return _EmptyState(
-                            searchQuery: searchQuery.value,
-                            onAddPressed: () =>
-                                _showAddPastorDialog(context, ref),
-                          );
-                        }
-                        return Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: StyledDataTable(
-                            columns: const [
-                              '#',
-                              'Full Name',
-                              'Email',
-                              'Assigned Church',
-                              'Actions',
-                            ],
-                            rows: filteredPastors.asMap().entries.map((entry) {
-                              final index = entry.key;
-                              final pastor = entry.value;
-                              final isNew = pastor.id == newlyAddedItemId;
-                              final rowWidget = DataRow(
-                                cells: [
-                                  DataCell(Text((index + 1).toString())),
-                                  DataCell(Text(pastor.user?.fullName ?? '')),
-                                  DataCell(Text(pastor.user?.email ?? '')),
-                                  DataCell(
-                                    pastor.churchId == null
-                                        ? Text(
-                                      'N/A',
-                                      style: TextStyle(
-                                        color: appColors.textSecondary,
-                                      ),
-                                    )
-                                        : Chip(
-                                      avatar: Icon(
-                                        Iconsax.building,
-                                        size: 16,
-                                        color: theme.colorScheme.primary,
-                                      ),
-                                      label: Text(
-                                        churchMap[pastor.churchId] ??
-                                            'Unknown Church',
-                                        style: TextStyle(
-                                          color:
-                                          theme.colorScheme.primary,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      backgroundColor: theme
-                                          .colorScheme.primary
-                                          .withOpacity(0.1),
-                                      side: BorderSide.none,
-                                    ),
-                                  ),
-                                  DataCell(
-                                    Row(
-                                      children: [
-                                        ModernButton(
-                                          text: 'ASSIGN',
-                                          variant: ButtonVariant.outline,
-                                          size: ButtonSize.small,
-                                          customColor:
-                                          theme.colorScheme.secondary,
-                                          icon: Iconsax.building,
-                                          onPressed: () =>
-                                              _showAssignChurchDialog(
-                                                context,
-                                                ref,
-                                                pastor,
-                                              ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        ModernButton(
-                                          text: 'EDIT',
-                                          variant: ButtonVariant.outline,
-                                          size: ButtonSize.small,
-                                          customColor:
-                                          theme.colorScheme.primary,
-                                          icon: Iconsax.edit,
-                                          onPressed: () =>
-                                              _showEditPastorDialog(
-                                                context,
-                                                ref,
-                                                pastor,
-                                              ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        DestructiveButton(
-                                          text: 'DELETE',
-                                          size: ButtonSize.small,
-                                          icon: Iconsax.trash,
-                                          isLoading:
-                                          isDeleting.value == pastor.id,
-                                          onPressed: () =>
-                                              _showDeleteConfirmationDialog(
-                                                context,
-                                                ref,
-                                                pastor,
-                                                isDeleting,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              );
+                if (filteredPastors.isEmpty) {
+                  return _EmptyState(
+                    hasFilters:
+                        searchQuery.value.isNotEmpty ||
+                        selectedChurchFilter.value != null,
+                    onAddPressed: () => _showAddPastorDialog(context, ref),
+                  );
+                }
 
-                              if (isNew) {
-                                return DataRow(
-                                  cells: rowWidget.cells
-                                      .map(
-                                        (cell) => DataCell(
-                                      Animate(
-                                        effects: const [
-                                          FadeEffect(
-                                            duration: Duration(
-                                              milliseconds: 600,
-                                            ),
-                                          ),
-                                          SlideEffect(
-                                            begin: Offset(0, 0.2),
-                                            duration: Duration(
-                                              milliseconds: 600,
-                                            ),
-                                            curve: Curves.easeOutCubic,
-                                          ),
-                                        ],
-                                        child: cell.child,
-                                      ),
-                                      showEditIcon: cell.showEditIcon,
-                                      placeholder: cell.placeholder,
-                                      onTap: cell.onTap,
-                                    ),
-                                  )
-                                      .toList(),
-                                );
-                              }
-                              return rowWidget;
-                            }).toList(),
-                          ),
-                        );
-                      },
-                      loading: () => const TableShimmerLoader(columnCount: 5),
-                      error: (err, stack) => Padding(
-                        padding: const EdgeInsets.all(64.0),
-                        child: ApiErrorWidget(error: err),
+                return ModernDataGrid.responsive(
+                  context: context,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  children: filteredPastors.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final pastor = entry.value;
+                    final isNew = pastor.id == newlyAddedItemId;
+                    final churchName =
+                        churchMap[pastor.churchId] ?? 'Unassigned';
+
+                    return ModernDataCard(
+                      index: index,
+                      isNew: isNew,
+                      leading: DataCardAvatar(
+                        initials: getInitials(pastor.user?.fullName),
+                        backgroundColor: theme.colorScheme.secondary,
                       ),
+                      title: pastor.user?.fullName ?? 'Unknown',
+                      subtitle: pastor.user?.email ?? '',
+                      chips: [
+                        DataChip(
+                          label: churchName,
+                          icon: Iconsax.building,
+                          color: pastor.churchId != null
+                              ? theme.colorScheme.primary
+                              : appColors.textSecondary,
+                        ),
+                      ],
+                      actions: [
+                        DataAction(
+                          label: 'ASSIGN',
+                          icon: Iconsax.building,
+                          color: theme.colorScheme.secondary,
+                          onPressed: () =>
+                              _showAssignChurchDialog(context, ref, pastor),
+                        ),
+                        DataAction(
+                          label: 'EDIT',
+                          icon: Iconsax.edit,
+                          color: theme.colorScheme.primary,
+                          onPressed: () =>
+                              _showEditPastorDialog(context, ref, pastor),
+                        ),
+                        DataAction(
+                          label: 'DELETE',
+                          icon: Iconsax.trash,
+                          isDestructive: true,
+                          isLoading: isDeleting.value == pastor.id,
+                          onPressed: () => _showDeleteConfirmationDialog(
+                            context,
+                            ref,
+                            pastor,
+                            isDeleting,
+                          ),
+                        ),
+                      ],
                     );
-                  },
-                  loading: () => const TableShimmerLoader(columnCount: 5),
-                  error: (err, stack) => Padding(
-                    padding: const EdgeInsets.all(64.0),
-                    child: ApiErrorWidget(error: err),
-                  ),
+                  }).toList(),
+                );
+              },
+              loading: () => CardGridShimmerLoader.responsive(context: context),
+              error: (err, stack) => ModernCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(48),
+                  child: ApiErrorWidget(error: err),
                 ),
-              ],
+              ),
+            ),
+            loading: () => CardGridShimmerLoader.responsive(context: context),
+            error: (err, stack) => ModernCard(
+              child: Padding(
+                padding: const EdgeInsets.all(48),
+                child: ApiErrorWidget(error: err),
+              ),
             ),
           ),
         ],
@@ -283,11 +241,11 @@ class ReportPastorsScreen extends HookConsumerWidget {
   }
 
   void _showDeleteConfirmationDialog(
-      BuildContext context,
-      WidgetRef ref,
-      Pastor pastor,
-      ValueNotifier<String?> isDeleting,
-      ) {
+    BuildContext context,
+    WidgetRef ref,
+    Pastor pastor,
+    ValueNotifier<String?> isDeleting,
+  ) {
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
@@ -319,7 +277,7 @@ class ReportPastorsScreen extends HookConsumerWidget {
                     context.showSuccessNotification(
                       title: 'Success',
                       message:
-                      '${pastor.user?.fullName ?? ''} has been deleted.',
+                          '${pastor.user?.fullName ?? ''} has been deleted.',
                     );
                   }
                 } catch (e) {
@@ -327,7 +285,7 @@ class ReportPastorsScreen extends HookConsumerWidget {
                     String message = 'Failed to delete pastor.';
                     if (e is DioException && e.response?.statusCode == 500) {
                       message =
-                      'Server Error: Unable to delete pastor. This may be due to existing records linked to this account.';
+                          'Server Error: Unable to delete pastor. This may be due to existing records linked to this account.';
                     }
                     context.showErrorNotification(
                       title: 'Error',
@@ -385,7 +343,7 @@ class ReportPastorsScreen extends HookConsumerWidget {
                         controller: passwordController,
                         label: 'Temporary Password',
                         validator: (v) =>
-                        v!.length < 6 ? 'Min 6 characters' : null,
+                            v!.length < 6 ? 'Min 6 characters' : null,
                       ),
                       const SizedBox(height: 20),
                       churchesAsync.when(
@@ -399,7 +357,7 @@ class ReportPastorsScreen extends HookConsumerWidget {
                               child: Text('None (Unassigned)'),
                             ),
                             ...churches.map(
-                                  (c) => DropdownMenuItem(
+                              (c) => DropdownMenuItem(
                                 value: c.id,
                                 child: Text(c.name),
                               ),
@@ -407,10 +365,8 @@ class ReportPastorsScreen extends HookConsumerWidget {
                           ],
                           onChanged: (val) => selectedChurchId.value = val,
                         ),
-                        loading: () => const SizedBox(
-                          height: 48,
-                          child: Center(child: CircularProgressIndicator()),
-                        ),
+                        loading: () =>
+                            const InlineShimmerLoader(width: 200, height: 48),
                         error: (e, s) => const Text('Could not load churches'),
                       ),
                     ],
@@ -430,18 +386,18 @@ class ReportPastorsScreen extends HookConsumerWidget {
                         final newPastor = await ref
                             .read(pastorsProvider.notifier)
                             .addPastor(
-                          fullName: nameController.text,
-                          email: emailController.text,
-                          password: passwordController.text,
-                        );
+                              fullName: nameController.text,
+                              email: emailController.text,
+                              password: passwordController.text,
+                            );
 
                         if (selectedChurchId.value != null) {
                           await ref
                               .read(pastorsProvider.notifier)
                               .assignChurchToPastor(
-                            pastorId: newPastor.id,
-                            churchId: selectedChurchId.value!,
-                          );
+                                pastorId: newPastor.id,
+                                churchId: selectedChurchId.value!,
+                              );
                         }
 
                         ref
@@ -453,7 +409,7 @@ class ReportPastorsScreen extends HookConsumerWidget {
                           context.showSuccessNotification(
                             title: "Pastor Added",
                             message:
-                            "${nameController.text} has been successfully added.",
+                                "${nameController.text} has been successfully added.",
                           );
                         }
                       } catch (e) {
@@ -462,7 +418,7 @@ class ReportPastorsScreen extends HookConsumerWidget {
                           context.showErrorNotification(
                             title: "Failed to Add",
                             message:
-                            "An error occurred while adding the pastor.",
+                                "An error occurred while adding the pastor.",
                           );
                         }
                       }
@@ -478,10 +434,10 @@ class ReportPastorsScreen extends HookConsumerWidget {
   }
 
   void _showEditPastorDialog(
-      BuildContext context,
-      WidgetRef ref,
-      Pastor pastor,
-      ) {
+    BuildContext context,
+    WidgetRef ref,
+    Pastor pastor,
+  ) {
     final nameController = TextEditingController(
       text: pastor.user?.fullName ?? '',
     );
@@ -505,13 +461,13 @@ class ReportPastorsScreen extends HookConsumerWidget {
                   label: 'Full Name',
                   prefixIcon: Iconsax.user,
                   validator: (val) =>
-                  val!.isEmpty ? 'Name cannot be empty' : null,
+                      val!.isEmpty ? 'Name cannot be empty' : null,
                 ),
                 const SizedBox(height: 20),
                 EmailInput(
                   controller: emailController,
                   validator: (val) =>
-                  val!.isEmpty ? 'Email cannot be empty' : null,
+                      val!.isEmpty ? 'Email cannot be empty' : null,
                 ),
               ],
             ),
@@ -526,11 +482,13 @@ class ReportPastorsScreen extends HookConsumerWidget {
               onPressedAsync: () async {
                 if (formKey.currentState!.validate()) {
                   try {
-                    await ref.read(pastorsProvider.notifier).updatePastor(
-                      pastorId: pastor.id,
-                      fullName: nameController.text,
-                      email: emailController.text,
-                    );
+                    await ref
+                        .read(pastorsProvider.notifier)
+                        .updatePastor(
+                          pastorId: pastor.id,
+                          fullName: nameController.text,
+                          email: emailController.text,
+                        );
                     if (dialogContext.mounted) {
                       context.showSuccessNotification(
                         title: 'Success',
@@ -556,10 +514,10 @@ class ReportPastorsScreen extends HookConsumerWidget {
   }
 
   void _showAssignChurchDialog(
-      BuildContext context,
-      WidgetRef ref,
-      Pastor pastor,
-      ) {
+    BuildContext context,
+    WidgetRef ref,
+    Pastor pastor,
+  ) {
     final churchesAsync = ref.watch(churchesProvider);
 
     showDialog(
@@ -570,7 +528,8 @@ class ReportPastorsScreen extends HookConsumerWidget {
             final validChurchIds =
                 churchesAsync.valueOrNull?.map((c) => c.id).toSet() ?? {};
             final initialChurchId =
-            pastor.churchId != null && validChurchIds.contains(pastor.churchId)
+                pastor.churchId != null &&
+                    validChurchIds.contains(pastor.churchId)
                 ? pastor.churchId
                 : null;
 
@@ -589,8 +548,10 @@ class ReportPastorsScreen extends HookConsumerWidget {
                       value: selectedChurchId.value,
                       items: [
                         ...churches.map(
-                              (c) => DropdownMenuItem(
-                              value: c.id, child: Text(c.name)),
+                          (c) => DropdownMenuItem(
+                            value: c.id,
+                            child: Text(c.name),
+                          ),
                         ),
                       ],
                       onChanged: (val) {
@@ -598,7 +559,7 @@ class ReportPastorsScreen extends HookConsumerWidget {
                       },
                     ),
                     loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                        const InlineShimmerLoader(width: 200, height: 48),
                     error: (e, s) => const Text('Could not load churches.'),
                   ),
                   if (initialChurchId != null) ...[
@@ -606,75 +567,73 @@ class ReportPastorsScreen extends HookConsumerWidget {
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .errorContainer
-                              .withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .error
-                                  .withOpacity(0.5))),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.errorContainer.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.error.withOpacity(0.5),
+                        ),
+                      ),
                       child: TextButton(
                         onPressed: isUnassigning.value
                             ? null
                             : () async {
-                          isUnassigning.value = true;
-                          try {
-                            await ref
-                                .read(pastorsProvider.notifier)
-                                .unassignChurch(pastorId: pastor.id);
+                                isUnassigning.value = true;
+                                try {
+                                  await ref
+                                      .read(pastorsProvider.notifier)
+                                      .unassignChurch(pastorId: pastor.id);
 
-                            if (dialogContext.mounted) {
-                              Navigator.pop(dialogContext);
-                              context.showSuccessNotification(
-                                title: "Unassigned Successfully",
-                                message:
-                                "Pastor has been removed from the church.",
-                              );
-                            }
-                          } catch (e) {
-                            if (dialogContext.mounted) {
-                              context.showErrorNotification(
-                                title: "Failed to Unassign",
-                                message:
-                                "Could not remove church assignment.",
-                              );
-                            }
-                          } finally {
-                            if (context.mounted) isUnassigning.value = false;
-                          }
-                        },
+                                  if (dialogContext.mounted) {
+                                    Navigator.pop(dialogContext);
+                                    context.showSuccessNotification(
+                                      title: "Unassigned Successfully",
+                                      message:
+                                          "Pastor has been removed from the church.",
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (dialogContext.mounted) {
+                                    context.showErrorNotification(
+                                      title: "Failed to Unassign",
+                                      message:
+                                          "Could not remove church assignment.",
+                                    );
+                                  }
+                                } finally {
+                                  if (context.mounted) {
+                                    isUnassigning.value = false;
+                                  }
+                                }
+                              },
                         child: isUnassigning.value
-                            ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color:
-                                Theme.of(context).colorScheme.error))
+                            ? const InlineShimmerLoader(width: 100, height: 20)
                             : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Iconsax.minus_square,
-                                color:
-                                Theme.of(context).colorScheme.error,
-                                size: 18),
-                            const SizedBox(width: 8),
-                            Text(
-                              "Unassign Church",
-                              style: TextStyle(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .error,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Iconsax.minus_square,
+                                    color: Theme.of(context).colorScheme.error,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "Unassign Church",
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                       ),
                     ),
-                  ]
+                  ],
                 ],
               ),
               actions: [
@@ -683,29 +642,34 @@ class ReportPastorsScreen extends HookConsumerWidget {
                   child: const Text('Cancel'),
                 ),
                 PrimaryButton(
-                    text: 'Assign Church',
-                    onPressedAsync: () async {
-                      if (selectedChurchId.value == null) return;
-                      try {
-                        await ref
-                            .read(pastorsProvider.notifier)
-                            .assignChurchToPastor(
-                          pastorId: pastor.id,
-                          churchId: selectedChurchId.value,
+                  text: 'Assign Church',
+                  onPressedAsync: () async {
+                    if (selectedChurchId.value == null) return;
+                    try {
+                      await ref
+                          .read(pastorsProvider.notifier)
+                          .assignChurchToPastor(
+                            pastorId: pastor.id,
+                            churchId: selectedChurchId.value,
+                          );
+                      if (dialogContext.mounted) {
+                        Navigator.pop(dialogContext);
+                        context.showSuccessNotification(
+                          title: "Success",
+                          message: "Church assigned.",
                         );
-                        if (dialogContext.mounted) {
-                          Navigator.pop(dialogContext);
-                          context.showSuccessNotification(
-                              title: "Success", message: "Church assigned.");
-                        }
-                      } catch (e) {
-                        if (dialogContext.mounted) {
-                          Navigator.pop(dialogContext);
-                          context.showErrorNotification(
-                              title: "Error", message: e.toString());
-                        }
                       }
-                    }),
+                    } catch (e) {
+                      if (dialogContext.mounted) {
+                        Navigator.pop(dialogContext);
+                        context.showErrorNotification(
+                          title: "Error",
+                          message: e.toString(),
+                        );
+                      }
+                    }
+                  },
+                ),
               ],
             );
           },
@@ -716,54 +680,68 @@ class ReportPastorsScreen extends HookConsumerWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  final String searchQuery;
+  final bool hasFilters;
   final VoidCallback onAddPressed;
 
-  const _EmptyState({required this.searchQuery, required this.onAddPressed});
+  const _EmptyState({required this.hasFilters, required this.onAddPressed});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(64),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            searchQuery.isEmpty
-                ? Iconsax.user_octagon
-                : Iconsax.search_zoom_out,
-            size: 48,
-            color: theme.colorScheme.onSurface.withOpacity(0.4),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            searchQuery.isEmpty
-                ? 'No Pastors Found'
-                : 'No Pastors Match Your Search',
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+    final appColors = theme.extension<AppColors>()!;
+
+    return ModernCard(
+      child: Container(
+        padding: const EdgeInsets.all(64),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    theme.colorScheme.secondary.withOpacity(0.1),
+                    theme.colorScheme.secondary.withOpacity(0.05),
+                  ],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                hasFilters ? Iconsax.search_zoom_out : Iconsax.user_octagon,
+                size: 48,
+                color: theme.colorScheme.secondary.withOpacity(0.6),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            searchQuery.isEmpty
-                ? 'Add your first pastor to get started.'
-                : 'Try adjusting your search terms.',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.4),
-            ),
-            textAlign: TextAlign.center,
-          ),
-          if (searchQuery.isEmpty) ...[
             const SizedBox(height: 24),
-            PrimaryButton(
-              onPressed: onAddPressed,
-              text: 'Add First Pastor',
-              icon: Iconsax.add,
+            Text(
+              hasFilters ? 'No Pastors Match Your Filters' : 'No Pastors Found',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: appColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 12),
+            Text(
+              hasFilters
+                  ? 'Try adjusting your search or filter criteria.'
+                  : 'Add your first pastor to get started.',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: appColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (!hasFilters) ...[
+              const SizedBox(height: 24),
+              PrimaryButton(
+                onPressed: onAddPressed,
+                text: 'Add First Pastor',
+                icon: Iconsax.add,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
