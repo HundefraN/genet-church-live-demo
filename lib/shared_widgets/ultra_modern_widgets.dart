@@ -1,6 +1,4 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
 import 'package:genet_church_portal/core/theme/visual_effects.dart';
 
@@ -65,12 +63,18 @@ class _GlowingBadgeState extends State<GlowingBadge>
           ),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [glowColor.withOpacity(0.3), glowColor.withOpacity(0.15)],
+              colors: [
+                glowColor.withValues(alpha: 0.3),
+                glowColor.withValues(alpha: 0.15),
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular((widget.size ?? 12) * 1.5),
-            border: Border.all(color: glowColor.withOpacity(0.6), width: 1.5),
+            border: Border.all(
+              color: glowColor.withValues(alpha: 0.6),
+              width: 1.5,
+            ),
             boxShadow: VisualEffects.createGlow(
               color: glowColor,
               intensity: 0.4 * _pulseAnimation.value,
@@ -144,16 +148,16 @@ class _HolographicChipState extends State<HolographicChip>
           decoration: BoxDecoration(
             gradient: VisualEffects.createHolographic(
               colors: [
-                appColors.glowPrimary.withOpacity(0.2),
-                appColors.glowAccent.withOpacity(0.2),
-                appColors.glowSecondary.withOpacity(0.2),
+                appColors.glowPrimary.withValues(alpha: 0.2),
+                appColors.glowAccent.withValues(alpha: 0.2),
+                appColors.glowSecondary.withValues(alpha: 0.2),
               ],
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: _isHovered
-                  ? appColors.glowPrimary.withOpacity(0.5)
-                  : appColors.border.withOpacity(0.3),
+                  ? appColors.glowPrimary.withValues(alpha: 0.5)
+                  : appColors.border.withValues(alpha: 0.3),
               width: 1,
             ),
             boxShadow: _isHovered
@@ -210,7 +214,6 @@ class _FloatingActionCardState extends State<FloatingActionCard>
   late AnimationController _hoverController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _elevationAnimation;
-  bool _isHovered = false;
 
   @override
   void initState() {
@@ -247,11 +250,9 @@ class _FloatingActionCardState extends State<FloatingActionCard>
 
     return MouseRegion(
       onEnter: (_) {
-        setState(() => _isHovered = true);
         _hoverController.forward();
       },
       onExit: (_) {
-        setState(() => _isHovered = false);
         _hoverController.reverse();
       },
       child: GestureDetector(

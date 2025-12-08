@@ -7,6 +7,7 @@ import 'package:genet_church_portal/shared_widgets/card_shimmer_loader.dart';
 import 'package:genet_church_portal/shared_widgets/modern_button.dart';
 import 'package:genet_church_portal/shared_widgets/modern_card.dart';
 import 'package:genet_church_portal/shared_widgets/modern_data_card.dart';
+import 'package:genet_church_portal/shared_widgets/modern_date_picker.dart';
 import 'package:genet_church_portal/state/new_item_provider.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
@@ -17,7 +18,11 @@ import 'package:genet_church_portal/shared_widgets/api_error_widget.dart';
 import 'package:genet_church_portal/shared_widgets/modern_input.dart';
 import 'package:genet_church_portal/shared_widgets/notification_system.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:genet_church_portal/core/settings/language_provider.dart';
 import '../../core/constants.dart';
+import 'package:genet_church_portal/core/utils/date_formatter.dart';
+
+import '../../core/localization/app_localization.dart';
 
 class ReportChurchsScreen extends HookConsumerWidget {
   const ReportChurchsScreen({super.key});
@@ -33,29 +38,27 @@ class ReportChurchsScreen extends HookConsumerWidget {
     final urlLauncher = UrlLauncherService();
     final hasLocationFilter = useState(false);
     final sortOption = useState<String>('name_asc');
+    final locale = ref.watch(languageNotifierProvider);
+    final loc = AppLocalization(locale);
 
-    // ... (existing useEffect)
-
-    // Build sort dropdown
     final sortDropdowns = <FilterDropdownConfig>[
       FilterDropdownConfig(
-        label: 'Sort By',
+        label: loc.sortBy,
         icon: Iconsax.sort,
         options: [
-          const FilterOption(label: 'Name (A-Z)', value: 'name_asc'),
-          const FilterOption(label: 'Name (Z-A)', value: 'name_desc'),
-          const FilterOption(label: 'Newest First', value: 'date_desc'),
-          const FilterOption(label: 'Oldest First', value: 'date_asc'),
+          FilterOption(label: loc.nameAsc, value: 'name_asc'),
+          FilterOption(label: loc.nameDesc, value: 'name_desc'),
+          FilterOption(label: loc.newestFirst, value: 'date_desc'),
+          FilterOption(label: loc.oldestFirst, value: 'date_asc'),
         ],
         selectedValue: sortOption.value,
         onChanged: (val) => sortOption.value = val!,
       ),
     ];
 
-    // Build filter chips
     final filterChips = <FilterOption>[
       FilterOption(
-        label: 'Has Location',
+        label: loc.hasLocation,
         value: 'has_location',
         icon: Iconsax.location,
         isSelected: hasLocationFilter.value,
@@ -66,17 +69,20 @@ class ReportChurchsScreen extends HookConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Container(
-            margin: const EdgeInsets.only(bottom: 32),
-            padding: const EdgeInsets.all(32),
+            margin: EdgeInsets.only(
+              bottom: MediaQuery.of(context).size.width < 600 ? 16 : 32,
+            ),
+            padding: EdgeInsets.all(
+              MediaQuery.of(context).size.width < 600 ? 16 : 32,
+            ),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  theme.colorScheme.primary.withOpacity(0.1),
-                  theme.colorScheme.secondary.withOpacity(0.05),
+                  theme.colorScheme.primary.withValues(alpha: 0.1),
+                  theme.colorScheme.secondary.withValues(alpha: 0.05),
                 ],
               ),
               borderRadius: BorderRadius.circular(24),
@@ -89,16 +95,24 @@ class ReportChurchsScreen extends HookConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Church Records',
+                        loc.churchRecords,
                         style: theme.textTheme.headlineLarge?.copyWith(
                           fontWeight: FontWeight.w700,
+                          fontSize: MediaQuery.of(context).size.width < 600
+                              ? 24
+                              : 32,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Manage all church branches within the ministry network',
+                        loc.manageChurchesDesc,
                         style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
+                          fontSize: MediaQuery.of(context).size.width < 600
+                              ? 14
+                              : null,
                         ),
                       ),
                     ],
@@ -108,16 +122,15 @@ class ReportChurchsScreen extends HookConsumerWidget {
                   const SizedBox(width: 24),
                   PrimaryButton(
                     onPressed: () => _showAddChurchDialog(context, ref),
-                    text: 'Add New Church',
+                    text: loc.addChurch,
                     icon: Iconsax.add,
                   ),
                 ],
               ],
             ),
           ),
-          // Filter Bar
           AdvancedFilterBar(
-            searchHint: 'Search by church name...',
+            searchHint: loc.searchChurchHint,
             searchValue: searchQuery.value,
             onSearchChanged: (val) => searchQuery.value = val,
             filterDropdowns: sortDropdowns,
@@ -134,11 +147,9 @@ class ReportChurchsScreen extends HookConsumerWidget {
             },
           ),
           const SizedBox(height: 24),
-          // Content
           churchesAsync.when(
             data: (churches) {
               var filteredChurches = churches.where((church) {
-                // Search filter
                 if (searchQuery.value.isNotEmpty) {
                   if (!church.name.toLowerCase().contains(
                     searchQuery.value.toLowerCase(),
@@ -146,7 +157,6 @@ class ReportChurchsScreen extends HookConsumerWidget {
                     return false;
                   }
                 }
-                // Location filter
                 if (hasLocationFilter.value) {
                   if (church.locationLink == null ||
                       church.locationLink!.isEmpty) {
@@ -156,7 +166,6 @@ class ReportChurchsScreen extends HookConsumerWidget {
                 return true;
               }).toList();
 
-              // Sort logic
               filteredChurches.sort((a, b) {
                 switch (sortOption.value) {
                   case 'name_asc':
@@ -194,8 +203,12 @@ class ReportChurchsScreen extends HookConsumerWidget {
 
               return ModernDataGrid.responsive(
                 context: context,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
+                mainAxisSpacing: MediaQuery.of(context).size.width < 600
+                    ? 12
+                    : 16,
+                crossAxisSpacing: MediaQuery.of(context).size.width < 600
+                    ? 12
+                    : 16,
                 children: filteredChurches.asMap().entries.map((entry) {
                   final index = entry.key;
                   final church = entry.value;
@@ -213,15 +226,15 @@ class ReportChurchsScreen extends HookConsumerWidget {
                     ),
                     title: church.name,
                     subtitle: church.establishmentDate != null
-                        ? 'Est. ${church.establishmentDate}'
+                        ? '${loc.est} ${AppDateFormatter.format(DateTime.parse(church.establishmentDate!), ref)}'
                         : null,
                     description: church.headOfficeId != null
-                        ? 'Head Office ID: ${church.headOfficeId}'
+                        ? '${loc.headOfficeId}: ${church.headOfficeId}'
                         : null,
                     chips: [
                       if (hasLocation)
                         DataChip(
-                          label: 'View on Map',
+                          label: loc.viewOnMap,
                           icon: Iconsax.location,
                           color: theme.colorScheme.secondary,
                         ),
@@ -275,17 +288,19 @@ class ReportChurchsScreen extends HookConsumerWidget {
     Church church,
     ValueNotifier<String?> isDeleting,
   ) {
+    final locale = ref.read(languageNotifierProvider);
+    final loc = AppLocalization(locale);
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Confirm Deletion'),
+          title: Text(loc.confirmDeletion),
           content: Text(
-            'Are you sure you want to delete the church "${church.name}"? This action cannot be undone.',
+            loc.deleteConfirmation.replaceAll('{name}', church.name),
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(loc.cancel),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
@@ -294,7 +309,7 @@ class ReportChurchsScreen extends HookConsumerWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.error,
               ),
-              child: const Text('Delete'),
+              child: Text(loc.delete),
               onPressed: () async {
                 isDeleting.value = church.id;
                 Navigator.of(dialogContext).pop();
@@ -304,16 +319,18 @@ class ReportChurchsScreen extends HookConsumerWidget {
                       .removeChurch(church.id);
                   if (context.mounted) {
                     context.showSuccessNotification(
-                      title: 'Church Deleted',
-                      message:
-                          '"${church.name}" has been successfully removed from the database.',
+                      title: loc.churchDeleted,
+                      message: loc.churchDeleteSuccess.replaceAll(
+                        '{name}',
+                        church.name,
+                      ),
                     );
                   }
                 } catch (e) {
                   if (context.mounted) {
                     context.showErrorNotification(
-                      title: 'Delete Failed',
-                      message: 'Failed to delete church. Please try again.',
+                      title: loc.deleteFailed,
+                      message: loc.failedDeleteChurch,
                     );
                   }
                 } finally {
@@ -332,8 +349,10 @@ class ReportChurchsScreen extends HookConsumerWidget {
   void _showAddChurchDialog(BuildContext context, WidgetRef ref) {
     final nameController = TextEditingController();
     final locationController = TextEditingController();
-    final establishmentDateController = TextEditingController();
+    DateTime? selectedEstablishmentDate;
     final formKey = GlobalKey<FormState>();
+    final locale = ref.read(languageNotifierProvider);
+    final loc = AppLocalization(locale);
 
     showDialog(
       context: context,
@@ -341,7 +360,7 @@ class ReportChurchsScreen extends HookConsumerWidget {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Add New Church'),
+              title: Text(loc.addChurch),
               content: SingleChildScrollView(
                 child: Form(
                   key: formKey,
@@ -350,20 +369,25 @@ class ReportChurchsScreen extends HookConsumerWidget {
                     children: [
                       ModernInput(
                         controller: nameController,
-                        label: 'Church Name',
+                        label: loc.churchName,
                         prefixIcon: Iconsax.building,
                       ),
                       const SizedBox(height: 20),
                       ModernInput(
                         controller: locationController,
-                        label: 'Google Maps Link (Optional)',
+                        label: loc.googleMapsLink,
                         prefixIcon: Iconsax.map_1,
                       ),
                       const SizedBox(height: 20),
-                      ModernInput(
-                        controller: establishmentDateController,
-                        label: 'Establishment Date (YYYY-MM-DD)',
-                        prefixIcon: Iconsax.calendar_1,
+                      ModernDatePicker(
+                        hintText: loc.churchEstablishmentDate,
+                        icon: Iconsax.calendar_1,
+                        selectedDate: selectedEstablishmentDate,
+                        onDateSelected: (date) {
+                          setState(() {
+                            selectedEstablishmentDate = date;
+                          });
+                        },
                       ),
                     ],
                   ),
@@ -372,15 +396,15 @@ class ReportChurchsScreen extends HookConsumerWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Cancel'),
+                  child: Text(loc.cancel),
                 ),
                 PrimaryButton(
-                  text: 'Add Church',
+                  text: loc.addChurch,
                   onPressedAsync: () async {
                     if (nameController.text.trim().isEmpty) {
                       context.showWarningNotification(
-                        title: 'Validation Error',
-                        message: 'Church name is required.',
+                        title: loc.validationError,
+                        message: loc.churchNameRequired,
                       );
                       return;
                     }
@@ -391,10 +415,8 @@ class ReportChurchsScreen extends HookConsumerWidget {
                         locationLink: locationController.text.trim().isEmpty
                             ? null
                             : locationController.text.trim(),
-                        establishmentDate:
-                            establishmentDateController.text.trim().isEmpty
-                            ? null
-                            : establishmentDateController.text.trim(),
+                        establishmentDate: selectedEstablishmentDate
+                            ?.toIso8601String(),
                         headOfficeId: AppConstants.addisAbabaHeadOfficeId,
                       );
                       final newChurch = await ref
@@ -406,16 +428,16 @@ class ReportChurchsScreen extends HookConsumerWidget {
                       if (dialogContext.mounted) {
                         Navigator.pop(dialogContext);
                         context.showSuccessNotification(
-                          title: 'Church Added!',
+                          title: loc.churchAdded,
                           message:
-                              '"${nameController.text.trim()}" has been successfully added to the database.',
+                              '"${nameController.text.trim()}" ${loc.churchAdded}',
                         );
                       }
                     } catch (e) {
                       if (dialogContext.mounted) {
                         context.showErrorNotification(
-                          title: 'Add Failed',
-                          message: 'Error: ${e.toString()}',
+                          title: loc.addFailed,
+                          message: '${loc.error}: ${e.toString()}',
                         );
                       }
                     }
@@ -437,6 +459,8 @@ class ReportChurchsScreen extends HookConsumerWidget {
     final nameController = TextEditingController(text: church.name);
     final locationController = TextEditingController(text: church.locationLink);
     final formKey = GlobalKey<FormState>();
+    final locale = ref.read(languageNotifierProvider);
+    final loc = AppLocalization(locale);
 
     showDialog(
       context: context,
@@ -445,7 +469,7 @@ class ReportChurchsScreen extends HookConsumerWidget {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Edit Church'),
+              title: Text(loc.editChurch),
               content: SingleChildScrollView(
                 child: Form(
                   key: formKey,
@@ -454,13 +478,13 @@ class ReportChurchsScreen extends HookConsumerWidget {
                     children: [
                       ModernInput(
                         controller: nameController,
-                        label: 'Church Name',
+                        label: loc.churchName,
                         prefixIcon: Iconsax.building,
                       ),
                       const SizedBox(height: 20),
                       ModernInput(
                         controller: locationController,
-                        label: 'Location Link (Optional)',
+                        label: loc.googleMapsLink,
                         prefixIcon: Iconsax.map_1,
                       ),
                     ],
@@ -470,15 +494,15 @@ class ReportChurchsScreen extends HookConsumerWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Cancel'),
+                  child: Text(loc.cancel),
                 ),
                 PrimaryButton(
-                  text: 'Save Changes',
+                  text: loc.saveChanges,
                   onPressedAsync: () async {
                     if (nameController.text.trim().isEmpty) {
                       context.showWarningNotification(
-                        title: 'Validation Error',
-                        message: 'Church name is required.',
+                        title: loc.validationError,
+                        message: loc.churchNameRequired,
                       );
                       return;
                     }
@@ -502,16 +526,18 @@ class ReportChurchsScreen extends HookConsumerWidget {
                       if (dialogContext.mounted) {
                         Navigator.pop(dialogContext);
                         context.showSuccessNotification(
-                          title: 'Church Updated!',
-                          message:
-                              'Changes to "${nameController.text.trim()}" have been saved successfully.',
+                          title: loc.churchUpdated,
+                          message: loc.churchUpdateSuccess.replaceAll(
+                            '{name}',
+                            nameController.text.trim(),
+                          ),
                         );
                       }
                     } catch (e) {
                       if (dialogContext.mounted) {
                         context.showErrorNotification(
-                          title: 'Update Failed',
-                          message: 'Error: ${e.toString()}',
+                          title: loc.updateFailed,
+                          message: '${loc.error}: ${e.toString()}',
                         );
                       }
                     }
@@ -542,61 +568,64 @@ class _EmptyState extends StatelessWidget {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
 
-    return ModernCard(
-      child: Container(
-        padding: const EdgeInsets.all(64),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    theme.colorScheme.primary.withOpacity(0.1),
-                    theme.colorScheme.primary.withOpacity(0.05),
-                  ],
+    return Consumer(
+      builder: (context, ref, child) {
+        final locale = ref.watch(languageNotifierProvider);
+        final loc = AppLocalization(locale);
+
+        return ModernCard(
+          child: Container(
+            padding: const EdgeInsets.all(64),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.colorScheme.primary.withValues(alpha: 0.1),
+                        theme.colorScheme.primary.withValues(alpha: 0.05),
+                      ],
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    hasFilters ? Iconsax.search_zoom_out : Iconsax.building,
+                    size: 48,
+                    color: theme.colorScheme.primary.withValues(alpha: 0.6),
+                  ),
                 ),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                hasFilters ? Iconsax.search_zoom_out : Iconsax.building,
-                size: 48,
-                color: theme.colorScheme.primary.withOpacity(0.6),
-              ),
+                const SizedBox(height: 24),
+                Text(
+                  hasFilters ? loc.noChurchesMatch : loc.noChurchesFound,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: appColors.textPrimary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  hasFilters ? loc.adjustSearchTerms : loc.addFirstChurchDesc,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: appColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (!hasFilters && userCanAdd) ...[
+                  const SizedBox(height: 24),
+                  PrimaryButton(
+                    onPressed: onAddPressed,
+                    text: loc.addFirstChurch,
+                    icon: Iconsax.add,
+                  ),
+                ],
+              ],
             ),
-            const SizedBox(height: 24),
-            Text(
-              hasFilters
-                  ? 'No Churches Match Your Search'
-                  : 'No Churches Found',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: appColors.textPrimary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              hasFilters
-                  ? 'Try adjusting your search terms.'
-                  : 'Add your first church to get started.',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: appColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (!hasFilters && userCanAdd) ...[
-              const SizedBox(height: 24),
-              PrimaryButton(
-                onPressed: onAddPressed,
-                text: 'Add First Church',
-                icon: Iconsax.add,
-              ),
-            ],
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

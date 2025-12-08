@@ -88,7 +88,9 @@ final dioProvider = Provider<Dio>((ref) {
     ),
   );
 
-  dio.interceptors.add(LogInterceptor(responseBody: true, requestBody: true));
+  if (const bool.fromEnvironment('dart.vm.product') == false) {
+    dio.interceptors.add(LogInterceptor(responseBody: true, requestBody: true));
+  }
 
   return dio;
 });

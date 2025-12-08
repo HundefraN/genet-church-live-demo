@@ -139,6 +139,7 @@ class _ModernInputState extends State<ModernInput> {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
     final sizeConfig = _getSizeConfig();
+    final isDark = theme.brightness == Brightness.dark;
 
     final primaryColor = widget.borderColor ?? theme.colorScheme.primary;
     final errorColor = theme.colorScheme.error;
@@ -147,8 +148,9 @@ class _ModernInputState extends State<ModernInput> {
         ? errorColor
         : _isFocused
         ? primaryColor
-        : appColors.border.withOpacity(0.3);
-
+        : isDark
+        ? appColors.border.withValues(alpha: 0.5)
+        : appColors.border.withValues(alpha: 0.3);
 
     Widget? prefixWidget;
     if (widget.prefixIcon != null || widget.prefix != null) {
@@ -168,14 +170,17 @@ class _ModernInputState extends State<ModernInput> {
 
     Widget? suffixWidget;
     if (widget.suffixIcon != null || widget.suffix != null) {
-      suffixWidget = widget.suffix ??
+      suffixWidget =
+          widget.suffix ??
           MouseRegion(
             cursor: SystemMouseCursors.click,
             child: GestureDetector(
               onTap: widget.onSuffixTap,
               child: Container(
-                margin:
-                    EdgeInsets.only(right: sizeConfig.padding.right, left: 8),
+                margin: EdgeInsets.only(
+                  right: sizeConfig.padding.right,
+                  left: 8,
+                ),
                 padding: const EdgeInsets.all(4),
                 child: Icon(
                   widget.suffixIcon,
@@ -186,6 +191,14 @@ class _ModernInputState extends State<ModernInput> {
             ),
           );
     }
+
+    final defaultFillColor = isDark
+        ? appColors.surfaceElevated.withValues(alpha: 0.5)
+        : appColors.surface.withValues(alpha: 0.5);
+
+    final focusedFillColor = isDark
+        ? appColors.surfaceElevated.withValues(alpha: 0.8)
+        : appColors.surface.withValues(alpha: 0.8);
 
     switch (widget.variant) {
       case InputVariant.filled:
@@ -199,9 +212,7 @@ class _ModernInputState extends State<ModernInput> {
           filled: true,
           fillColor:
               widget.fillColor ??
-              (_isFocused
-                  ? appColors.surface.withOpacity(0.8)
-                  : appColors.surface.withOpacity(0.5)),
+              (_isFocused ? focusedFillColor : defaultFillColor),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(sizeConfig.borderRadius),
             borderSide: BorderSide.none,
@@ -209,7 +220,9 @@ class _ModernInputState extends State<ModernInput> {
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(sizeConfig.borderRadius),
             borderSide: BorderSide(
-              color: appColors.border.withOpacity(0.2),
+              color: isDark
+                  ? appColors.border.withValues(alpha: 0.4)
+                  : appColors.border.withValues(alpha: 0.2),
               width: 1,
             ),
           ),
@@ -232,7 +245,7 @@ class _ModernInputState extends State<ModernInput> {
             fontWeight: FontWeight.w500,
           ),
           hintStyle: TextStyle(
-            color: appColors.textSecondary.withOpacity(0.7),
+            color: appColors.textSecondary.withValues(alpha: 0.7),
             fontSize: sizeConfig.fontSize,
             fontWeight: FontWeight.w400,
           ),
@@ -262,7 +275,9 @@ class _ModernInputState extends State<ModernInput> {
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(sizeConfig.borderRadius),
             borderSide: BorderSide(
-              color: appColors.border.withOpacity(0.3),
+              color: isDark
+                  ? appColors.border.withValues(alpha: 0.5)
+                  : appColors.border.withValues(alpha: 0.3),
               width: 1.5,
             ),
           ),
@@ -285,7 +300,7 @@ class _ModernInputState extends State<ModernInput> {
             fontWeight: FontWeight.w500,
           ),
           hintStyle: TextStyle(
-            color: appColors.textSecondary.withOpacity(0.7),
+            color: appColors.textSecondary.withValues(alpha: 0.7),
             fontSize: sizeConfig.fontSize,
           ),
         );
@@ -303,7 +318,9 @@ class _ModernInputState extends State<ModernInput> {
           ),
           enabledBorder: UnderlineInputBorder(
             borderSide: BorderSide(
-              color: appColors.border.withOpacity(0.5),
+              color: isDark
+                  ? appColors.border.withValues(alpha: 0.6)
+                  : appColors.border.withValues(alpha: 0.5),
               width: 1,
             ),
           ),
@@ -355,12 +372,7 @@ class _ModernInputState extends State<ModernInput> {
       ),
       decoration: _buildDecoration(context),
       buildCounter: widget.showCharacterCount && widget.maxLength != null
-          ? (
-              context, {
-              required currentLength,
-              required isFocused,
-              maxLength,
-            }) {
+          ? (context, {required currentLength, required isFocused, maxLength}) {
               return Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(

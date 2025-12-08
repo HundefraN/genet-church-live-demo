@@ -124,21 +124,21 @@ class _ModernDataCardState extends State<ModernDataCard>
                   colors: [
                     appColors.surface,
                     _isHovered
-                        ? appColors.surface.withOpacity(0.98)
-                        : appColors.surface.withOpacity(0.95),
+                        ? appColors.surface.withValues(alpha: 0.98)
+                        : appColors.surface.withValues(alpha: 0.95),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: widget.isNew
                       ? Color.lerp(
-                          appColors.border.withOpacity(0.3),
+                          appColors.border.withValues(alpha: 0.3),
                           theme.colorScheme.primary,
                           _glowAnimation.value,
                         )!
                       : _isHovered
-                      ? theme.colorScheme.primary.withOpacity(0.3)
-                      : appColors.border.withOpacity(0.3),
+                      ? theme.colorScheme.primary.withValues(alpha: 0.3)
+                      : appColors.border.withValues(alpha: 0.3),
                   width: widget.isNew ? 2 : 1,
                 ),
                 boxShadow: [
@@ -219,13 +219,13 @@ class _ModernDataCardState extends State<ModernDataCard>
                         gradient: LinearGradient(
                           colors: [
                             theme.colorScheme.primary,
-                            theme.colorScheme.primary.withOpacity(0.8),
+                            theme.colorScheme.primary.withValues(alpha: 0.8),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: theme.colorScheme.primary.withOpacity(0.4),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.4),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -315,14 +315,14 @@ class _DataChipWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final chipColor = chip.color ?? theme.colorScheme.primary;
-    final chipBg = chip.backgroundColor ?? chipColor.withOpacity(0.1);
+    final chipBg = chip.backgroundColor ?? chipColor.withValues(alpha: 0.1);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: chipBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: chipColor.withOpacity(0.3), width: 1),
+        border: Border.all(color: chipColor.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -378,11 +378,11 @@ class _ActionButtonState extends State<_ActionButton> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: _isHovered
-                  ? buttonColor.withOpacity(0.15)
-                  : buttonColor.withOpacity(0.08),
+                  ? buttonColor.withValues(alpha: 0.15)
+                  : buttonColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: buttonColor.withOpacity(_isHovered ? 0.4 : 0.2),
+                color: buttonColor.withValues(alpha: _isHovered ? 0.4 : 0.2),
                 width: 1,
               ),
             ),
@@ -527,12 +527,12 @@ class DataCardAvatar extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [bgColor, bgColor.withOpacity(0.8)],
+          colors: [bgColor, bgColor.withValues(alpha: 0.8)],
         ),
         borderRadius: BorderRadius.circular(size * 0.3),
         boxShadow: [
           BoxShadow(
-            color: bgColor.withOpacity(0.3),
+            color: bgColor.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

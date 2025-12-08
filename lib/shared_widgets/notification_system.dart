@@ -292,18 +292,18 @@ class _NotificationCardState extends State<NotificationCard>
                       color: appColors.surface,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: backgroundColor.withOpacity(0.3),
+                        color: backgroundColor.withValues(alpha: 0.3),
                         width: 1.5,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: backgroundColor.withOpacity(0.15),
+                          color: backgroundColor.withValues(alpha: 0.15),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                           spreadRadius: -2,
                         ),
                         BoxShadow(
-                          color: appColors.shadow.withOpacity(0.1),
+                          color: appColors.shadow.withValues(alpha: 0.1),
                           blurRadius: 40,
                           offset: const Offset(0, 16),
                           spreadRadius: -4,
@@ -327,7 +327,7 @@ class _NotificationCardState extends State<NotificationCard>
                                   end: Alignment.bottomCenter,
                                   colors: [
                                     backgroundColor,
-                                    backgroundColor.withOpacity(0.7),
+                                    backgroundColor.withValues(alpha: 0.7),
                                   ],
                                 ),
                               ),
@@ -343,7 +343,7 @@ class _NotificationCardState extends State<NotificationCard>
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: backgroundColor.withOpacity(0.1),
+                                    color: backgroundColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Icon(
@@ -423,7 +423,7 @@ class _NotificationCardState extends State<NotificationCard>
                 ),
               ).animate().shimmer(
                 duration: 2000.ms,
-                color: backgroundColor.withOpacity(0.1),
+                color: backgroundColor.withValues(alpha: 0.1),
               ),
             ),
           ),

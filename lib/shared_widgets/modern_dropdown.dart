@@ -23,6 +23,7 @@ class ModernDropdown<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
 
     // Defensive check: If the current value is not in the list of items, treat it as null.
     // This prevents the "Assertion failed: items.where((DropdownMenuItem<T> item) => item.value == value).length == 1" error.
@@ -38,7 +39,7 @@ class ModernDropdown<T> extends StatelessWidget {
       style: TextStyle(
         fontWeight: FontWeight.w600,
         color: appColors.textPrimary,
-        fontSize: 15,
+        fontSize: isSmallScreen ? 13 : 15,
         letterSpacing: 0.2,
       ),
       decoration: InputDecoration(
@@ -46,23 +47,27 @@ class ModernDropdown<T> extends StatelessWidget {
         fillColor: appColors.scaffold,
         hintText: hintText,
         hintStyle: TextStyle(
-          color: appColors.textSecondary.withOpacity(0.7),
+          color: appColors.textSecondary.withValues(alpha: 0.7),
           fontWeight: FontWeight.w500,
           letterSpacing: 0.2,
         ),
         prefixIcon: Container(
-          margin: const EdgeInsets.all(12),
-          padding: const EdgeInsets.all(8),
+          margin: EdgeInsets.all(isSmallScreen ? 8 : 12),
+          padding: EdgeInsets.all(isSmallScreen ? 6 : 8),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                theme.colorScheme.primary.withOpacity(0.1),
-                theme.colorScheme.primary.withOpacity(0.05),
+                theme.colorScheme.primary.withValues(alpha: 0.1),
+                theme.colorScheme.primary.withValues(alpha: 0.05),
               ],
             ),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: appColors.textSecondary, size: 20),
+          child: Icon(
+            icon,
+            color: appColors.textSecondary,
+            size: isSmallScreen ? 16 : 20,
+          ),
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -71,7 +76,7 @@ class ModernDropdown<T> extends StatelessWidget {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(
-            color: appColors.border.withOpacity(0.3),
+            color: appColors.border.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -87,9 +92,9 @@ class ModernDropdown<T> extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: theme.colorScheme.error, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 20,
-          horizontal: 20,
+        contentPadding: EdgeInsets.symmetric(
+          vertical: isSmallScreen ? 12 : 20,
+          horizontal: isSmallScreen ? 12 : 20,
         ),
       ),
     );

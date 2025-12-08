@@ -6,7 +6,7 @@ part of 'providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$usersHash() => r'772e45ba943d7b424e1dc8a7c7f452041251c140';
+String _$usersHash() => r'f683a41c6e037b8e6b5a4a7a72ec6dd53a83a3d6';
 
 /// See also [users].
 @ProviderFor(users)
@@ -23,7 +23,7 @@ final usersProvider = AutoDisposeFutureProvider<List<UserModel>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef UsersRef = AutoDisposeFutureProviderRef<List<UserModel>>;
-String _$currentPastorHash() => r'1a50f118f51313e26ac84df2514a88d682c88854';
+String _$currentPastorHash() => r'26e4780f82f95cfc606b72f044dce4a5075187bb';
 
 /// See also [currentPastor].
 @ProviderFor(currentPastor)
@@ -40,7 +40,7 @@ final currentPastorProvider = AutoDisposeFutureProvider<Pastor?>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CurrentPastorRef = AutoDisposeFutureProviderRef<Pastor?>;
-String _$memberDetailsHash() => r'3b1eed18f452eb12d7650417de40489e25879569';
+String _$memberDetailsHash() => r'e257d591887caeb933522b30789257a38474898a';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -181,7 +181,7 @@ class _MemberDetailsProviderElement
   String get memberId => (origin as MemberDetailsProvider).memberId;
 }
 
-String _$pastorsHash() => r'e17ec4f52401a2d7fe3a9cb854d36f4e4015de8d';
+String _$pastorsHash() => r'5010c7b4db5e0879e70471527560b9701307c136';
 
 /// See also [Pastors].
 @ProviderFor(Pastors)
@@ -229,7 +229,7 @@ final departmentsProvider =
     );
 
 typedef _$Departments = AutoDisposeAsyncNotifier<List<Department>>;
-String _$servantsHash() => r'72ff53ec7f47f729bac62540d8ca15b776c4f489';
+String _$servantsHash() => r'cb774f509975fa07d382efdfae50a715c41e226e';
 
 /// See also [Servants].
 @ProviderFor(Servants)
@@ -260,7 +260,7 @@ final membersProvider = AutoDisposeNotifierProvider<Members, void>.internal(
 );
 
 typedef _$Members = AutoDisposeNotifier<void>;
-String _$membersListHash() => r'5956b387693b681e3da6e0302a174c155e304c71';
+String _$membersListHash() => r'0f7ae5cc16da4897603a8d3eaa83ab0f72cdf911';
 
 /// See also [MembersList].
 @ProviderFor(MembersList)
@@ -276,7 +276,7 @@ final membersListProvider =
     );
 
 typedef _$MembersList = AutoDisposeAsyncNotifier<MemberListState>;
-String _$activityLogHash() => r'2bb6c6da3c82b6677054d58ba33525c6ca9a1a95';
+String _$activityLogHash() => r'd75c30a92eaa0a9ee12e3701e352400f5cdb9e9c';
 
 /// See also [ActivityLog].
 @ProviderFor(ActivityLog)

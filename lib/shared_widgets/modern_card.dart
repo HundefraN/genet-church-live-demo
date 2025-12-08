@@ -27,7 +27,7 @@ class ModernCard extends StatefulWidget {
   final Border? border;
   final List<BoxShadow>? customShadows;
   final double? elevation;
-  final bool animate;
+  final bool enableAnimation;
 
   const ModernCard({
     super.key,
@@ -43,7 +43,7 @@ class ModernCard extends StatefulWidget {
     this.border,
     this.customShadows,
     this.elevation,
-    this.animate = true,
+    this.enableAnimation = true,
   });
 
   @override
@@ -105,19 +105,19 @@ class _ModernCardState extends State<ModernCard>
               widget.customShadows ??
               [
                 BoxShadow(
-                  color: appColors.shadow.withOpacity(0.12),
+                  color: appColors.shadow.withValues(alpha: 0.12),
                   blurRadius: 48,
                   offset: const Offset(0, 20),
                   spreadRadius: -8,
                 ),
                 BoxShadow(
-                  color: appColors.shadow.withOpacity(0.08),
+                  color: appColors.shadow.withValues(alpha: 0.08),
                   blurRadius: 24,
                   offset: const Offset(0, 8),
                   spreadRadius: -4,
                 ),
                 BoxShadow(
-                  color: appColors.shadow.withOpacity(0.04),
+                  color: appColors.shadow.withValues(alpha: 0.04),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                   spreadRadius: -2,
@@ -132,12 +132,17 @@ class _ModernCardState extends State<ModernCard>
           borderRadius: radius,
           border:
               widget.border ??
-              Border.all(color: appColors.border.withOpacity(0.3), width: 1.5),
+              Border.all(
+                color: appColors.border.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
         );
 
       case CardVariant.filled:
         return BoxDecoration(
-          color: widget.backgroundColor ?? appColors.surface.withOpacity(0.5),
+          color:
+              widget.backgroundColor ??
+              appColors.surface.withValues(alpha: 0.5),
           gradient: widget.gradient,
           borderRadius: radius,
           border: widget.border,
@@ -145,32 +150,36 @@ class _ModernCardState extends State<ModernCard>
 
       case CardVariant.glass:
         return BoxDecoration(
-          color: widget.backgroundColor ?? appColors.glass.withOpacity(0.15),
+          color:
+              widget.backgroundColor ?? appColors.glass.withValues(alpha: 0.15),
           gradient:
               widget.gradient ??
               LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  appColors.glass.withOpacity(0.2),
-                  appColors.glass.withOpacity(0.1),
+                  appColors.glass.withValues(alpha: 0.2),
+                  appColors.glass.withValues(alpha: 0.1),
                 ],
               ),
           borderRadius: radius,
           border:
               widget.border ??
-              Border.all(color: appColors.glass.withOpacity(0.3), width: 1.5),
+              Border.all(
+                color: appColors.glass.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
           boxShadow:
               widget.customShadows ??
               [
                 BoxShadow(
-                  color: appColors.shadow.withOpacity(0.15),
+                  color: appColors.shadow.withValues(alpha: 0.15),
                   blurRadius: 32,
                   offset: const Offset(0, 16),
                   spreadRadius: -8,
                 ),
                 BoxShadow(
-                  color: appColors.glass.withOpacity(0.1),
+                  color: appColors.glass.withValues(alpha: 0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                   spreadRadius: -2,
@@ -180,7 +189,9 @@ class _ModernCardState extends State<ModernCard>
 
       case CardVariant.neon:
         return BoxDecoration(
-          color: widget.backgroundColor ?? appColors.surface.withOpacity(0.8),
+          color:
+              widget.backgroundColor ??
+              appColors.surface.withValues(alpha: 0.8),
           gradient: widget.gradient,
           borderRadius: radius,
           border:
@@ -205,7 +216,7 @@ class _ModernCardState extends State<ModernCard>
               widget.customShadows ??
               [
                 BoxShadow(
-                  color: appColors.shadow.withOpacity(0.2),
+                  color: appColors.shadow.withValues(alpha: 0.2),
                   blurRadius: 40,
                   offset: const Offset(0, 20),
                   spreadRadius: -8,
@@ -234,7 +245,7 @@ class _ModernCardState extends State<ModernCard>
           border:
               widget.border ??
               Border.all(
-                color: appColors.glowAccent.withOpacity(0.4),
+                color: appColors.glowAccent.withValues(alpha: 0.4),
                 width: 1.5,
               ),
           boxShadow:
@@ -292,7 +303,7 @@ class _ModernCardState extends State<ModernCard>
       );
     }
 
-    if (widget.animate) {
+    if (widget.enableAnimation) {
       cardContent = cardContent
           .animate()
           .fadeIn(duration: 400.ms, curve: Curves.easeOut)
@@ -415,7 +426,7 @@ class StatCard extends StatelessWidget {
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [appColors.surface, appColors.surface.withOpacity(0.8)],
+        colors: [appColors.surface, appColors.surface.withValues(alpha: 0.8)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -437,7 +448,7 @@ class StatCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: cardColor.withOpacity(0.1),
+                    color: cardColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(icon, color: cardColor, size: 20),
@@ -473,7 +484,7 @@ class StatCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: (isPositiveTrend ? Colors.green : Colors.red)
-                          .withOpacity(0.1),
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(

@@ -11,47 +11,11 @@ import 'package:genet_church_portal/state/providers.dart';
 import 'package:genet_church_portal/shared_widgets/notification_system.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:genet_church_portal/core/settings/language_provider.dart';
 
-final List<AppMenuItem> _allMenuItems = [
-  AppMenuItem(title: 'Dashboard', path: '/dashboard', icon: Iconsax.category),
-  AppMenuItem(
-    title: 'Church Admin',
-    path: '#',
-    icon: Iconsax.building_4,
-    roles: [UserRole.SUPER_ADMIN, UserRole.PASTOR],
-    children: {
-      'Churches': '/report-churchs',
-      'Pastors': '/report-pastors',
-      'Departments': '/departments',
-      'Servants': '/report-servants',
-    },
-  ),
-  AppMenuItem(
-    title: 'Members',
-    path: '#',
-    icon: Iconsax.people,
-    roles: [UserRole.PASTOR, UserRole.SERVANT, UserRole.SUPER_ADMIN],
-    children: {'Add Member': '/add-members', 'Show Members': '/show-members'},
-  ),
-  AppMenuItem(
-    title: 'Analytics',
-    path: '/advanced-reports',
-    icon: Iconsax.chart_21,
-    roles: [UserRole.SUPER_ADMIN],
-  ),
-  AppMenuItem(
-    title: 'Categories',
-    path: '/categories',
-    icon: Iconsax.folder_2,
-    roles: [UserRole.PASTOR],
-  ),
-  AppMenuItem(
-    title: 'Permissions',
-    path: '/permissions',
-    icon: Iconsax.shield_tick,
-    roles: [UserRole.SUPER_ADMIN],
-  ),
-];
+import '../core/localization/app_localization.dart';
+
+// Removed static list to allow localization in build method
 
 class SideMenu extends ConsumerWidget {
   final bool isCollapsed;
@@ -62,6 +26,51 @@ class SideMenu extends ConsumerWidget {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
     final user = ref.watch(authStateProvider);
+    final locale = ref.watch(languageNotifierProvider);
+    final loc = AppLocalization(locale);
+
+    final List<AppMenuItem> allMenuItems = [
+      AppMenuItem(
+        title: loc.navDashboard,
+        path: '/dashboard',
+        icon: Iconsax.category,
+      ),
+      AppMenuItem(
+        title: loc.navChurchAdmin,
+        path: '#',
+        icon: Iconsax.building_4,
+        roles: [UserRole.SUPER_ADMIN, UserRole.PASTOR],
+        children: {
+          loc.navChurches: '/report-churchs',
+          loc.navPastors: '/report-pastors',
+          loc.navDepartments: '/departments',
+          loc.navServants: '/report-servants',
+        },
+      ),
+      AppMenuItem(
+        title: loc.navMembers,
+        path: '#',
+        icon: Iconsax.people,
+        roles: [UserRole.PASTOR, UserRole.SERVANT, UserRole.SUPER_ADMIN],
+        children: {
+          loc.navAddMember: '/add-members',
+          loc.navShowMembers: '/show-members',
+        },
+      ),
+      AppMenuItem(
+        title: loc.navAnalytics,
+        path: '/advanced-reports',
+        icon: Iconsax.chart_21,
+        roles: [UserRole.SUPER_ADMIN],
+      ),
+
+      AppMenuItem(
+        title: loc.navSettings,
+        path: '/settings',
+        icon: Iconsax.setting_2,
+        roles: [UserRole.SUPER_ADMIN, UserRole.PASTOR, UserRole.SERVANT],
+      ),
+    ];
 
     if (user == null) {
       return const SizedBox.shrink();
@@ -76,35 +85,35 @@ class SideMenu extends ConsumerWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                appColors.surface.withOpacity(0.95),
-                appColors.surface.withOpacity(0.85),
-                appColors.surface.withOpacity(0.90),
-                appColors.surface.withOpacity(0.95),
+                appColors.surface.withValues(alpha: 0.95),
+                appColors.surface.withValues(alpha: 0.85),
+                appColors.surface.withValues(alpha: 0.90),
+                appColors.surface.withValues(alpha: 0.95),
               ],
               stops: const [0.0, 0.3, 0.7, 1.0],
             ),
             border: Border(
               right: BorderSide(
-                color: appColors.glowPrimary.withOpacity(0.15),
+                color: appColors.glowPrimary.withValues(alpha: 0.15),
                 width: 1.5,
               ),
             ),
             boxShadow: [
               BoxShadow(
-                color: appColors.shadow.withOpacity(0.12),
+                color: appColors.shadow.withValues(alpha: 0.12),
                 blurRadius: 48,
                 offset: const Offset(8, 0),
                 spreadRadius: 0,
               ),
               BoxShadow(
-                color: appColors.glowPrimary.withOpacity(0.03),
+                color: appColors.glowPrimary.withValues(alpha: 0.03),
                 blurRadius: 80,
                 offset: const Offset(16, 0),
                 spreadRadius: 0,
               ),
               // Subtle inner glow
               BoxShadow(
-                color: appColors.glowPrimary.withOpacity(0.02),
+                color: appColors.glowPrimary.withValues(alpha: 0.02),
                 blurRadius: 24,
                 offset: const Offset(-2, 0),
                 spreadRadius: 0,
@@ -128,7 +137,14 @@ class SideMenu extends ConsumerWidget {
                           ),
                           sliver: SliverList(
                             delegate: SliverChildListDelegate(
-                              _buildMenuItems(user, context, ref, isCollapsed),
+                              _buildMenuItems(
+                                user,
+                                context,
+                                ref,
+                                isCollapsed,
+                                allMenuItems,
+                                loc,
+                              ),
                             ),
                           ),
                         ),
@@ -155,6 +171,8 @@ class SideMenu extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     bool collapsed,
+    List<AppMenuItem> menuItems,
+    AppLocalization loc,
   ) {
     final currentRole = user.roleEnum;
     final pastor = ref.watch(currentPastorProvider);
@@ -163,15 +181,13 @@ class SideMenu extends ConsumerWidget {
     final currentRoute = GoRouter.of(
       context,
     ).routerDelegate.currentConfiguration.uri.toString();
-    final accessibleItems = _allMenuItems.where(
+    final accessibleItems = menuItems.where(
       (item) => item.roles.contains(currentRole),
     );
 
     return accessibleItems.map((item) {
       final isProtected =
-          (item.title == 'Members' ||
-              item.title == 'Categories' ||
-              item.title == 'Church Admin') &&
+          (item.title == loc.navMembers || item.title == loc.navChurchAdmin) &&
           isPastorUnassigned;
 
       if (isProtected) {
@@ -179,6 +195,7 @@ class SideMenu extends ConsumerWidget {
           title: item.title,
           icon: item.icon,
           isCollapsed: collapsed,
+          loc: loc,
         );
       }
 
@@ -186,13 +203,15 @@ class SideMenu extends ConsumerWidget {
         Map<String, String> accessibleChildren = Map.from(item.children!);
 
         if (currentRole == UserRole.SUPER_ADMIN) {
-          if (item.title == 'Members') {
-            accessibleChildren.removeWhere((key, value) => key == 'Add Member');
+          if (item.title == loc.navMembers) {
+            accessibleChildren.removeWhere(
+              (key, value) => key == loc.navAddMember,
+            );
           }
         } else if (currentRole == UserRole.PASTOR) {
-          if (item.title == 'Church Admin') {
+          if (item.title == loc.navChurchAdmin) {
             accessibleChildren.removeWhere(
-              (key, value) => key == 'Churches' || key == 'Pastors',
+              (key, value) => key == loc.navChurches || key == loc.navPastors,
             );
           }
         }
@@ -213,7 +232,12 @@ class SideMenu extends ConsumerWidget {
             title: item.title,
             icon: item.icon,
             isSelected: currentRoute.startsWith(item.path),
-            onTap: () => context.go(item.path),
+            onTap: () {
+              context.go(item.path);
+              try {
+                Scaffold.of(context).closeDrawer();
+              } catch (_) {}
+            },
             isCollapsed: collapsed,
           ),
         );
@@ -222,14 +246,16 @@ class SideMenu extends ConsumerWidget {
   }
 }
 
-class _Header extends StatelessWidget {
+class _Header extends ConsumerWidget {
   final bool isCollapsed;
   const _Header({required this.isCollapsed});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
+    final locale = ref.watch(languageNotifierProvider);
+    final loc = AppLocalization(locale);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
@@ -240,11 +266,14 @@ class _Header extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [appColors.surface, appColors.surface.withOpacity(0.95)],
+          colors: [
+            appColors.surface,
+            appColors.surface.withValues(alpha: 0.95),
+          ],
         ),
         border: Border(
           bottom: BorderSide(
-            color: appColors.border.withOpacity(0.5),
+            color: appColors.border.withValues(alpha: 0.5),
             width: 0.5,
           ),
         ),
@@ -254,10 +283,10 @@ class _Header extends StatelessWidget {
             ? Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: theme.primaryColor.withOpacity(0.1),
+                      color: theme.primaryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: theme.primaryColor.withOpacity(0.2),
+                        color: theme.primaryColor.withValues(alpha: 0.2),
                         width: 1,
                       ),
                     ),
@@ -276,10 +305,10 @@ class _Header extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: theme.primaryColor.withOpacity(0.1),
+                          color: theme.primaryColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: theme.primaryColor.withOpacity(0.2),
+                            color: theme.primaryColor.withValues(alpha: 0.2),
                             width: 1,
                           ),
                         ),
@@ -295,7 +324,7 @@ class _Header extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Ethiopian Genet Church',
+                              loc.navDashboard,
                               style: theme.textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.w800,
                                 color: appColors.textPrimary,
@@ -312,11 +341,13 @@ class _Header extends StatelessWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: theme.primaryColor.withOpacity(0.1),
+                                color: theme.primaryColor.withValues(
+                                  alpha: 0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                'Church Management',
+                                loc.churchManagement,
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: theme.primaryColor,
                                   fontWeight: FontWeight.w600,
@@ -400,7 +431,7 @@ class _MenuItemState extends State<_MenuItem>
         border: Border.all(color: appColors.border),
         boxShadow: [
           BoxShadow(
-            color: appColors.shadow.withOpacity(0.1),
+            color: appColors.shadow.withValues(alpha: 0.1),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -441,9 +472,9 @@ class _MenuItemState extends State<_MenuItem>
                                   begin: Alignment.centerLeft,
                                   end: Alignment.centerRight,
                                   colors: [
-                                    theme.primaryColor.withOpacity(0.15),
-                                    theme.primaryColor.withOpacity(0.08),
-                                    theme.primaryColor.withOpacity(0.05),
+                                    theme.primaryColor.withValues(alpha: 0.15),
+                                    theme.primaryColor.withValues(alpha: 0.08),
+                                    theme.primaryColor.withValues(alpha: 0.05),
                                   ],
                                 )
                               : _isHovered
@@ -451,8 +482,8 @@ class _MenuItemState extends State<_MenuItem>
                                   begin: Alignment.centerLeft,
                                   end: Alignment.centerRight,
                                   colors: [
-                                    theme.primaryColor.withOpacity(0.08),
-                                    theme.primaryColor.withOpacity(0.04),
+                                    theme.primaryColor.withValues(alpha: 0.08),
+                                    theme.primaryColor.withValues(alpha: 0.04),
                                     Colors.transparent,
                                   ],
                                 )
@@ -460,24 +491,32 @@ class _MenuItemState extends State<_MenuItem>
                           borderRadius: BorderRadius.circular(16),
                           border: widget.isSelected
                               ? Border.all(
-                                  color: theme.primaryColor.withOpacity(0.2),
+                                  color: theme.primaryColor.withValues(
+                                    alpha: 0.2,
+                                  ),
                                   width: 1,
                                 )
                               : _isHovered
                               ? Border.all(
-                                  color: theme.primaryColor.withOpacity(0.1),
+                                  color: theme.primaryColor.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   width: 1,
                                 )
                               : null,
                           boxShadow: widget.isSelected
                               ? [
                                   BoxShadow(
-                                    color: theme.primaryColor.withOpacity(0.1),
+                                    color: theme.primaryColor.withValues(
+                                      alpha: 0.1,
+                                    ),
                                     blurRadius: 16,
                                     offset: const Offset(0, 4),
                                   ),
                                   BoxShadow(
-                                    color: theme.primaryColor.withOpacity(0.05),
+                                    color: theme.primaryColor.withValues(
+                                      alpha: 0.05,
+                                    ),
                                     blurRadius: 32,
                                     offset: const Offset(0, 8),
                                   ),
@@ -485,7 +524,9 @@ class _MenuItemState extends State<_MenuItem>
                               : _isHovered
                               ? [
                                   BoxShadow(
-                                    color: theme.primaryColor.withOpacity(0.05),
+                                    color: theme.primaryColor.withValues(
+                                      alpha: 0.05,
+                                    ),
                                     blurRadius: 12,
                                     offset: const Offset(0, 2),
                                   ),
@@ -508,7 +549,7 @@ class _MenuItemState extends State<_MenuItem>
                                 colors: [
                                   appColors.glowPrimary,
                                   theme.primaryColor,
-                                  appColors.glowPrimary.withOpacity(0.7),
+                                  appColors.glowPrimary.withValues(alpha: 0.7),
                                 ],
                                 stops: const [0.0, 0.5, 1.0],
                               ),
@@ -540,7 +581,7 @@ class _MenuItemState extends State<_MenuItem>
                               padding: const EdgeInsets.all(2),
                               decoration: BoxDecoration(
                                 color: widget.isSelected
-                                    ? theme.primaryColor.withOpacity(0.1)
+                                    ? theme.primaryColor.withValues(alpha: 0.1)
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -550,7 +591,7 @@ class _MenuItemState extends State<_MenuItem>
                                 color: widget.isSelected
                                     ? theme.primaryColor
                                     : _isHovered
-                                    ? theme.primaryColor.withOpacity(0.8)
+                                    ? theme.primaryColor.withValues(alpha: 0.8)
                                     : appColors.textSecondary,
                               ),
                             ),
@@ -580,7 +621,9 @@ class _MenuItemState extends State<_MenuItem>
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: theme.primaryColor.withOpacity(0.1),
+                                    color: theme.primaryColor.withValues(
+                                      alpha: 0.1,
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Icon(
@@ -618,17 +661,20 @@ class _DisabledMenuItem extends StatelessWidget {
     required this.title,
     required this.icon,
     required this.isCollapsed,
+    required this.loc,
   });
+
+  final AppLocalization loc;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
-    final disabledColor = appColors.textSecondary.withOpacity(0.5);
+    final disabledColor = appColors.textSecondary.withValues(alpha: 0.5);
 
     final tooltipMessage = isCollapsed
-        ? '$title (Assign to a church to enable)'
-        : 'You must be assigned to a church to access this feature.';
+        ? '$title ${loc.assignToEnable}'
+        : loc.mustBeAssigned;
 
     return Tooltip(
       message: tooltipMessage,
@@ -637,16 +683,15 @@ class _DisabledMenuItem extends StatelessWidget {
         child: InkWell(
           onTap: () {
             context.showInfoNotification(
-              title: 'Action Disabled',
-              message:
-                  'Please contact a Super Admin to be assigned to a church.',
+              title: loc.actionDisabled,
+              message: loc.contactAdmin,
             );
           },
           borderRadius: BorderRadius.circular(16),
           child: Container(
             height: 56,
             decoration: BoxDecoration(
-              color: appColors.scaffold.withOpacity(0.5),
+              color: appColors.scaffold.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Padding(
@@ -743,7 +788,7 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
           border: Border.all(color: appColors.border),
           boxShadow: [
             BoxShadow(
-              color: appColors.shadow.withOpacity(0.1),
+              color: appColors.shadow.withValues(alpha: 0.1),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -755,7 +800,7 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
           ),
           elevation: 16,
           color: appColors.surface,
-          shadowColor: appColors.shadow.withOpacity(0.2),
+          shadowColor: appColors.shadow.withValues(alpha: 0.2),
           itemBuilder: (context) {
             return widget.children.entries.map((entry) {
               return PopupMenuItem(
@@ -783,7 +828,12 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
               );
             }).toList();
           },
-          onSelected: (path) => context.go(path),
+          onSelected: (path) {
+            context.go(path);
+            try {
+              Scaffold.of(context).closeDrawer();
+            } catch (_) {}
+          },
           child: MouseRegion(
             onEnter: (_) {
               setState(() => _isHovered = true);
@@ -810,8 +860,8 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
                                 begin: Alignment.centerLeft,
                                 end: Alignment.centerRight,
                                 colors: [
-                                  theme.primaryColor.withOpacity(0.15),
-                                  theme.primaryColor.withOpacity(0.05),
+                                  theme.primaryColor.withValues(alpha: 0.15),
+                                  theme.primaryColor.withValues(alpha: 0.05),
                                 ],
                               )
                             : _isHovered
@@ -819,7 +869,7 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
                                 begin: Alignment.centerLeft,
                                 end: Alignment.centerRight,
                                 colors: [
-                                  theme.primaryColor.withOpacity(0.08),
+                                  theme.primaryColor.withValues(alpha: 0.08),
                                   Colors.transparent,
                                 ],
                               )
@@ -827,7 +877,9 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
                         borderRadius: BorderRadius.circular(16),
                         border: isExpanded
                             ? Border.all(
-                                color: theme.primaryColor.withOpacity(0.2),
+                                color: theme.primaryColor.withValues(
+                                  alpha: 0.2,
+                                ),
                                 width: 1,
                               )
                             : null,
@@ -839,7 +891,7 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
                           color: isExpanded
                               ? theme.primaryColor
                               : _isHovered
-                              ? theme.primaryColor.withOpacity(0.8)
+                              ? theme.primaryColor.withValues(alpha: 0.8)
                               : appColors.textSecondary,
                         ),
                       ),
@@ -876,8 +928,8 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
                           colors: [
-                            theme.primaryColor.withOpacity(0.1),
-                            theme.primaryColor.withOpacity(0.05),
+                            theme.primaryColor.withValues(alpha: 0.1),
+                            theme.primaryColor.withValues(alpha: 0.05),
                             Colors.transparent,
                           ],
                         )
@@ -886,7 +938,7 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
                           colors: [
-                            theme.primaryColor.withOpacity(0.05),
+                            theme.primaryColor.withValues(alpha: 0.05),
                             Colors.transparent,
                           ],
                         )
@@ -894,7 +946,7 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
                   borderRadius: BorderRadius.circular(16),
                   border: isExpanded
                       ? Border.all(
-                          color: theme.primaryColor.withOpacity(0.15),
+                          color: theme.primaryColor.withValues(alpha: 0.15),
                           width: 1,
                         )
                       : null,
@@ -919,7 +971,7 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
                       padding: const EdgeInsets.all(2),
                       decoration: BoxDecoration(
                         color: isExpanded
-                            ? theme.primaryColor.withOpacity(0.1)
+                            ? theme.primaryColor.withValues(alpha: 0.1)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -929,7 +981,7 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
                         color: isExpanded
                             ? theme.primaryColor
                             : _isHovered
-                            ? theme.primaryColor.withOpacity(0.8)
+                            ? theme.primaryColor.withValues(alpha: 0.8)
                             : appColors.textSecondary,
                       ),
                     ),
@@ -971,7 +1023,12 @@ class _ExpansionMenuItemState extends State<_ExpansionMenuItem>
                           icon: Iconsax.arrow_right_3,
                           isCollapsed: false,
                           isSelected: isSelected,
-                          onTap: () => context.go(entry.value),
+                          onTap: () {
+                            context.go(entry.value);
+                            try {
+                              Scaffold.of(context).closeDrawer();
+                            } catch (_) {}
+                          },
                         ),
                       );
                     }).toList(),

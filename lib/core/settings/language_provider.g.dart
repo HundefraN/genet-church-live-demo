@@ -1,26 +1,26 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'church_selection_provider.dart';
+part of 'language_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$currentChurchHash() => r'536d0dba916817d9ad40d647c4266b78bf6ae9b9';
+String _$languageNotifierHash() => r'7a194c13c9479bd493e05e072ee69e69ba365c97';
 
-/// See also [CurrentChurch].
-@ProviderFor(CurrentChurch)
-final currentChurchProvider =
-    AutoDisposeNotifierProvider<CurrentChurch, String?>.internal(
-      CurrentChurch.new,
-      name: r'currentChurchProvider',
+/// See also [LanguageNotifier].
+@ProviderFor(LanguageNotifier)
+final languageNotifierProvider =
+    AutoDisposeNotifierProvider<LanguageNotifier, Locale>.internal(
+      LanguageNotifier.new,
+      name: r'languageNotifierProvider',
       debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
           ? null
-          : _$currentChurchHash,
+          : _$languageNotifierHash,
       dependencies: null,
       allTransitiveDependencies: null,
     );
 
-typedef _$CurrentChurch = AutoDisposeNotifier<String?>;
+typedef _$LanguageNotifier = AutoDisposeNotifier<Locale>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

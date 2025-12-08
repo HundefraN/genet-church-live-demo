@@ -95,12 +95,12 @@
 //                       colors: _isHovered && !widget.isLoading
 //                           ? [
 //                         widget.color,
-//                         widget.color.withOpacity(0.7),
-//                         widget.color.withOpacity(0.9),
+//                         widget.color.withValues(alpha: 0.7),
+//                         widget.color.withValues(alpha: 0.9),
 //                       ]
 //                           : [
 //                         widget.color,
-//                         widget.color.withOpacity(0.8),
+//                         widget.color.withValues(alpha: 0.8),
 //                       ],
 //                       begin: Alignment.topLeft,
 //                       end: Alignment.bottomRight,
@@ -108,19 +108,19 @@
 //                     ),
 //                     borderRadius: BorderRadius.circular(12),
 //                     border: Border.all(
-//                       color: widget.color.withOpacity(0.3),
+//                       color: widget.color.withValues(alpha: 0.3),
 //                       width: 1,
 //                     ),
 //                     boxShadow: _isHovered && !widget.isLoading
 //                         ? [
 //                       BoxShadow(
-//                         color: widget.color.withOpacity(0.4),
+//                         color: widget.color.withValues(alpha: 0.4),
 //                         blurRadius: 16,
 //                         offset: const Offset(0, 8),
 //                         spreadRadius: -2,
 //                       ),
 //                       BoxShadow(
-//                         color: widget.color.withOpacity(0.2),
+//                         color: widget.color.withValues(alpha: 0.2),
 //                         blurRadius: 8,
 //                         offset: const Offset(0, 4),
 //                         spreadRadius: -1,
@@ -128,7 +128,7 @@
 //                     ]
 //                         : [
 //                       BoxShadow(
-//                         color: widget.color.withOpacity(0.25),
+//                         color: widget.color.withValues(alpha: 0.25),
 //                         blurRadius: 8,
 //                         offset: const Offset(0, 4),
 //                         spreadRadius: -1,
@@ -159,7 +159,7 @@
 //                                 Container(
 //                                   padding: const EdgeInsets.all(2),
 //                                   decoration: BoxDecoration(
-//                                     color: Colors.white.withOpacity(0.2),
+//                                     color: Colors.white.withValues(alpha: 0.2),
 //                                     borderRadius: BorderRadius.circular(4),
 //                                   ),
 //                                   child: Icon(

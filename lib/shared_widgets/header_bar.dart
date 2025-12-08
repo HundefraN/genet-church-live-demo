@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
@@ -12,6 +13,9 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'dart:ui';
+import 'package:genet_church_portal/core/settings/language_provider.dart';
+
+import '../core/localization/app_localization.dart';
 
 class HeaderBar extends HookConsumerWidget {
   final List<String> breadcrumbs;
@@ -37,12 +41,14 @@ class HeaderBar extends HookConsumerWidget {
     final appColors = theme.extension<AppColors>()!;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 950;
+    final locale = ref.watch(languageNotifierProvider);
+    final loc = AppLocalization(locale);
 
     return SliverAppBar(
-      backgroundColor: appColors.surface.withOpacity(0.85),
+      backgroundColor: appColors.surface.withValues(alpha: 0.85),
       elevation: 0,
       scrolledUnderElevation: 8.0,
-      shadowColor: appColors.shadow.withOpacity(0.2),
+      shadowColor: appColors.shadow.withValues(alpha: 0.2),
       surfaceTintColor: Colors.transparent,
       pinned: pinned,
       floating: floating,
@@ -52,22 +58,22 @@ class HeaderBar extends HookConsumerWidget {
       leadingWidth: isSmallScreen ? 72 : 0,
       leading: isSmallScreen
           ? Center(
-              child: Container(
-                margin: const EdgeInsets.only(left: 16),
-                decoration: BoxDecoration(
-                  color: theme.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: theme.primaryColor.withOpacity(0.2),
-                    width: 1,
-                  ),
-                ),
-                child: IconButton(
-                  icon: Icon(Iconsax.menu, color: theme.primaryColor),
-                  onPressed: onMenuPressed,
-                ),
-              ),
-            )
+        child: Container(
+          margin: const EdgeInsets.only(left: 16),
+          decoration: BoxDecoration(
+            color: theme.primaryColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: theme.primaryColor.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          child: IconButton(
+            icon: Icon(Iconsax.menu, color: theme.primaryColor),
+            onPressed: onMenuPressed,
+          ),
+        ),
+      )
           : const SizedBox.shrink(),
       titleSpacing: 0,
       title: ClipRRect(
@@ -79,7 +85,7 @@ class HeaderBar extends HookConsumerWidget {
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: appColors.border.withOpacity(0.5),
+                  color: appColors.border.withValues(alpha: 0.5),
                   width: 0.5,
                 ),
               ),
@@ -88,10 +94,10 @@ class HeaderBar extends HookConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 if (!isSmallScreen)
-                  Expanded(child: _Breadcrumbs(items: breadcrumbs)),
+                  Expanded(child: _Breadcrumbs(items: breadcrumbs, loc: loc)),
                 if (isSmallScreen)
                   Text(
-                    breadcrumbs.isNotEmpty ? breadcrumbs.last : 'Dashboard',
+                    breadcrumbs.isNotEmpty ? breadcrumbs.last : loc.dashboard,
                     style: TextStyle(
                       color: appColors.textPrimary,
                       fontWeight: FontWeight.w800,
@@ -100,7 +106,7 @@ class HeaderBar extends HookConsumerWidget {
                     ),
                   ),
                 const Spacer(),
-                _HeaderActions(isSmallScreen: isSmallScreen),
+                _HeaderActions(isSmallScreen: isSmallScreen, loc: loc),
               ],
             ),
           ),
@@ -112,7 +118,8 @@ class HeaderBar extends HookConsumerWidget {
 
 class _HeaderActions extends ConsumerWidget {
   final bool isSmallScreen;
-  const _HeaderActions({required this.isSmallScreen});
+  final AppLocalization loc;
+  const _HeaderActions({required this.isSmallScreen, required this.loc});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -124,10 +131,10 @@ class _HeaderActions extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (currentRole == UserRole.SUPER_ADMIN)
-            const _CompactChurchSelector(),
-          const _CompactGlobalSearch(),
+            _CompactChurchSelector(loc: loc),
+          _CompactGlobalSearch(loc: loc),
           const SizedBox(width: 8),
-          const _UserProfileButton(),
+          _UserProfileButton(loc: loc),
         ],
       );
     } else {
@@ -135,12 +142,12 @@ class _HeaderActions extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (currentRole == UserRole.SUPER_ADMIN) ...[
-            const ChurchSelector(),
+            ChurchSelector(loc: loc),
             const SizedBox(width: 16),
           ],
-          const SizedBox(width: 200, child: GlobalSearchField()),
+          SizedBox(width: 200, child: GlobalSearchField(loc: loc)),
           const SizedBox(width: 24),
-          const _UserProfileButton(),
+          _UserProfileButton(loc: loc),
         ],
       );
     }
@@ -148,7 +155,8 @@ class _HeaderActions extends ConsumerWidget {
 }
 
 class _UserProfileButton extends ConsumerStatefulWidget {
-  const _UserProfileButton();
+  final AppLocalization loc;
+  const _UserProfileButton({required this.loc});
 
   @override
   ConsumerState<_UserProfileButton> createState() => _UserProfileButtonState();
@@ -208,284 +216,284 @@ class _UserProfileButtonState extends ConsumerState<_UserProfileButton>
             child: ref.watch(isLoggingOutProvider)
                 ? const Center(child: CircularProgressIndicator())
                 : PopupMenuButton<String>(
-                    onSelected: (value) async {
-                      if (value == 'profile') {
-                        context.go('/profile');
-                      } else if (value == 'logout') {
-                        await ref.read(authStateProvider.notifier).logout();
-                        if (mounted) {
-                          context.go('/login');
-                        }
-                      } else if (value == 'light_mode') {
-                        ref
-                            .read(appThemeNotifierProvider.notifier)
-                            .setTheme(ThemeMode.light);
-                      } else if (value == 'dark_mode') {
-                        ref
-                            .read(appThemeNotifierProvider.notifier)
-                            .setTheme(ThemeMode.dark);
-                      } else if (value == 'system_mode') {
-                        ref
-                            .read(appThemeNotifierProvider.notifier)
-                            .setTheme(ThemeMode.system);
-                      }
-                    },
-                    tooltip: 'Profile Settings',
-                    offset: const Offset(0, 60),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+              onSelected: (value) async {
+                if (value == 'profile') {
+                  context.go('/profile');
+                } else if (value == 'logout') {
+                  await ref.read(authStateProvider.notifier).logout();
+                  if (mounted) {
+                    context.go('/login');
+                  }
+                } else if (value == 'light_mode') {
+                  ref
+                      .read(appThemeNotifierProvider.notifier)
+                      .setTheme(ThemeMode.light);
+                } else if (value == 'dark_mode') {
+                  ref
+                      .read(appThemeNotifierProvider.notifier)
+                      .setTheme(ThemeMode.dark);
+                } else if (value == 'system_mode') {
+                  ref
+                      .read(appThemeNotifierProvider.notifier)
+                      .setTheme(ThemeMode.system);
+                }
+              },
+              tooltip: widget.loc.profileSettings,
+              offset: const Offset(0, 60),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 16,
+              color: appColors.surface,
+              shadowColor: appColors.shadow.withValues(alpha: 0.2),
+              itemBuilder: (BuildContext context) =>
+              <PopupMenuEntry<String>>[
+                PopupMenuItem<String>(
+                  value: 'profile',
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: theme.primaryColor.withOpacity(
+                              0.1,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Iconsax.user,
+                            color: theme.primaryColor,
+                            size: 16,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          widget.loc.myProfile,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: appColors.textPrimary,
+                          ),
+                        ),
+                      ],
                     ),
-                    elevation: 16,
-                    color: appColors.surface,
-                    shadowColor: appColors.shadow.withOpacity(0.2),
-                    itemBuilder: (BuildContext context) =>
-                        <PopupMenuEntry<String>>[
-                          PopupMenuItem<String>(
-                            value: 'profile',
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: theme.primaryColor.withOpacity(
-                                        0.1,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Icon(
-                                      Iconsax.user,
-                                      color: theme.primaryColor,
-                                      size: 16,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    'My Profile',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      color: appColors.textPrimary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                  ),
+                ),
+                const PopupMenuDivider(),
+                PopupMenuItem<String>(
+                  value: 'light_mode',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Iconsax.sun_1,
+                        size: 16,
+                        color: appColors.textSecondary,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(widget.loc.lightMode),
+                      const Spacer(),
+                      if (currentTheme == ThemeMode.light)
+                        Icon(
+                          Iconsax.tick_circle,
+                          color: theme.primaryColor,
+                          size: 20,
+                        ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'dark_mode',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Iconsax.moon,
+                        size: 16,
+                        color: appColors.textSecondary,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(widget.loc.darkMode),
+                      const Spacer(),
+                      if (currentTheme == ThemeMode.dark)
+                        Icon(
+                          Iconsax.tick_circle,
+                          color: theme.primaryColor,
+                          size: 20,
+                        ),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(),
+                PopupMenuItem<String>(
+                  value: 'logout',
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: destructiveRed.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          const PopupMenuDivider(),
-                          PopupMenuItem<String>(
-                            value: 'light_mode',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Iconsax.sun_1,
-                                  size: 16,
-                                  color: appColors.textSecondary,
-                                ),
-                                const SizedBox(width: 12),
-                                const Text("Light Mode"),
-                                const Spacer(),
-                                if (currentTheme == ThemeMode.light)
-                                  Icon(
-                                    Iconsax.tick_circle,
-                                    color: theme.primaryColor,
-                                    size: 20,
-                                  ),
-                              ],
-                            ),
+                          child: Icon(
+                            Iconsax.logout,
+                            color: destructiveRed,
+                            size: 16,
                           ),
-                          PopupMenuItem<String>(
-                            value: 'dark_mode',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Iconsax.moon,
-                                  size: 16,
-                                  color: appColors.textSecondary,
-                                ),
-                                const SizedBox(width: 12),
-                                const Text("Dark Mode"),
-                                const Spacer(),
-                                if (currentTheme == ThemeMode.dark)
-                                  Icon(
-                                    Iconsax.tick_circle,
-                                    color: theme.primaryColor,
-                                    size: 20,
-                                  ),
-                              ],
-                            ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          widget.loc.logout,
+                          style: TextStyle(
+                            color: destructiveRed,
+                            fontWeight: FontWeight.w600,
                           ),
-                          const PopupMenuDivider(),
-                          PopupMenuItem<String>(
-                            value: 'logout',
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: destructiveRed.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Icon(
-                                      Iconsax.logout,
-                                      color: destructiveRed,
-                                      size: 16,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    'Logout',
-                                    style: TextStyle(
-                                      color: destructiveRed,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: isCompact
+                    ? const EdgeInsets.all(4)
+                    : const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  gradient: _isHovered
+                      ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      theme.primaryColor.withValues(alpha: 0.1),
+                      theme.primaryColor.withValues(alpha: 0.05),
+                    ],
+                  )
+                      : null,
+                  border: Border.all(
+                    color: _isHovered
+                        ? theme.primaryColor.withValues(alpha: 0.3)
+                        : appColors.border.withValues(alpha: 0.6),
+                    width: 1,
+                  ),
+                  borderRadius: BorderRadius.circular(
+                    isCompact ? 12 : 24,
+                  ),
+                  boxShadow: _isHovered
+                      ? [
+                    BoxShadow(
+                      color: theme.primaryColor.withValues(alpha: 0.1),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                      : null,
+                ),
+                child: isCompact
+                    ? Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        theme.primaryColor,
+                        theme.primaryColor.withValues(alpha: 0.8),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.primaryColor.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      userInitial,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                )
+                    : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            theme.primaryColor,
+                            theme.primaryColor.withValues(alpha: 0.8),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: theme.primaryColor.withOpacity(
+                              0.3,
+                            ),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          userInitial,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user?.fullName ?? "User",
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: appColors.textPrimary,
+                              fontSize: 14,
+                              letterSpacing: -0.2,
                             ),
                           ),
                         ],
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: isCompact
-                          ? const EdgeInsets.all(4)
-                          : const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                      decoration: BoxDecoration(
-                        gradient: _isHovered
-                            ? LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  theme.primaryColor.withOpacity(0.1),
-                                  theme.primaryColor.withOpacity(0.05),
-                                ],
-                              )
-                            : null,
-                        border: Border.all(
-                          color: _isHovered
-                              ? theme.primaryColor.withOpacity(0.3)
-                              : appColors.border.withOpacity(0.6),
-                          width: 1,
-                        ),
-                        borderRadius: BorderRadius.circular(
-                          isCompact ? 12 : 24,
-                        ),
-                        boxShadow: _isHovered
-                            ? [
-                                BoxShadow(
-                                  color: theme.primaryColor.withOpacity(0.1),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ]
-                            : null,
                       ),
-                      child: isCompact
-                          ? Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    theme.primaryColor,
-                                    theme.primaryColor.withOpacity(0.8),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(10),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: theme.primaryColor.withOpacity(0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: Text(
-                                  userInitial,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                            )
-                          : Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        theme.primaryColor,
-                                        theme.primaryColor.withOpacity(0.8),
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: theme.primaryColor.withOpacity(
-                                          0.3,
-                                        ),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      userInitial,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Flexible(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        user?.fullName ?? "User",
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          color: appColors.textPrimary,
-                                          fontSize: 14,
-                                          letterSpacing: -0.2,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Icon(
-                                  Iconsax.arrow_down_1,
-                                  size: 16,
-                                  color: appColors.textSecondary,
-                                ),
-                              ],
-                            ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Iconsax.arrow_down_1,
+                      size: 16,
+                      color: appColors.textSecondary,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           );
         },
       ),
@@ -494,7 +502,8 @@ class _UserProfileButtonState extends ConsumerState<_UserProfileButton>
 }
 
 class ChurchSelector extends ConsumerWidget {
-  const ChurchSelector({super.key});
+  final AppLocalization loc;
+  const ChurchSelector({super.key, required this.loc});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -513,7 +522,7 @@ class ChurchSelector extends ConsumerWidget {
             color: appColors.scaffold,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: appColors.border.withOpacity(0.6),
+              color: appColors.border.withValues(alpha: 0.6),
               width: 1,
             ),
           ),
@@ -530,7 +539,7 @@ class ChurchSelector extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Select Church',
+                    loc.selectChurch,
                     style: TextStyle(
                       color: appColors.textSecondary,
                       fontWeight: FontWeight.w500,
@@ -586,7 +595,8 @@ class ChurchSelector extends ConsumerWidget {
 }
 
 class GlobalSearchField extends HookConsumerWidget {
-  const GlobalSearchField({super.key});
+  final AppLocalization loc;
+  const GlobalSearchField({super.key, required this.loc});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -610,31 +620,31 @@ class GlobalSearchField extends HookConsumerWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isFocused.value
-              ? theme.primaryColor.withOpacity(0.4)
-              : appColors.border.withOpacity(0.6),
+              ? theme.primaryColor.withValues(alpha: 0.4)
+              : appColors.border.withValues(alpha: 0.6),
           width: isFocused.value ? 1.5 : 1,
         ),
         boxShadow: isFocused.value
             ? [
-                BoxShadow(
-                  color: theme.primaryColor.withOpacity(0.1),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ]
+          BoxShadow(
+            color: theme.primaryColor.withValues(alpha: 0.1),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ]
             : null,
       ),
       child: TextField(
         controller: searchController,
         focusNode: searchFocusNode,
-        onTap: () => _showSearchDialog(context, ref),
+        onTap: () => _showSearchDialog(context, ref, loc),
         readOnly: true,
         style: TextStyle(
           color: appColors.textPrimary,
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
-          hintText: 'Search actions...',
+          hintText: loc.searchActions,
           hintStyle: TextStyle(
             color: appColors.textSecondary,
             fontWeight: FontWeight.w500,
@@ -657,7 +667,8 @@ class GlobalSearchField extends HookConsumerWidget {
 }
 
 class _CompactGlobalSearch extends StatelessWidget {
-  const _CompactGlobalSearch();
+  final AppLocalization loc;
+  const _CompactGlobalSearch({required this.loc});
 
   @override
   Widget build(BuildContext context) {
@@ -665,8 +676,8 @@ class _CompactGlobalSearch extends StatelessWidget {
       builder: (context, ref, _) {
         return IconButton(
           icon: const Icon(Iconsax.search_normal_1),
-          onPressed: () => _showSearchDialog(context, ref),
-          tooltip: 'Search',
+          onPressed: () => _showSearchDialog(context, ref, loc),
+          tooltip: loc.search,
         );
       },
     );
@@ -674,7 +685,8 @@ class _CompactGlobalSearch extends StatelessWidget {
 }
 
 class _CompactChurchSelector extends ConsumerWidget {
-  const _CompactChurchSelector();
+  final AppLocalization loc;
+  const _CompactChurchSelector({required this.loc});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -682,7 +694,7 @@ class _CompactChurchSelector extends ConsumerWidget {
     return churchesAsync.maybeWhen(
       data: (churches) => PopupMenuButton<String>(
         icon: const Icon(Iconsax.building_4),
-        tooltip: 'Select Church',
+        tooltip: loc.selectChurch,
         onSelected: (value) {
           ref.read(currentChurchProvider.notifier).selectChurch(value);
         },
@@ -695,12 +707,13 @@ class _CompactChurchSelector extends ConsumerWidget {
   }
 }
 
-void _showSearchDialog(BuildContext context, WidgetRef ref) {
-  showDialog(context: context, builder: (context) => const _SearchDialog());
+void _showSearchDialog(BuildContext context, WidgetRef ref, AppLocalization loc) {
+  showDialog(context: context, builder: (context) => _SearchDialog(loc: loc));
 }
 
 class _SearchDialog extends HookConsumerWidget {
-  const _SearchDialog();
+  final AppLocalization loc;
+  const _SearchDialog({required this.loc});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -732,10 +745,10 @@ class _SearchDialog extends HookConsumerWidget {
                 controller: searchController,
                 focusNode: searchFocusNode,
                 onChanged: (value) =>
-                    ref.read(rawSearchQueryProvider.notifier).state = value,
+                ref.read(rawSearchQueryProvider.notifier).state = value,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: 'Search actions or pages...',
+                  hintText: loc.searchActionsOrPages,
                   prefixIcon: const Icon(Iconsax.search_normal_1),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -750,7 +763,7 @@ class _SearchDialog extends HookConsumerWidget {
               child: searchResults.when(
                 data: (results) {
                   if (results.isEmpty && searchController.text.isNotEmpty) {
-                    return const Center(child: Text('No results found.'));
+                    return Center(child: Text(loc.noResultsFound));
                   }
                   return ListView.builder(
                     itemCount: results.length,
@@ -765,7 +778,7 @@ class _SearchDialog extends HookConsumerWidget {
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, s) => const Center(child: Text('Error searching.')),
+                error: (e, s) => Center(child: Text(loc.errorSearching)),
               ),
             ),
           ],
@@ -777,7 +790,8 @@ class _SearchDialog extends HookConsumerWidget {
 
 class _Breadcrumbs extends StatelessWidget {
   final List<String> items;
-  const _Breadcrumbs({required this.items});
+  final AppLocalization loc;
+  const _Breadcrumbs({required this.items, required this.loc});
 
   @override
   Widget build(BuildContext context) {
@@ -787,8 +801,8 @@ class _Breadcrumbs extends StatelessWidget {
     final bool isCompact = screenWidth < 1200;
 
     String title = items.lastWhere(
-      (item) => item.isNotEmpty,
-      orElse: () => 'Dashboard',
+          (item) => item.isNotEmpty,
+      orElse: () => loc.dashboard,
     );
 
     return Column(
@@ -809,10 +823,10 @@ class _Breadcrumbs extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: appColors.surface.withOpacity(0.6),
+              color: appColors.surface.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: appColors.border.withOpacity(0.5),
+                color: appColors.border.withValues(alpha: 0.5),
                 width: 1,
               ),
             ),

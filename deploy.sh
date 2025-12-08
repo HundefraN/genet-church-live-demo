@@ -10,12 +10,13 @@ flutter build web --release --base-href "/genet-church-live-demo/" --no-tree-sha
 echo "Navigating to build directory..."
 cd build/web
 
+# Initialize git repository if not already present (though we rm -rf it at the end)
 git init
 git add -A
 git commit -m "Deploy to GitHub Pages: $(date)"
 
 echo "Deploying to gh-pages branch..."
-git push -f git@github.com:HundefraN/genet-church-live-demo.git main:gh-pages
+git push -f https://github.com/HundefraN/genet-church-live-demo.git main:gh-pages
 
 cd -
 rm -rf build/web/.git

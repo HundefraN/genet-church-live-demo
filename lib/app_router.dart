@@ -11,7 +11,7 @@ import 'package:genet_church_portal/features/screens/add_church_screen.dart';
 import 'package:genet_church_portal/features/screens/add_members_screen.dart';
 import 'package:genet_church_portal/features/screens/add_pastors_screen.dart';
 import 'package:genet_church_portal/features/screens/advanced_reports_screen.dart';
-import 'package:genet_church_portal/features/screens/permissions_screen.dart';
+import 'package:genet_church_portal/features/settings/presentation/settings_screen.dart';
 import 'package:genet_church_portal/features/screens/profile_screen.dart';
 import 'package:genet_church_portal/features/screens/report_churchs_screen.dart';
 import 'package:genet_church_portal/features/screens/report_departments_screen.dart';
@@ -20,7 +20,7 @@ import 'package:genet_church_portal/features/screens/report_servants_screen.dart
 import 'package:genet_church_portal/features/screens/show_members_screen.dart';
 import 'package:genet_church_portal/shared_widgets/main_layout.dart';
 import 'features/auth/presentation/login_screen.dart';
-import 'features/categories_screen.dart';
+
 import 'features/screens/members_detail_screen.dart';
 import 'features/screens/sessions_screen.dart';
 
@@ -30,7 +30,7 @@ final routerAuthRepositoryProvider = Provider(
 
 final Map<String, List<String>> _routeBreadcrumbs = {
   '/dashboard': ['App', 'Dashboard'],
-  '/permissions': ['App', 'Settings', 'Permissions'],
+  '/settings': ['App', 'Settings'],
   '/profile': ['App', 'User', 'Profile'],
   '/sessions': ['App', 'User', 'Security'],
   '/report-churchs': ['App', 'Church', 'Reports'],
@@ -42,13 +42,12 @@ final Map<String, List<String>> _routeBreadcrumbs = {
   '/add-members': ['App', 'Members', 'Add Member'],
   '/show-members': ['App', 'Members', 'Show Members'],
   '/show-members/:memberId': ['App', 'Members', 'Member Details'],
-  '/categories': ['App', 'Members', 'Categories'],
+
   '/advanced-reports': ['App', 'Analytics'],
   '/activity-log': ['App', 'System', 'Activity Log'],
 };
 
 const _superAdminOnlyRoutes = [
-  '/permissions',
   '/report-churchs',
   '/add-church',
   '/report-pastors',
@@ -56,7 +55,7 @@ const _superAdminOnlyRoutes = [
   '/advanced-reports',
 ];
 
-const _pastorOnlyRoutes = ['/categories'];
+const _pastorOnlyRoutes = [];
 
 const _pastorAndServantRoutes = ['/add-members'];
 
@@ -124,8 +123,8 @@ class AppRouter {
               builder: (context, state) => const DashboardScreen(),
             ),
             GoRoute(
-              path: '/permissions',
-              builder: (context, state) => const PermissionsScreen(),
+              path: '/settings',
+              builder: (context, state) => const SettingsScreen(),
             ),
             GoRoute(
               path: '/profile',
@@ -174,10 +173,7 @@ class AppRouter {
                 return MemberDetailsScreen(memberId: memberId);
               },
             ),
-            GoRoute(
-              path: '/categories',
-              builder: (context, state) => const CategoriesScreen(),
-            ),
+
             GoRoute(
               path: '/advanced-reports',
               builder: (context, state) => const AdvancedReportsScreen(),

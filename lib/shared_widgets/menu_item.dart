@@ -89,19 +89,19 @@ class _MenuItemState extends State<MenuItem>
                   gradient: widget.isSelected
                       ? LinearGradient(
                     colors: [
-                      primaryColor.withOpacity(0.15),
-                      primaryColor.withOpacity(0.05),
+                      primaryColor.withValues(alpha: 0.15),
+                      primaryColor.withValues(alpha: 0.05),
                     ],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   )
                       : null,
                   color: _isHovered && !widget.isSelected
-                      ? Colors.grey.withOpacity(0.08)
+                      ? Colors.grey.withValues(alpha: 0.08)
                       : null,
                   border: widget.isSelected
                       ? Border.all(
-                    color: primaryColor.withOpacity(0.3),
+                    color: primaryColor.withValues(alpha: 0.3),
                     width: 1,
                   )
                       : null,
@@ -137,7 +137,7 @@ class _MenuItemState extends State<MenuItem>
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 color: widget.isSelected
-                                    ? primaryColor.withOpacity(0.1)
+                                    ? primaryColor.withValues(alpha: 0.1)
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -146,7 +146,7 @@ class _MenuItemState extends State<MenuItem>
                                 color: widget.isSelected
                                     ? primaryColor
                                     : theme.textTheme.bodyMedium?.color
-                                    ?.withOpacity(0.7),
+                                    ?.withValues(alpha: 0.7),
                                 size: 20,
                               ),
                             ),

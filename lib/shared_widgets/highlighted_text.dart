@@ -53,7 +53,7 @@ class HighlightedText extends StatelessWidget {
         TextStyle(
           color: theme.colorScheme.primary,
           fontWeight: FontWeight.w700,
-          backgroundColor: theme.colorScheme.primary.withOpacity(0.15),
+          backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
         );
 
     while (index != -1) {

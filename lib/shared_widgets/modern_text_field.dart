@@ -76,7 +76,7 @@
 //               boxShadow: _isFocused
 //                   ? [
 //                 BoxShadow(
-//                   color: theme.colorScheme.primary.withOpacity(0.15),
+//                   color: theme.colorScheme.primary.withValues(alpha: 0.15),
 //                   blurRadius: 20,
 //                   offset: const Offset(0, 8),
 //                   spreadRadius: -2,
@@ -99,11 +99,11 @@
 //               decoration: InputDecoration(
 //                 filled: true,
 //                 fillColor: _isFocused
-//                     ? appColors.scaffold.withOpacity(0.8)
+//                     ? appColors.scaffold.withValues(alpha: 0.8)
 //                     : appColors.scaffold,
 //                 hintText: widget.hintText,
 //                 hintStyle: TextStyle(
-//                   color: appColors.textSecondary.withOpacity(0.7),
+//                   color: appColors.textSecondary.withValues(alpha: 0.7),
 //                   fontWeight: FontWeight.w500,
 //                   letterSpacing: 0.2,
 //                 ),
@@ -113,8 +113,8 @@
 //                   decoration: BoxDecoration(
 //                     gradient: LinearGradient(
 //                       colors: [
-//                         theme.colorScheme.primary.withOpacity(0.1),
-//                         theme.colorScheme.primary.withOpacity(0.05),
+//                         theme.colorScheme.primary.withValues(alpha: 0.1),
+//                         theme.colorScheme.primary.withValues(alpha: 0.05),
 //                       ],
 //                     ),
 //                     borderRadius: BorderRadius.circular(8),
@@ -134,7 +134,7 @@
 //                 enabledBorder: OutlineInputBorder(
 //                   borderRadius: BorderRadius.circular(16),
 //                   borderSide: BorderSide(
-//                     color: appColors.border.withOpacity(0.3),
+//                     color: appColors.border.withValues(alpha: 0.3),
 //                     width: 1,
 //                   ),
 //                 ),

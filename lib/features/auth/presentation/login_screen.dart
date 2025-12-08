@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
 import 'package:genet_church_portal/shared_widgets/modern_input.dart';
@@ -11,6 +12,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:genet_church_portal/data/repositories/auth_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/localization/app_localization.dart';
+import 'package:genet_church_portal/core/settings/language_provider.dart';
+
 
 class BibleVerse {
   final String reference;
@@ -31,89 +35,24 @@ final bibleVerseProvider = FutureProvider.autoDispose<BibleVerse>((ref) async {
   return BibleVerse.fromJson(response.data);
 });
 
-class LoginScreen extends StatefulHookConsumerWidget {
+class LoginScreen extends HookConsumerWidget {
   const LoginScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends ConsumerState<LoginScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late AnimationController _slideController;
-  late AnimationController _scaleController;
-  late AnimationController _backgroundController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 1800),
-      vsync: this,
-    );
-    _slideController = AnimationController(
-      duration: const Duration(milliseconds: 1400),
-      vsync: this,
-    );
-    _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
-      vsync: this,
-    );
-    _backgroundController = AnimationController(
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Use flutter_animate for background loop
+    final backgroundController = useAnimationController(
       duration: const Duration(seconds: 20),
-      vsync: this,
     )..repeat();
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeOutCubic),
-    );
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(-0.3, 0), end: Offset.zero).animate(
-          CurvedAnimation(parent: _slideController, curve: Curves.easeOutBack),
-        );
-    _scaleAnimation = Tween<double>(begin: 0.9, end: 1.0).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.easeOutBack),
-    );
-
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) {
-        _fadeController.forward();
-        _slideController.forward();
-        _scaleController.forward();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _fadeController.dispose();
-    _slideController.dispose();
-    _scaleController.dispose();
-    _backgroundController.stop();
-    _backgroundController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       body: ResponsiveLayout(
-        mobileBreakpoint: 850,
+        mobileBreakpoint: 900,
         mobileBody: _LoginSmallScreenView(
-          fadeAnimation: _fadeAnimation,
-          slideAnimation: _slideAnimation,
-          scaleAnimation: _scaleAnimation,
-          backgroundController: _backgroundController,
+          backgroundController: backgroundController,
         ),
         desktopBody: _LoginDesktopView(
-          fadeAnimation: _fadeAnimation,
-          slideAnimation: _slideAnimation,
-          scaleAnimation: _scaleAnimation,
-          backgroundController: _backgroundController,
+          backgroundController: backgroundController,
         ),
       ),
     );
@@ -121,17 +60,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 }
 
 class _LoginDesktopView extends ConsumerWidget {
-  final Animation<double> fadeAnimation;
-  final Animation<Offset> slideAnimation;
-  final Animation<double> scaleAnimation;
   final AnimationController backgroundController;
 
-  const _LoginDesktopView({
-    required this.fadeAnimation,
-    required this.slideAnimation,
-    required this.scaleAnimation,
-    required this.backgroundController,
-  });
+  const _LoginDesktopView({required this.backgroundController});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -142,49 +73,56 @@ class _LoginDesktopView extends ConsumerWidget {
 
     return Row(
       children: [
+        // Left Panel - Ultra Modern Design
         Expanded(
           flex: 5,
           child: Container(
             decoration: BoxDecoration(gradient: appColors.primaryGradient),
             child: Stack(
               children: [
+                // Animated Background
                 AnimatedBuilder(
                   animation: backgroundController,
                   builder: (context, child) => CustomPaint(
-                    painter: _ModernBackgroundPainter(
+                    painter: _UltraModernBackgroundPainter(
                       backgroundController.value,
+                      theme.colorScheme.primary,
                     ),
                     size: Size.infinite,
                   ),
                 ),
+
+                // Glass Overlay
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        appColors.glass.withOpacity(0.1),
-                        appColors.glass.withOpacity(0.05),
+                        Colors.white.withValues(alpha: 0.1),
+                        Colors.white.withValues(alpha: 0.05),
                         Colors.transparent,
                       ],
                     ),
                   ),
                 ),
-                FadeTransition(
-                  opacity: fadeAnimation,
-                  child: SlideTransition(
-                    position: slideAnimation,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: size.width * 0.06,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildModernLogo(),
-                          const SizedBox(height: 60),
-                          verseAsync.when(
+
+                // Content
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: size.width * 0.08),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildModernLogo()
+                          .animate()
+                          .fadeIn(duration: 800.ms)
+                          .slideY(begin: 0.2),
+                      const SizedBox(height: 60),
+
+                      // Bible Verse Section
+                      verseAsync
+                          .when(
                             data: (verse) => _VerseDisplay(
                               reference: verse.reference,
                               text: verse.text,
@@ -195,13 +133,19 @@ class _LoginDesktopView extends ConsumerWidget {
                               ),
                             ),
                             error: (e, s) => const _VerseDisplay(
-                              reference: 'John 3:16',
+                              reference: 'John 15:16',
                               text:
-                                  'For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life.',
+                                  'You did not choose me, but I chose you and appointed you that you should go and bear fruit and that your fruit should abide, so that whatever you ask the Father in my name, he may give it to you',
                             ),
-                          ),
-                          const SizedBox(height: 50),
-                          Wrap(
+                          )
+                          .animate()
+                          .fadeIn(delay: 400.ms, duration: 800.ms)
+                          .slideX(begin: -0.1),
+
+                      const SizedBox(height: 60),
+
+                      // Features
+                      Wrap(
                             spacing: 20,
                             runSpacing: 12,
                             children: [
@@ -209,24 +153,27 @@ class _LoginDesktopView extends ConsumerWidget {
                               _buildFeatureIndicator('Centralized Management'),
                               _buildFeatureIndicator('Insightful Analytics'),
                             ],
-                          ),
-                        ],
-                      ),
-                    ),
+                          )
+                          .animate()
+                          .fadeIn(delay: 800.ms, duration: 800.ms)
+                          .slideY(begin: 0.2),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
         ),
+
+        // Right Panel - Login Form
         Expanded(
           flex: 4,
           child: Container(
             color: appColors.scaffold,
-            child: _LoginForm(
-              scaleAnimation: scaleAnimation,
-              fadeAnimation: fadeAnimation,
-            ),
+            child: const _LoginForm()
+                .animate()
+                .fadeIn(duration: 1000.ms)
+                .slideX(begin: 0.1),
           ),
         ),
       ],
@@ -239,16 +186,19 @@ class _LoginDesktopView extends ConsumerWidget {
       height: 100,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
-        color: Colors.white.withOpacity(0.15),
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+        color: Colors.white.withValues(alpha: 0.15),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             blurRadius: 40,
-            spreadRadius: 10,
+            spreadRadius: 5,
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -262,8 +212,8 @@ class _LoginDesktopView extends ConsumerWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.white.withOpacity(0.2),
-                Colors.white.withOpacity(0.1),
+                Colors.white.withValues(alpha: 0.2),
+                Colors.white.withValues(alpha: 0.1),
               ],
             ),
           ),
@@ -277,18 +227,26 @@ class _LoginDesktopView extends ConsumerWidget {
 
   Widget _buildFeatureIndicator(String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: Colors.white.withOpacity(0.1),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        color: Colors.white.withValues(alpha: 0.1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Text(
         text,
         style: TextStyle(
-          fontSize: 12,
-          color: Colors.white.withOpacity(0.9),
+          fontSize: 13,
+          color: Colors.white.withValues(alpha: 0.95),
           fontWeight: FontWeight.w500,
+          letterSpacing: 0.3,
         ),
       ),
     );
@@ -308,10 +266,10 @@ class _VerseDisplay extends StatelessWidget {
   const _VerseDisplay({
     required this.reference,
     required this.text,
-    this.bookFontSize = 80,
+    this.bookFontSize = 72,
     this.chapterVerseFontSize = 32,
     this.textFontSize = 18,
-    this.boxMaxWidth = 480,
+    this.boxMaxWidth = 500,
     this.boxPadding = const EdgeInsets.all(32),
     this.gapHeight = 30,
   });
@@ -339,6 +297,13 @@ class _VerseDisplay extends StatelessWidget {
                 color: Colors.white,
                 height: 1.0,
                 letterSpacing: -2,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
             ),
             if (chapterVerse.isNotEmpty)
@@ -349,8 +314,15 @@ class _VerseDisplay extends StatelessWidget {
                   style: TextStyle(
                     fontSize: chapterVerseFontSize,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.9),
                     height: 1.0,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -363,24 +335,29 @@ class _VerseDisplay extends StatelessWidget {
           ),
           padding: boxPadding,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            color: Colors.white.withOpacity(0.12),
-            border: Border.all(color: Colors.white.withOpacity(0.2)),
+            borderRadius: BorderRadius.circular(32),
+            color: Colors.white.withValues(alpha: 0.1),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 40,
                 offset: const Offset(0, 20),
               ),
             ],
           ),
-          child: Text(
-            '"$text"',
-            style: TextStyle(
-              fontSize: textFontSize,
-              color: Colors.white.withOpacity(0.95),
-              height: 1.5,
-              fontWeight: FontWeight.w400,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(32),
+            child: Text(
+              '"$text"',
+              style: TextStyle(
+                fontSize: textFontSize,
+                color: Colors.white.withValues(alpha: 0.95),
+                height: 1.6,
+                fontWeight: FontWeight.w400,
+                fontStyle: FontStyle.italic,
+                letterSpacing: 0.3,
+              ),
             ),
           ),
         ),
@@ -390,23 +367,17 @@ class _VerseDisplay extends StatelessWidget {
 }
 
 class _LoginSmallScreenView extends ConsumerWidget {
-  final Animation<double> fadeAnimation;
-  final Animation<Offset> slideAnimation;
-  final Animation<double> scaleAnimation;
   final AnimationController backgroundController;
 
-  const _LoginSmallScreenView({
-    required this.fadeAnimation,
-    required this.slideAnimation,
-    required this.scaleAnimation,
-    required this.backgroundController,
-  });
+  const _LoginSmallScreenView({required this.backgroundController});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
     final verseAsync = ref.watch(bibleVerseProvider);
+    final locale = ref.watch(languageNotifierProvider);
+    final loc = AppLocalization(locale);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width >= 600;
 
@@ -428,51 +399,49 @@ class _LoginSmallScreenView extends ConsumerWidget {
                   animation: backgroundController,
                   builder: (context, child) {
                     return CustomPaint(
-                      painter: _ModernBackgroundPainter(
+                      painter: _UltraModernBackgroundPainter(
                         backgroundController.value,
+                        theme.colorScheme.primary,
                       ),
                       size: Size.infinite,
                     );
                   },
                 ),
-                FadeTransition(
-                  opacity: fadeAnimation,
-                  child: SlideTransition(
-                    position: slideAnimation,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isTablet ? 32.0 : 20.0,
-                      ),
-                      child: SafeArea(
-                        bottom: false,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: isTablet ? 24 : 16),
-                            Container(
-                              width: logoSize,
-                              height: logoSize,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16),
-                                color: Colors.white.withOpacity(0.15),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.3),
-                                ),
-                              ),
-                              child: Center(
-                                child: Image.asset(
-                                  'assets/images/logo.png',
-                                  height: logoIconSize,
-                                ),
-                              ),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isTablet ? 32.0 : 20.0,
+                  ),
+                  child: SafeArea(
+                    bottom: false,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: isTablet ? 24 : 16),
+                        Container(
+                          width: logoSize,
+                          height: logoSize,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            color: Colors.white.withValues(alpha: 0.15),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.3),
                             ),
-                            SizedBox(height: isTablet ? 24 : 16),
-                            Expanded(
-                              child: SingleChildScrollView(
-                                physics: const BouncingScrollPhysics(),
-                                child: Padding(
-                                  padding: const EdgeInsets.only(bottom: 24.0),
-                                  child: verseAsync.when(
+                          ),
+                          child: Center(
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              height: logoIconSize,
+                            ),
+                          ),
+                        ).animate().fadeIn().scale(),
+                        SizedBox(height: isTablet ? 24 : 16),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 24.0),
+                              child: verseAsync
+                                  .when(
                                     data: (verse) => _VerseDisplay(
                                       reference: verse.reference,
                                       text: verse.text,
@@ -497,7 +466,7 @@ class _LoginSmallScreenView extends ConsumerWidget {
                                     ),
                                     error: (e, s) => _VerseDisplay(
                                       reference: 'Ethiopian Genet Church',
-                                      text: 'Welcome to the Ministry.',
+                                      text: loc.welcomeToMinistry,
                                       bookFontSize: isTablet ? 42 : 32,
                                       chapterVerseFontSize: 0,
                                       textFontSize: isTablet ? 15 : 14,
@@ -507,13 +476,14 @@ class _LoginSmallScreenView extends ConsumerWidget {
                                       boxMaxWidth: size.width * 0.85,
                                       gapHeight: 10,
                                     ),
-                                  ),
-                                ),
-                              ),
+                                  )
+                                  .animate()
+                                  .fadeIn(delay: 300.ms)
+                                  .slideY(begin: 0.1),
                             ),
-                          ],
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
@@ -527,10 +497,10 @@ class _LoginSmallScreenView extends ConsumerWidget {
               vertical: isTablet ? 40 : 24,
               horizontal: 16,
             ),
-            child: _LoginForm(
-              scaleAnimation: scaleAnimation,
-              fadeAnimation: fadeAnimation,
-            ),
+            child: const _LoginForm()
+                .animate()
+                .fadeIn(delay: 500.ms)
+                .slideY(begin: 0.1),
           ),
         ],
       ),
@@ -539,14 +509,14 @@ class _LoginSmallScreenView extends ConsumerWidget {
 }
 
 class _LoginForm extends HookConsumerWidget {
-  final Animation<double> scaleAnimation;
-  final Animation<double> fadeAnimation;
-  const _LoginForm({required this.scaleAnimation, required this.fadeAnimation});
+  const _LoginForm();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
+    final locale = ref.watch(languageNotifierProvider);
+    final loc = AppLocalization(locale);
     final width = MediaQuery.of(context).size.width;
     final isSmall = width < 600;
 
@@ -556,6 +526,8 @@ class _LoginForm extends HookConsumerWidget {
     final emailController = useTextEditingController();
     final passwordController = useTextEditingController();
     final passwordFocusNode = useFocusNode();
+
+    // Button animation
     final buttonController = useAnimationController(
       duration: const Duration(milliseconds: 150),
     );
@@ -584,7 +556,9 @@ class _LoginForm extends HookConsumerWidget {
       isLoading.value = true;
       buttonController.forward();
       try {
-        await ref.read(authStateProvider.notifier).login(
+        await ref
+            .read(authStateProvider.notifier)
+            .login(
               emailController.text,
               passwordController.text,
               rememberMe.value,
@@ -596,7 +570,6 @@ class _LoginForm extends HookConsumerWidget {
             title: 'Welcome Back, $firstName!',
             message: 'Login successful. Redirecting to dashboard...',
           );
-          // Small delay to show the notification before navigation
           await Future.delayed(const Duration(milliseconds: 500));
           context.go('/dashboard');
         }
@@ -624,202 +597,227 @@ class _LoginForm extends HookConsumerWidget {
       }
     }
 
-    return ScaleTransition(
-      scale: scaleAnimation,
-      child: FadeTransition(
-        opacity: fadeAnimation,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 440),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: isSmall ? 8.0 : 32.0),
-              child: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: isSmall ? 8.0 : 32.0),
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  loc.welcomeBack,
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    color: appColors.textPrimary,
+                    fontSize: isSmall ? 28 : 36,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -1,
+                  ),
+                ),
+                SizedBox(height: isSmall ? 8 : 12),
+                Text(
+                  loc.signInPrompt,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: appColors.textSecondary,
+                    fontSize: isSmall ? 15 : 16,
+                  ),
+                ),
+                SizedBox(height: isSmall ? 32 : 48),
+
+                // Inputs
+                EmailInput(
+                  controller: emailController,
+                  size: isSmall ? InputSize.medium : InputSize.large,
+                  label: loc.usernameOrEmail,
+                  onFieldSubmitted: (_) =>
+                      FocusScope.of(context).requestFocus(passwordFocusNode),
+                ),
+                SizedBox(height: isSmall ? 16 : 24),
+                PasswordInput(
+                  controller: passwordController,
+                  focusNode: passwordFocusNode,
+                  size: isSmall ? InputSize.medium : InputSize.large,
+                  onFieldSubmitted: (_) => submitForm(),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return loc.passwordRequired;
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: isSmall ? 16 : 24),
+
+                // Remember Me & Forgot Password
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Welcome Back',
-                      style: theme.textTheme.headlineLarge?.copyWith(
-                        color: appColors.textPrimary,
-                        fontSize: isSmall ? 26 : null,
-                      ),
-                    ),
-                    SizedBox(height: isSmall ? 4 : 8),
-                    Text(
-                      'Sign in to access your portal',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: appColors.textSecondary,
-                        fontSize: isSmall ? 14 : null,
-                      ),
-                    ),
-                    SizedBox(height: isSmall ? 32 : 48),
-                    EmailInput(
-                      controller: emailController,
-                      size: isSmall ? InputSize.medium : InputSize.large,
-                      label: 'Username or Email',
-                      onFieldSubmitted: (_) => FocusScope.of(
-                        context,
-                      ).requestFocus(passwordFocusNode),
-                    ),
-                    SizedBox(height: isSmall ? 16 : 20),
-                    PasswordInput(
-                      controller: passwordController,
-                      focusNode: passwordFocusNode,
-                      size: isSmall ? InputSize.medium : InputSize.large,
-                      onFieldSubmitted: (_) => submitForm(),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: isSmall ? 16 : 24),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: Transform.scale(
-                                scale: isSmall ? 0.8 : 0.9,
-                                child: Checkbox(
-                                  value: rememberMe.value,
-                                  onChanged: (val) =>
-                                      rememberMe.value = val ?? false,
-                                  activeColor: theme.colorScheme.primary,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                ),
+                        SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: Transform.scale(
+                            scale: isSmall ? 0.8 : 0.9,
+                            child: Checkbox(
+                              value: rememberMe.value,
+                              onChanged: (val) =>
+                                  rememberMe.value = val ?? false,
+                              activeColor: theme.colorScheme.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Remember me',
-                              style: TextStyle(
-                                fontSize: isSmall ? 13 : 14,
-                                color: appColors.textSecondary,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            context.showInfoNotification(
-                              title: 'Coming Soon',
-                              message:
-                                  'Forgot Password feature is currently being developed.',
-                            );
-                          },
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 4,
-                            ),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child: Text(
-                            'Forgot password?',
-                            style: TextStyle(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: isSmall ? 13 : 14,
-                            ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          loc.rememberMe,
+                          style: TextStyle(
+                            fontSize: isSmall ? 13 : 14,
+                            color: appColors.textSecondary,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: isSmall ? 24 : 32),
-                    Transform.scale(
-                      scale: buttonScale,
-                      child: Container(
-                        width: double.infinity,
-                        height: isSmall ? 48 : 56,
-                        decoration: BoxDecoration(
-                          gradient: appColors.primaryGradient,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: theme.colorScheme.primary.withOpacity(0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
+                    TextButton(
+                      onPressed: () {
+                        context.showInfoNotification(
+                          title: 'Coming Soon',
+                          message:
+                              'Forgot Password feature is currently being developed.',
+                        );
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
                         ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(16),
-                            onTap: submitForm,
-                            child: Center(
-                              child: isLoading.value
-                                  ? SizedBox(
-                                      height: isSmall ? 20 : 24,
-                                      width: isSmall ? 20 : 24,
-                                      child: const CircularProgressIndicator(
-                                        strokeWidth: 2.5,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              Colors.white,
-                                            ),
-                                      ),
-                                    )
-                                  : Text(
-                                      'Sign In',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: isSmall ? 15 : 16,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                            ),
-                          ),
-                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                    ),
-                    SizedBox(height: isSmall ? 24 : 32),
-                    Container(
-                      padding: EdgeInsets.all(isSmall ? 12 : 16),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: theme.colorScheme.primary.withOpacity(0.2),
+                      child: Text(
+                        loc.forgotPassword,
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: isSmall ? 13 : 14,
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Iconsax.message_question,
-                            color: theme.colorScheme.primary,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Need help? Contact your administrator',
-                              style: TextStyle(
-                                color: theme.colorScheme.primary,
-                                fontSize: isSmall ? 13 : 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
+                SizedBox(height: isSmall ? 32 : 40),
+
+                // Submit Button
+                Transform.scale(
+                  scale: buttonScale,
+                  child: Container(
+                    width: double.infinity,
+                    height: isSmall ? 50 : 58,
+                    decoration: BoxDecoration(
+                      gradient: appColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.3,
+                          ),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: submitForm,
+                        child: Center(
+                          child: isLoading.value
+                              ? SizedBox(
+                                  height: isSmall ? 20 : 24,
+                                  width: isSmall ? 20 : 24,
+                                  child: const CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : Text(
+                                  loc.signIn,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: isSmall ? 16 : 18,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: isSmall ? 32 : 40),
+
+                // Help Section
+                Container(
+                  padding: EdgeInsets.all(isSmall ? 16 : 20),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Iconsax.message_question,
+                          color: theme.colorScheme.primary,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              loc.needHelp,
+                              style: TextStyle(
+                                color: appColors.textPrimary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              loc.contactAdmin,
+                              style: TextStyle(
+                                color: appColors.textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -828,38 +826,52 @@ class _LoginForm extends HookConsumerWidget {
   }
 }
 
-class _ModernBackgroundPainter extends CustomPainter {
+class _UltraModernBackgroundPainter extends CustomPainter {
   final double animationValue;
-  _ModernBackgroundPainter(this.animationValue);
+  final Color primaryColor;
+
+  _UltraModernBackgroundPainter(this.animationValue, this.primaryColor);
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.05)
+      ..color = Colors.white.withValues(alpha: 0.05)
       ..style = PaintingStyle.fill;
-    for (int i = 0; i < 8; i++) {
+
+    // Draw dynamic circles
+    for (int i = 0; i < 6; i++) {
       final path = Path();
-      final centerX = size.width * (0.2 + (i * 0.15));
+      final phase = i * (pi / 3);
+      final centerX =
+          size.width * (0.5 + 0.4 * sin(animationValue * 2 * pi + phase));
       final centerY =
-          size.height * (0.3 + sin(animationValue * 2 * pi + i) * 0.2);
-      final radius = 40 + sin(animationValue * pi + i) * 20;
+          size.height * (0.5 + 0.4 * cos(animationValue * 1.5 * pi + phase));
+      final radius = 100 + 50 * sin(animationValue * pi + phase);
+
       path.addOval(
         Rect.fromCircle(center: Offset(centerX, centerY), radius: radius),
       );
       canvas.drawPath(path, paint);
     }
+
+    // Draw connecting lines
     final linePaint = Paint()
-      ..color = Colors.white.withOpacity(0.03)
-      ..strokeWidth = 2
+      ..color = Colors.white.withValues(alpha: 0.02)
+      ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
-    for (int i = 0; i < 5; i++) {
-      final startX = size.width * (0.1 + i * 0.2);
-      final startY = size.height * (0.2 + sin(animationValue * pi + i) * 0.3);
-      final endX = size.width * (0.3 + i * 0.2);
-      final endY = size.height * (0.8 - sin(animationValue * pi + i) * 0.3);
+
+    for (int i = 0; i < 8; i++) {
+      final startX = size.width * (0.1 + i * 0.1);
+      final startY =
+          size.height * (0.2 + 0.1 * sin(animationValue * 2 * pi + i));
+      final endX = size.width * (0.9 - i * 0.1);
+      final endY = size.height * (0.8 + 0.1 * cos(animationValue * 2 * pi + i));
+
       canvas.drawLine(Offset(startX, startY), Offset(endX, endY), linePaint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _UltraModernBackgroundPainter oldDelegate) =>
+      oldDelegate.animationValue != animationValue;
 }

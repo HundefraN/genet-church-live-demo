@@ -20,6 +20,9 @@ import 'package:genet_church_portal/shared_widgets/api_error_widget.dart';
 import 'package:genet_church_portal/state/providers.dart';
 import 'package:genet_church_portal/shared_widgets/page_header.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:genet_church_portal/core/settings/language_provider.dart';
+
+import '../../core/localization/app_localization.dart';
 
 class ReportDepartmentsScreen extends HookConsumerWidget {
   const ReportDepartmentsScreen({super.key});
@@ -30,8 +33,9 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
     final departmentsAsync = ref.watch(departmentsProvider);
     final selectedChurchId = ref.watch(currentChurchProvider);
     final userRole = ref.watch(authStateProvider)?.roleEnum;
+    final locale = ref.watch(languageNotifierProvider);
+    final loc = AppLocalization(locale);
 
-    // Filter state
     final searchQuery = useState('');
 
     return SingleChildScrollView(
@@ -40,45 +44,40 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           PageHeader(
-            title: 'Department Records',
-            description:
-                'Manage all departments within the currently selected church.',
+            title: loc.departmentRecords,
+            description: loc.manageDepartmentsDesc,
             action: userRole == UserRole.PASTOR
                 ? PrimaryButton(
-                    text: 'Add New Department',
-                    icon: Iconsax.add,
-                    onPressed: () async {
-                      if (selectedChurchId == null) {
-                        context.showErrorNotification(
-                          title: 'Action Required',
-                          message:
-                              'Please select a church from the header first.',
-                        );
-                        return;
-                      }
-                      _showAddDepartmentDialog(context, ref);
-                    },
-                  )
+              text: loc.addNewDepartment,
+              icon: Iconsax.add,
+              onPressed: () async {
+                if (selectedChurchId == null) {
+                  context.showErrorNotification(
+                    title: loc.actionRequired,
+                    message: loc.selectChurchFirst,
+                  );
+                  return;
+                }
+                _showAddDepartmentDialog(context, ref, loc);
+              },
+            )
                 : null,
           ),
           const SizedBox(height: 24),
           if (selectedChurchId == null)
-            const NoChurchSelectedState(
-              message:
-                  'Please select a church from the header to manage departments.',
+            NoChurchSelectedState(
+              message: loc.selectChurchManageDepartments,
             )
           else
             Column(
               children: [
-                // Filter Bar
                 AdvancedFilterBar(
-                  searchHint: 'Search by department name...',
+                  searchHint: loc.searchDepartmentHint,
                   searchValue: searchQuery.value,
                   onSearchChanged: (val) => searchQuery.value = val,
                   onClearAll: () => searchQuery.value = '',
                 ),
                 const SizedBox(height: 24),
-                // Content
                 departmentsAsync.when(
                   data: (departments) {
                     final filteredDepartments = departments.where((dept) {
@@ -94,16 +93,21 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
                         searchQuery.value.isNotEmpty,
                         userRole,
                         ref,
+                        loc,
                       );
                     }
 
                     return ModernDataGrid.responsive(
                       context: context,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
+                      mainAxisSpacing: MediaQuery.of(context).size.width < 600
+                          ? 12
+                          : 16,
+                      crossAxisSpacing: MediaQuery.of(context).size.width < 600
+                          ? 12
+                          : 16,
                       children: filteredDepartments.asMap().entries.map((
-                        entry,
-                      ) {
+                          entry,
+                          ) {
                         final index = entry.key;
                         final department = entry.value;
 
@@ -117,36 +121,38 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
                           subtitle: 'ID: ${department.id}',
                           chips: [
                             DataChip(
-                              label: 'Department',
+                              label: loc.department,
                               icon: Iconsax.category,
                               color: theme.colorScheme.primary,
                             ),
                           ],
                           actions: userRole == UserRole.PASTOR
                               ? [
-                                  DataAction(
-                                    label: 'EDIT',
-                                    icon: Iconsax.edit,
-                                    color: theme.colorScheme.primary,
-                                    onPressed: () => _showEditDepartmentDialog(
-                                      context,
-                                      ref,
-                                      department,
-                                    ),
+                            DataAction(
+                              label: loc.edit,
+                              icon: Iconsax.edit,
+                              color: theme.colorScheme.primary,
+                              onPressed: () => _showEditDepartmentDialog(
+                                context,
+                                ref,
+                                department,
+                                loc,
+                              ),
+                            ),
+                            DataAction(
+                              label: loc.delete,
+                              icon: Iconsax.trash,
+                              isDestructive: true,
+                              onPressed: () =>
+                                  _showDeleteConfirmationDialog(
+                                    context,
+                                    ref,
+                                    department.id,
+                                    department.name,
+                                    loc,
                                   ),
-                                  DataAction(
-                                    label: 'DELETE',
-                                    icon: Iconsax.trash,
-                                    isDestructive: true,
-                                    onPressed: () =>
-                                        _showDeleteConfirmationDialog(
-                                          context,
-                                          ref,
-                                          department.id,
-                                          department.name,
-                                        ),
-                                  ),
-                                ]
+                            ),
+                          ]
                               : null,
                         );
                       }).toList(),
@@ -169,11 +175,12 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
   }
 
   Widget _buildEmptyState(
-    BuildContext context,
-    bool hasFilters,
-    UserRole? userRole,
-    WidgetRef ref,
-  ) {
+      BuildContext context,
+      bool hasFilters,
+      UserRole? userRole,
+      WidgetRef ref,
+      AppLocalization loc,
+      ) {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
 
@@ -188,8 +195,8 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    theme.colorScheme.secondary.withOpacity(0.1),
-                    theme.colorScheme.secondary.withOpacity(0.05),
+                    theme.colorScheme.secondary.withValues(alpha: 0.1),
+                    theme.colorScheme.secondary.withValues(alpha: 0.05),
                   ],
                 ),
                 shape: BoxShape.circle,
@@ -197,14 +204,14 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
               child: Icon(
                 hasFilters ? Iconsax.search_zoom_out : Iconsax.folder_open,
                 size: 48,
-                color: theme.colorScheme.secondary.withOpacity(0.6),
+                color: theme.colorScheme.secondary.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 24),
             Text(
               hasFilters
-                  ? 'No Departments Match Your Search'
-                  : 'No Departments Found',
+                  ? loc.noDepartmentsMatch
+                  : loc.noDepartmentsFound,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: appColors.textPrimary,
@@ -214,10 +221,10 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
             const SizedBox(height: 12),
             Text(
               hasFilters
-                  ? 'Try adjusting your search terms.'
+                  ? loc.adjustSearchTerms
                   : userRole == UserRole.PASTOR
-                  ? 'Add your first department to organize your servants.'
-                  : 'No departments have been created for this church yet.',
+                  ? loc.addFirstDepartmentDesc
+                  : loc.noDepartmentsYet,
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: appColors.textSecondary,
               ),
@@ -226,9 +233,9 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
             if (!hasFilters && userRole == UserRole.PASTOR) ...[
               const SizedBox(height: 24),
               PrimaryButton(
-                text: 'Add First Department',
+                text: loc.addFirstDepartment,
                 icon: Iconsax.add,
-                onPressed: () => _showAddDepartmentDialog(context, ref),
+                onPressed: () => _showAddDepartmentDialog(context, ref, loc),
               ),
             ],
           ],
@@ -237,30 +244,30 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
     );
   }
 
-  void _showAddDepartmentDialog(BuildContext context, WidgetRef ref) {
+  void _showAddDepartmentDialog(BuildContext context, WidgetRef ref, AppLocalization loc) {
     final nameController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Add New Department'),
+        title: Text(loc.addNewDepartment),
         content: Form(
           key: formKey,
           child: ModernInput(
             controller: nameController,
-            label: 'Department Name',
+            label: loc.departmentName,
             prefixIcon: Iconsax.folder,
-            validator: (v) => v!.trim().isEmpty ? 'Name is required' : null,
+            validator: (v) => v!.trim().isEmpty ? loc.required : null,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => context.pop(),
-            child: const Text('Cancel'),
+            child: Text(loc.cancel),
           ),
           PrimaryButton(
-            text: 'Add Department',
+            text: loc.addDepartment,
             onPressedAsync: () async {
               if (formKey.currentState?.validate() ?? false) {
                 try {
@@ -269,16 +276,16 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
                       .addDepartment(name: nameController.text);
                   if (context.mounted) {
                     context.showSuccessNotification(
-                      title: 'Success',
+                      title: loc.success,
                       message:
-                          'Department "${nameController.text}" added successfully.',
+                      loc.departmentAddedSuccess.replaceAll('{name}', nameController.text),
                     );
                     context.pop();
                   }
                 } catch (e) {
                   if (context.mounted) {
                     context.showErrorNotification(
-                      title: 'Failed to Add',
+                      title: loc.error,
                       message: e is DioException
                           ? (e.response?.data['message'] ?? 'An error occurred')
                           : 'An unknown error occurred.',
@@ -294,54 +301,55 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
   }
 
   void _showEditDepartmentDialog(
-    BuildContext context,
-    WidgetRef ref,
-    Department department,
-  ) {
+      BuildContext context,
+      WidgetRef ref,
+      Department department,
+      AppLocalization loc,
+      ) {
     final nameController = TextEditingController(text: department.name);
     final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Edit "${department.name}"'),
+        title: Text(loc.editDepartment.replaceAll('{name}', department.name)),
         content: Form(
           key: formKey,
           child: ModernInput(
             controller: nameController,
-            label: 'Department Name',
+            label: loc.departmentName,
             prefixIcon: Iconsax.folder,
-            validator: (v) => v!.trim().isEmpty ? 'Name is required' : null,
+            validator: (v) => v!.trim().isEmpty ? loc.required : null,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => context.pop(),
-            child: const Text('Cancel'),
+            child: Text(loc.cancel),
           ),
           PrimaryButton(
-            text: 'Save Changes',
+            text: loc.saveChanges,
             onPressedAsync: () async {
               if (formKey.currentState?.validate() ?? false) {
                 try {
                   await ref
                       .read(departmentsProvider.notifier)
                       .updateDepartment(
-                        departmentId: department.id,
-                        name: nameController.text,
-                      );
+                    departmentId: department.id,
+                    name: nameController.text,
+                  );
                   if (context.mounted) {
                     context.showSuccessNotification(
-                      title: 'Success',
-                      message: 'Department updated successfully.',
+                      title: loc.success,
+                      message: loc.departmentUpdatedSuccess,
                     );
                     context.pop();
                   }
                 } catch (e) {
                   if (context.mounted) {
                     context.showErrorNotification(
-                      title: 'Update Failed',
-                      message: 'Could not update department. Please try again.',
+                      title: loc.error,
+                      message: loc.failedUpdate,
                     );
                   }
                 }
@@ -354,22 +362,23 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
   }
 
   void _showDeleteConfirmationDialog(
-    BuildContext context,
-    WidgetRef ref,
-    String departmentId,
-    String departmentName,
-  ) {
+      BuildContext context,
+      WidgetRef ref,
+      String departmentId,
+      String departmentName,
+      AppLocalization loc,
+      ) {
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Confirm Deletion'),
+          title: Text(loc.confirmDeletion),
           content: Text(
-            'Are you sure you want to delete the department "$departmentName"? This action cannot be undone.',
+            loc.confirmDepartmentDeletion.replaceAll('{name}', departmentName),
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(loc.cancel),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
@@ -378,7 +387,7 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.error,
               ),
-              child: const Text('Delete'),
+              child: Text(loc.delete),
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
                 try {
@@ -387,15 +396,15 @@ class ReportDepartmentsScreen extends HookConsumerWidget {
                       .removeDepartment(departmentId);
                   if (context.mounted) {
                     context.showSuccessNotification(
-                      title: 'Deleted',
-                      message: 'Department "$departmentName" was removed.',
+                      title: loc.deleted,
+                      message: loc.departmentRemoved.replaceAll('{name}', departmentName),
                     );
                   }
                 } catch (e) {
                   if (context.mounted) {
                     context.showErrorNotification(
-                      title: 'Error',
-                      message: 'Could not delete department. Please try again.',
+                      title: loc.error,
+                      message: loc.failedDeleteDepartment,
                     );
                   }
                 }

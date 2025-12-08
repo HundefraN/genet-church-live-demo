@@ -2,24 +2,30 @@ import 'dashboard_base_model.dart';
 
 class SuperAdminDashboardStats extends DashboardStatsBase {
   final String timeframe;
-  final DashboardTotals totals;
-  final DashboardNewInTimeframe newInTimeframe;
-  final DashboardDistributions distributions;
+  final DashboardTotals? totals;
+  final DashboardNewInTimeframe? newInTimeframe;
+  final DashboardDistributions? distributions;
 
   SuperAdminDashboardStats({
     required this.timeframe,
-    required this.totals,
-    required this.newInTimeframe,
-    required this.distributions,
+    this.totals,
+    this.newInTimeframe,
+    this.distributions,
   });
 
   factory SuperAdminDashboardStats.fromJson(Map<String, dynamic> json) {
     return SuperAdminDashboardStats(
       timeframe: json['timeframe'] as String? ?? 'all',
       // FIX: Map directly from root JSON because backend returns flat structure
-      totals: DashboardTotals.fromJson(json),
-      newInTimeframe: DashboardNewInTimeframe.fromJson(json),
-      distributions: DashboardDistributions.fromJson(json),
+      totals: json['totals'] != null
+          ? DashboardTotals.fromJson(json['totals'])
+          : null,
+      newInTimeframe: json['newInTimeframe'] != null
+          ? DashboardNewInTimeframe.fromJson(json['newInTimeframe'])
+          : null,
+      distributions: json['distributions'] != null
+          ? DashboardDistributions.fromJson(json['distributions'])
+          : null,
     );
   }
 }
@@ -39,7 +45,9 @@ class DashboardTotals {
 
   factory DashboardTotals.fromJson(Map<String, dynamic> json) {
     // FIX: Look for keys either at root OR inside 'totals' to be safe
-    final source = json.containsKey('totals') ? (json['totals'] as Map<String, dynamic>) : json;
+    final source = json.containsKey('totals')
+        ? (json['totals'] as Map<String, dynamic>)
+        : json;
 
     return DashboardTotals(
       totalChurches: source['totalChurches'] as int? ?? 0,
@@ -65,7 +73,9 @@ class DashboardNewInTimeframe {
 
   factory DashboardNewInTimeframe.fromJson(Map<String, dynamic> json) {
     // FIX: Look for keys either at root OR inside 'newInTimeframe'
-    final source = json.containsKey('newInTimeframe') ? (json['newInTimeframe'] as Map<String, dynamic>) : json;
+    final source = json.containsKey('newInTimeframe')
+        ? (json['newInTimeframe'] as Map<String, dynamic>)
+        : json;
 
     return DashboardNewInTimeframe(
       newChurches: source['newChurches'] as int?,
@@ -89,7 +99,9 @@ class DashboardDistributions {
 
   factory DashboardDistributions.fromJson(Map<String, dynamic> json) {
     // FIX: Look for keys either at root OR inside 'distributions'
-    final source = json.containsKey('distributions') ? (json['distributions'] as Map<String, dynamic>) : json;
+    final source = json.containsKey('distributions')
+        ? (json['distributions'] as Map<String, dynamic>)
+        : json;
 
     return DashboardDistributions(
       membersByGender: Map<String, int>.from(source['membersByGender'] ?? {}),

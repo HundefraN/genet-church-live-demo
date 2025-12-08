@@ -198,7 +198,7 @@ class _ModernButtonState extends State<ModernButton>
         return 4;
       }),
       shadowColor: WidgetStateProperty.all(
-        colorConfig.shadow?.withOpacity(0.3),
+        colorConfig.shadow?.withValues(alpha: 0.3),
       ),
     );
   }
@@ -245,11 +245,11 @@ class _ModernButtonState extends State<ModernButton>
           foreground: Colors.white,
           background: customColor ?? theme.colorScheme.primary,
           hoveredBackground: (customColor ?? theme.colorScheme.primary)
-              .withOpacity(0.9),
+              .withValues(alpha: 0.9),
           pressedBackground: (customColor ?? theme.colorScheme.primary)
-              .withOpacity(0.8),
-          disabledBackground: appColors.textSecondary.withOpacity(0.3),
-          disabledForeground: appColors.textSecondary.withOpacity(0.5),
+              .withValues(alpha: 0.8),
+          disabledBackground: appColors.textSecondary.withValues(alpha: 0.3),
+          disabledForeground: appColors.textSecondary.withValues(alpha: 0.5),
           shadow: customColor ?? theme.colorScheme.primary,
         );
 
@@ -257,10 +257,10 @@ class _ModernButtonState extends State<ModernButton>
         return _ColorConfig(
           foreground: appColors.textPrimary,
           background: appColors.surface,
-          hoveredBackground: appColors.surface.withOpacity(0.8),
-          pressedBackground: appColors.surface.withOpacity(0.6),
-          disabledBackground: appColors.surface.withOpacity(0.3),
-          disabledForeground: appColors.textSecondary.withOpacity(0.5),
+          hoveredBackground: appColors.surface.withValues(alpha: 0.8),
+          pressedBackground: appColors.surface.withValues(alpha: 0.6),
+          disabledBackground: appColors.surface.withValues(alpha: 0.3),
+          disabledForeground: appColors.textSecondary.withValues(alpha: 0.5),
           shadow: appColors.shadow,
         );
 
@@ -269,33 +269,33 @@ class _ModernButtonState extends State<ModernButton>
           foreground: customColor ?? theme.colorScheme.primary,
           background: Colors.transparent,
           hoveredBackground: (customColor ?? theme.colorScheme.primary)
-              .withOpacity(0.05),
+              .withValues(alpha: 0.05),
           pressedBackground: (customColor ?? theme.colorScheme.primary)
-              .withOpacity(0.1),
+              .withValues(alpha: 0.1),
           disabledBackground: Colors.transparent,
-          disabledForeground: appColors.textSecondary.withOpacity(0.5),
+          disabledForeground: appColors.textSecondary.withValues(alpha: 0.5),
           border: customColor ?? theme.colorScheme.primary,
-          disabledBorder: appColors.textSecondary.withOpacity(0.3),
+          disabledBorder: appColors.textSecondary.withValues(alpha: 0.3),
         );
 
       case ButtonVariant.ghost:
         return _ColorConfig(
           foreground: customColor ?? appColors.textPrimary,
           background: Colors.transparent,
-          hoveredBackground: appColors.surface.withOpacity(0.5),
-          pressedBackground: appColors.surface.withOpacity(0.7),
+          hoveredBackground: appColors.surface.withValues(alpha: 0.5),
+          pressedBackground: appColors.surface.withValues(alpha: 0.7),
           disabledBackground: Colors.transparent,
-          disabledForeground: appColors.textSecondary.withOpacity(0.5),
+          disabledForeground: appColors.textSecondary.withValues(alpha: 0.5),
         );
 
       case ButtonVariant.destructive:
         return _ColorConfig(
           foreground: Colors.white,
           background: theme.colorScheme.error,
-          hoveredBackground: theme.colorScheme.error.withOpacity(0.9),
-          pressedBackground: theme.colorScheme.error.withOpacity(0.8),
-          disabledBackground: appColors.textSecondary.withOpacity(0.3),
-          disabledForeground: appColors.textSecondary.withOpacity(0.5),
+          hoveredBackground: theme.colorScheme.error.withValues(alpha: 0.9),
+          pressedBackground: theme.colorScheme.error.withValues(alpha: 0.8),
+          disabledBackground: appColors.textSecondary.withValues(alpha: 0.3),
+          disabledForeground: appColors.textSecondary.withValues(alpha: 0.5),
           shadow: theme.colorScheme.error,
         );
 
@@ -303,10 +303,10 @@ class _ModernButtonState extends State<ModernButton>
         return _ColorConfig(
           foreground: Colors.white,
           background: theme.colorScheme.primary,
-          hoveredBackground: theme.colorScheme.primary.withOpacity(0.9),
-          pressedBackground: theme.colorScheme.primary.withOpacity(0.8),
-          disabledBackground: appColors.textSecondary.withOpacity(0.3),
-          disabledForeground: appColors.textSecondary.withOpacity(0.5),
+          hoveredBackground: theme.colorScheme.primary.withValues(alpha: 0.9),
+          pressedBackground: theme.colorScheme.primary.withValues(alpha: 0.8),
+          disabledBackground: appColors.textSecondary.withValues(alpha: 0.3),
+          disabledForeground: appColors.textSecondary.withValues(alpha: 0.5),
           shadow: theme.colorScheme.primary,
           isGradient: true,
         );
@@ -314,13 +314,13 @@ class _ModernButtonState extends State<ModernButton>
       case ButtonVariant.neon:
         return _ColorConfig(
           foreground: appColors.glowPrimary,
-          background: appColors.surface.withOpacity(0.1),
-          hoveredBackground: appColors.glowPrimary.withOpacity(0.15),
-          pressedBackground: appColors.glowPrimary.withOpacity(0.25),
+          background: appColors.surface.withValues(alpha: 0.1),
+          hoveredBackground: appColors.glowPrimary.withValues(alpha: 0.15),
+          pressedBackground: appColors.glowPrimary.withValues(alpha: 0.25),
           disabledBackground: Colors.transparent,
-          disabledForeground: appColors.textSecondary.withOpacity(0.5),
+          disabledForeground: appColors.textSecondary.withValues(alpha: 0.5),
           border: appColors.glowPrimary,
-          disabledBorder: appColors.textSecondary.withOpacity(0.3),
+          disabledBorder: appColors.textSecondary.withValues(alpha: 0.3),
           shadow: appColors.glowPrimary,
           isNeon: true,
         );
@@ -328,13 +328,13 @@ class _ModernButtonState extends State<ModernButton>
       case ButtonVariant.glass:
         return _ColorConfig(
           foreground: appColors.textPrimary,
-          background: appColors.glass.withOpacity(0.2),
-          hoveredBackground: appColors.glass.withOpacity(0.3),
-          pressedBackground: appColors.glass.withOpacity(0.4),
-          disabledBackground: appColors.surface.withOpacity(0.1),
-          disabledForeground: appColors.textSecondary.withOpacity(0.5),
-          border: appColors.border.withOpacity(0.3),
-          disabledBorder: appColors.textSecondary.withOpacity(0.2),
+          background: appColors.glass.withValues(alpha: 0.2),
+          hoveredBackground: appColors.glass.withValues(alpha: 0.3),
+          pressedBackground: appColors.glass.withValues(alpha: 0.4),
+          disabledBackground: appColors.surface.withValues(alpha: 0.1),
+          disabledForeground: appColors.textSecondary.withValues(alpha: 0.5),
+          border: appColors.border.withValues(alpha: 0.3),
+          disabledBorder: appColors.textSecondary.withValues(alpha: 0.2),
           isGlass: true,
         );
     }

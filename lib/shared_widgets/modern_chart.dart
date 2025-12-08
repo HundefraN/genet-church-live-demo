@@ -39,8 +39,8 @@ class _ModernLineChartState extends State<ModernLineChart> {
     final appColors = theme.extension<AppColors>()!;
     final lineColor = widget.lineColor ?? theme.colorScheme.primary;
     final gradientColors = widget.gradientColors ?? [
-      lineColor.withOpacity(0.3),
-      lineColor.withOpacity(0.1),
+      lineColor.withValues(alpha: 0.3),
+      lineColor.withValues(alpha: 0.1),
     ];
 
     return ModernCard(
@@ -74,7 +74,7 @@ class _ModernLineChartState extends State<ModernLineChart> {
                   horizontalInterval: (widget.maxY - widget.minY) / 4,
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
-                      color: appColors.border.withOpacity(0.3),
+                      color: appColors.border.withValues(alpha: 0.3),
                       strokeWidth: 1,
                     );
                   },
@@ -354,7 +354,7 @@ class _ModernBarChartState extends State<ModernBarChart> {
                           end: Alignment.topCenter,
                           colors: [
                             color,
-                            color.withOpacity(0.7),
+                            color.withValues(alpha: 0.7),
                           ],
                         ),
                         width: isTouched ? 25 : 20,
@@ -377,7 +377,7 @@ class _ModernBarChartState extends State<ModernBarChart> {
                   horizontalInterval: widget.maxY / 4,
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
-                      color: appColors.border.withOpacity(0.3),
+                      color: appColors.border.withValues(alpha: 0.3),
                       strokeWidth: 1,
                     );
                   },
@@ -501,7 +501,7 @@ class _ModernPieChartState extends State<ModernPieChart> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: isTouched 
-                            ? section.color.withOpacity(0.1)
+                            ? section.color.withValues(alpha: 0.1)
                             : appColors.surface,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(

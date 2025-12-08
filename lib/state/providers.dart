@@ -44,7 +44,7 @@ final dashboardStatsProvider = FutureProvider.autoDispose<DashboardStatsBase?>((
 });
 
 @riverpod
-Future<List<UserModel>> users(UsersRef ref) async {
+Future<List<UserModel>> users(Ref ref) async {
   try {
     final users = await ref.watch(apiRepositoryProvider).getUsers();
     return users.data;
@@ -54,7 +54,7 @@ Future<List<UserModel>> users(UsersRef ref) async {
 }
 
 @riverpod
-Future<Pastor?> currentPastor(CurrentPastorRef ref) async {
+Future<Pastor?> currentPastor(Ref ref) async {
   final user = ref.watch(authStateProvider);
 
   if (user == null || user.roleEnum != UserRole.PASTOR) {
@@ -661,7 +661,7 @@ class ActivityLog extends _$ActivityLog {
           }
         } catch (e) {
           // Silently fail for activity log or log error
-          print('Error fetching pastor activities: $e');
+          // Silently fail for activity log or log error
         }
       }
     }
@@ -672,7 +672,7 @@ class ActivityLog extends _$ActivityLog {
 }
 
 @riverpod
-Future<Member> memberDetails(MemberDetailsRef ref, String memberId) {
+Future<Member> memberDetails(Ref ref, String memberId) {
   final churchId = ref.watch(currentChurchProvider);
   if (churchId == null) {
     throw Exception('A church must be selected to view member details.');

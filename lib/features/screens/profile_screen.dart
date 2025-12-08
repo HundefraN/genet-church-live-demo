@@ -109,15 +109,17 @@ class ProfileScreen extends ConsumerWidget {
       );
     }
 
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 16 : 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 40),
+              SizedBox(height: isSmallScreen ? 20 : 40),
               // Ultra-modern avatar with glow effect
               Container(
                     decoration: BoxDecoration(
@@ -137,13 +139,13 @@ class ProfileScreen extends ConsumerWidget {
                           end: Alignment.bottomRight,
                           colors: [
                             theme.colorScheme.primary,
-                            theme.colorScheme.primary.withOpacity(0.7),
+                            theme.colorScheme.primary.withValues(alpha: 0.7),
                             theme.colorScheme.secondary,
                           ],
                         ),
                       ),
                       child: CircleAvatar(
-                        radius: 60,
+                        radius: isSmallScreen ? 40 : 60,
                         backgroundColor: appColors.surface,
                         child: ShaderMask(
                           shaderCallback: (bounds) => LinearGradient(
@@ -154,8 +156,8 @@ class ProfileScreen extends ConsumerWidget {
                           ).createShader(bounds),
                           child: Text(
                             userInitial,
-                            style: const TextStyle(
-                              fontSize: 48,
+                            style: TextStyle(
+                              fontSize: isSmallScreen ? 32 : 48,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
                             ),
@@ -185,6 +187,7 @@ class ProfileScreen extends ConsumerWidget {
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                         letterSpacing: -0.5,
+                        fontSize: isSmallScreen ? 24 : null,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -204,19 +207,21 @@ class ProfileScreen extends ConsumerWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          theme.colorScheme.primary.withOpacity(0.2),
-                          theme.colorScheme.secondary.withOpacity(0.2),
-                          theme.colorScheme.primary.withOpacity(0.1),
+                          theme.colorScheme.primary.withValues(alpha: 0.2),
+                          theme.colorScheme.secondary.withValues(alpha: 0.2),
+                          theme.colorScheme.primary.withValues(alpha: 0.1),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        color: theme.colorScheme.primary.withOpacity(0.3),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.3),
                         width: 1.5,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: theme.colorScheme.primary.withOpacity(0.2),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.2,
+                          ),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -262,7 +267,9 @@ class ProfileScreen extends ConsumerWidget {
                             ],
                           ),
                           if (churchName != null) ...[
-                            Divider(color: appColors.border.withOpacity(0.3)),
+                            Divider(
+                              color: appColors.border.withValues(alpha: 0.3),
+                            ),
                             _ProfileInfoRow(
                               icon: Iconsax.building_4,
                               label: 'Assigned Church',
@@ -273,7 +280,9 @@ class ProfileScreen extends ConsumerWidget {
                               ],
                             ),
                           ],
-                          Divider(color: appColors.border.withOpacity(0.3)),
+                          Divider(
+                            color: appColors.border.withValues(alpha: 0.3),
+                          ),
                           _ProfileInfoRow(
                             icon: Iconsax.key,
                             label: 'Password',
@@ -320,7 +329,7 @@ class ProfileScreen extends ConsumerWidget {
                   .animate()
                   .fadeIn(duration: 500.ms, delay: 500.ms)
                   .slideY(begin: 0.1, curve: Curves.easeOut),
-              const SizedBox(height: 40),
+              SizedBox(height: isSmallScreen ? 20 : 40),
             ],
           ),
         ),
@@ -361,7 +370,7 @@ class _ProfileInfoRowState extends State<_ProfileInfoRow> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           color: _isHovered
-              ? widget.gradientColors[0].withOpacity(0.05)
+              ? widget.gradientColors[0].withValues(alpha: 0.05)
               : Colors.transparent,
         ),
         child: Row(
@@ -376,15 +385,17 @@ class _ProfileInfoRowState extends State<_ProfileInfoRow> {
                   colors: _isHovered
                       ? widget.gradientColors
                       : [
-                          widget.gradientColors[0].withOpacity(0.2),
-                          widget.gradientColors[1].withOpacity(0.1),
+                          widget.gradientColors[0].withValues(alpha: 0.2),
+                          widget.gradientColors[1].withValues(alpha: 0.1),
                         ],
                 ),
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: _isHovered
                     ? [
                         BoxShadow(
-                          color: widget.gradientColors[0].withOpacity(0.3),
+                          color: widget.gradientColors[0].withValues(
+                            alpha: 0.3,
+                          ),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),

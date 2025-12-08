@@ -105,7 +105,7 @@ class _NewItemAnimationWrapperState extends State<NewItemAnimationWrapper>
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: glowColor.withOpacity(0.4 * _glowAnimation.value),
+                      color: glowColor.withValues(alpha: 0.4 * _glowAnimation.value),
                       blurRadius: 20 + (10 * _glowAnimation.value),
                       spreadRadius: 2 * _glowAnimation.value,
                     ),

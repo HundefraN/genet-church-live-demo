@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
 import 'package:genet_church_portal/data/models/dashboard_model.dart';
@@ -7,6 +8,8 @@ import 'package:genet_church_portal/data/models/pastor_dashboard_model.dart';
 import 'package:genet_church_portal/state/providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../../../core/localization/app_localization.dart';
+import 'package:genet_church_portal/core/settings/language_provider.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ChurchesStatCard extends ConsumerWidget {
@@ -14,16 +17,16 @@ class ChurchesStatCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(dashboardStatsProvider);
+    final locale = ref.watch(languageNotifierProvider);
+    final loc = AppLocalization(locale);
     return statsAsync.when(
       data: (stats) {
         if (stats is! SuperAdminDashboardStats) return const SizedBox.shrink();
         return _StatCard(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-          ),
+          gradientColors: const [Color(0xFF667eea), Color(0xFF764ba2)],
           onTap: () => context.go('/report-churchs'),
-          value: stats.totals.totalChurches.toString(),
-          label: 'Total Churches',
+          value: (stats.totals?.totalChurches ?? 0).toString(),
+          label: loc.totalChurches,
           icon: Iconsax.building,
           chart: _buildPieChart(),
         );
@@ -39,19 +42,20 @@ class PastorsStatCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(dashboardStatsProvider);
+    final locale = ref.watch(languageNotifierProvider);
+    final loc = AppLocalization(locale);
     return statsAsync.when(
       data: (stats) {
         if (stats is! SuperAdminDashboardStats) return const SizedBox.shrink();
         return _StatCard(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF11998e), Color(0xFF38ef7d)],
-          ),
+          gradientColors: const [Color(0xFF11998e), Color(0xFF38ef7d)],
           onTap: () => context.go('/report-pastors'),
-          value: '${stats.totals.totalPastors}',
-          subtitle: '${stats.totals.totalChurches} Churches Assigned',
-          label: 'Total Pastors',
+          value: (stats.totals?.totalPastors ?? 0).toString(),
+          subtitle:
+              '${stats.totals?.totalChurches ?? 0} ${loc.churchesAssigned}',
+          label: loc.totalPastors,
           icon: Iconsax.user_octagon,
-          chart: _buildBarChart(stats.totals.totalPastors.toDouble()),
+          chart: _buildBarChart((stats.totals?.totalPastors ?? 0).toDouble()),
         );
       },
       loading: () => const _StatCardLoading(),
@@ -65,23 +69,23 @@ class MembersStatCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(dashboardStatsProvider);
+    final locale = ref.watch(languageNotifierProvider);
+    final loc = AppLocalization(locale);
     return statsAsync.when(
       data: (stats) {
         String value = '0';
-        String label = 'Members';
+        String label = loc.navMembers;
 
         if (stats is SuperAdminDashboardStats) {
-          value = stats.totals.totalMembers.toString();
-          label = 'Total Members';
+          value = (stats.totals?.totalMembers ?? 0).toString();
+          label = loc.totalMembers;
         } else if (stats is PastorDashboardStats) {
-          value = stats.totals.totalMembers.toString();
-          label = 'Your Members';
+          value = (stats.totals?.totalMembers ?? 0).toString();
+          label = loc.yourMembers;
         }
 
         return _StatCard(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFf093fb), Color(0xFFf5576c)],
-          ),
+          gradientColors: const [Color(0xFFf093fb), Color(0xFFf5576c)],
           onTap: () => context.go('/show-members'),
           value: value,
           label: label,
@@ -100,23 +104,23 @@ class ServantsStatCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(dashboardStatsProvider);
+    final locale = ref.watch(languageNotifierProvider);
+    final loc = AppLocalization(locale);
     return statsAsync.when(
       data: (stats) {
         String value = '0';
-        String label = 'Servants';
+        String label = loc.navServants;
 
         if (stats is SuperAdminDashboardStats) {
-          value = stats.totals.totalServants.toString();
-          label = 'Total Servants';
+          value = (stats.totals?.totalServants ?? 0).toString();
+          label = loc.totalServants;
         } else if (stats is PastorDashboardStats) {
-          value = stats.totals.totalServants.toString();
-          label = 'Your Servants';
+          value = (stats.totals?.totalServants ?? 0).toString();
+          label = loc.yourServants;
         }
 
         return _StatCard(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFf5a623), Color(0xFFf76b1c)],
-          ),
+          gradientColors: const [Color(0xFFf5a623), Color(0xFFf76b1c)],
           onTap: () => context.go('/report-servants'),
           value: value,
           label: label,
@@ -135,17 +139,17 @@ class DepartmentsStatCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final departmentsAsync = ref.watch(departmentsProvider);
+    final locale = ref.watch(languageNotifierProvider);
+    final loc = AppLocalization(locale);
     return departmentsAsync.when(
       data: (departments) {
         return _StatCard(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
-          ),
+          gradientColors: const [Color(0xFF4facfe), Color(0xFF00f2fe)],
           onTap: () => context.go('/departments'),
-          value: departments.length.toString(),
-          label: 'Your Departments',
+          value: departments?.length.toString() ?? '0',
+          label: loc.yourDepartments,
           icon: Iconsax.folder_open,
-          chart: _buildBarChart(departments.length.toDouble()),
+          chart: _buildBarChart((departments?.length ?? 0).toDouble()),
         );
       },
       loading: () => const _StatCardLoading(),
@@ -160,33 +164,33 @@ Widget _buildPieChart() {
     height: 80,
     child: PieChart(
       PieChartData(
-        sectionsSpace: 3,
-        centerSpaceRadius: 28,
+        sectionsSpace: 4,
+        centerSpaceRadius: 24,
         startDegreeOffset: -90,
         sections: [
           PieChartSectionData(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             value: 35,
             showTitle: false,
-            radius: 12,
+            radius: 10,
           ),
           PieChartSectionData(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.6),
             value: 25,
             showTitle: false,
-            radius: 12,
+            radius: 10,
           ),
           PieChartSectionData(
-            color: Colors.white.withOpacity(0.5),
+            color: Colors.white.withValues(alpha: 0.4),
             value: 20,
             showTitle: false,
-            radius: 12,
+            radius: 10,
           ),
           PieChartSectionData(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.2),
             value: 20,
             showTitle: false,
-            radius: 12,
+            radius: 10,
           ),
         ],
       ),
@@ -211,9 +215,9 @@ Widget _buildBarChart(double total) {
             barRods: [
               BarChartRodData(
                 toY: total * 0.8,
-                color: Colors.white.withOpacity(0.9),
-                width: 10,
-                borderRadius: const BorderRadius.all(Radius.circular(6)),
+                color: Colors.white.withValues(alpha: 0.9),
+                width: 8,
+                borderRadius: const BorderRadius.all(Radius.circular(4)),
               ),
             ],
           ),
@@ -222,9 +226,9 @@ Widget _buildBarChart(double total) {
             barRods: [
               BarChartRodData(
                 toY: total * 0.6,
-                color: Colors.white.withOpacity(0.7),
-                width: 10,
-                borderRadius: const BorderRadius.all(Radius.circular(6)),
+                color: Colors.white.withValues(alpha: 0.6),
+                width: 8,
+                borderRadius: const BorderRadius.all(Radius.circular(4)),
               ),
             ],
           ),
@@ -233,9 +237,9 @@ Widget _buildBarChart(double total) {
             barRods: [
               BarChartRodData(
                 toY: total * 0.9,
-                color: Colors.white.withOpacity(0.8),
-                width: 10,
-                borderRadius: const BorderRadius.all(Radius.circular(6)),
+                color: Colors.white.withValues(alpha: 0.8),
+                width: 8,
+                borderRadius: const BorderRadius.all(Radius.circular(4)),
               ),
             ],
           ),
@@ -266,7 +270,7 @@ Widget _buildLineChart() {
             isCurved: true,
             curveSmoothness: 0.4,
             color: Colors.white,
-            barWidth: 4,
+            barWidth: 3,
             isStrokeCapRound: true,
             dotData: FlDotData(
               show: true,
@@ -275,7 +279,7 @@ Widget _buildLineChart() {
                     radius: 3,
                     color: Colors.white,
                     strokeWidth: 2,
-                    strokeColor: Colors.white.withOpacity(0.5),
+                    strokeColor: Colors.white.withValues(alpha: 0.5),
                   ),
             ),
             belowBarData: BarAreaData(
@@ -284,8 +288,8 @@ Widget _buildLineChart() {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.white.withOpacity(0.3),
-                  Colors.white.withOpacity(0.1),
+                  Colors.white.withValues(alpha: 0.3),
+                  Colors.white.withValues(alpha: 0.0),
                 ],
               ),
             ),
@@ -297,7 +301,7 @@ Widget _buildLineChart() {
 }
 
 class _StatCard extends StatefulWidget {
-  final Gradient gradient;
+  final List<Color> gradientColors;
   final VoidCallback onTap;
   final String value;
   final String? subtitle;
@@ -306,7 +310,7 @@ class _StatCard extends StatefulWidget {
   final IconData icon;
 
   const _StatCard({
-    required this.gradient,
+    required this.gradientColors,
     required this.onTap,
     required this.value,
     this.subtitle,
@@ -321,160 +325,214 @@ class _StatCard extends StatefulWidget {
 
 class _StatCardState extends State<_StatCard> with TickerProviderStateMixin {
   late AnimationController _hoverController;
-  late AnimationController _pulseController;
 
   @override
   void initState() {
     super.initState();
     _hoverController = AnimationController(
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _pulseController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
     _hoverController.dispose();
-    _pulseController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 800;
+
     return SizedBox(
-      width: 350,
-      height: 170, // Increased height slightly to prevent overflow
-      child: MouseRegion(
-        onEnter: (_) {
-          _hoverController.forward();
-        },
-        onExit: (_) {
-          _hoverController.reverse();
-        },
-        child: AnimatedBuilder(
-          animation: Listenable.merge([_hoverController, _pulseController]),
-          builder: (context, child) {
-            return Transform.scale(
-              scale: 1.0 + (_hoverController.value * 0.02),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: widget.gradient,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(
-                        0.1 + (_hoverController.value * 0.1),
-                      ),
-                      blurRadius: 20 + (_hoverController.value * 10),
-                      offset: Offset(0, 8 + (_hoverController.value * 4)),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
+          width: isMobile ? double.infinity : 350,
+          height: isMobile ? 120 : 180,
+          child: MouseRegion(
+            onEnter: (_) => _hoverController.forward(),
+            onExit: (_) => _hoverController.reverse(),
+            child: AnimatedBuilder(
+              animation: _hoverController,
+              builder: (context, child) {
+                final scale = 1.0 + (_hoverController.value * 0.03);
+                final translateY = -_hoverController.value * 8;
+
+                return Transform(
+                  transform: Matrix4.identity()
+                    ..scale(scale)
+                    ..translate(0.0, translateY),
+                  alignment: Alignment.center,
+                  child: GestureDetector(
                     onTap: widget.onTap,
-                    borderRadius: BorderRadius.circular(20),
                     child: Container(
-                      padding: const EdgeInsets.all(22),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Icon(
-                                        widget.icon,
-                                        color: Colors.white,
-                                        size: 20,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        widget.label,
-                                        style: TextStyle(
-                                          color: Colors.white.withOpacity(0.9),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          letterSpacing: 0.5,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                Flexible(
-                                  child: Text(
-                                    widget.value,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 32, // Adjusted font size
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: -0.5,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                  ),
-                                ),
-                                if (widget.subtitle != null) ...[
-                                  const SizedBox(height: 4),
-                                  Flexible(
-                                    child: Text(
-                                      widget.subtitle!,
-                                      style: TextStyle(
-                                        color: Colors.white.withOpacity(0.8),
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
-                                  ),
-                                ],
-                              ],
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: widget.gradientColors[0].withValues(
+                              alpha: 0.2 + (_hoverController.value * 0.2),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.2),
-                                width: 1,
-                              ),
+                            blurRadius: 20 + (_hoverController.value * 10),
+                            offset: Offset(
+                              0,
+                              10 + (_hoverController.value * 5),
                             ),
-                            child: widget.chart,
+                            spreadRadius: _hoverController.value * 2,
                           ),
                         ],
                       ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: Stack(
+                          children: [
+                            // Background Gradient
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: widget.gradientColors,
+                                ),
+                              ),
+                            ),
+
+                            // Glassmorphism Overlay
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.white.withValues(alpha: 0.1),
+                                    Colors.white.withValues(alpha: 0.05),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            // Content
+                            Padding(
+                              padding: EdgeInsets.all(isMobile ? 12 : 24),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Container(
+                                              padding: EdgeInsets.all(
+                                                isMobile ? 8 : 10,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.2,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(14),
+                                                border: Border.all(
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.2),
+                                                ),
+                                              ),
+                                              child: Icon(
+                                                widget.icon,
+                                                color: Colors.white,
+                                                size: isMobile ? 16 : 20,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                widget.label,
+                                                style: TextStyle(
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.9),
+                                                  fontSize: isMobile ? 11 : 14,
+                                                  fontWeight: FontWeight.w600,
+                                                  letterSpacing: 0.5,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const Spacer(),
+                                        Text(
+                                          widget.value,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: isMobile ? 24 : 36,
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: -1,
+                                            height: 1,
+                                          ),
+                                        ),
+                                        if (widget.subtitle != null) ...[
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            widget.subtitle!,
+                                            style: TextStyle(
+                                              color: Colors.white.withValues(
+                                                alpha: 0.8,
+                                              ),
+                                              fontSize: isMobile ? 9 : 12,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Container(
+                                    padding: EdgeInsets.all(isMobile ? 8 : 12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.2,
+                                        ),
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.05,
+                                          ),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: widget.chart,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
+                );
+              },
+            ),
+          ),
+        )
+        .animate()
+        .fadeIn(duration: 400.ms)
+        .slideY(begin: 0.2, curve: Curves.easeOut);
   }
 }
 
@@ -488,64 +546,11 @@ class _StatCardLoading extends StatelessWidget {
       baseColor: appColors.shimmerBase,
       highlightColor: appColors.shimmerHighlight,
       child: Container(
-        height: 170, // Matched height
+        height: 180,
         width: 350,
-        padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
           color: appColors.surface,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: appColors.scaffold,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        height: 14,
-                        width: 100,
-                        decoration: BoxDecoration(
-                          color: appColors.scaffold,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    height: 32,
-                    width: 70,
-                    decoration: BoxDecoration(
-                      color: appColors.scaffold,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-            Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(
-                color: appColors.scaffold,
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(24),
         ),
       ),
     );
@@ -559,29 +564,34 @@ class _StatCardError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 170, // Matched height
+      height: 180,
       width: 350,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(20),
+        color: Theme.of(
+          context,
+        ).colorScheme.errorContainer.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.error.withValues(alpha: 0.2),
+        ),
       ),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.error_outline,
-              color: Theme.of(context).colorScheme.onErrorContainer,
+              Iconsax.warning_2,
+              color: Theme.of(context).colorScheme.error,
               size: 32,
             ),
             const SizedBox(height: 8),
             Text(
-              'Could not load\n$label data',
+              'Could not load\n$label',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onErrorContainer,
+                color: Theme.of(context).colorScheme.error,
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],

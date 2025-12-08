@@ -142,8 +142,8 @@ class _EmptyState extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    theme.colorScheme.primary.withOpacity(0.1),
-                    theme.colorScheme.primary.withOpacity(0.05),
+                    theme.colorScheme.primary.withValues(alpha: 0.1),
+                    theme.colorScheme.primary.withValues(alpha: 0.05),
                   ],
                 ),
                 shape: BoxShape.circle,
@@ -151,7 +151,7 @@ class _EmptyState extends StatelessWidget {
               child: Icon(
                 icon,
                 size: 48,
-                color: theme.colorScheme.primary.withOpacity(0.6),
+                color: theme.colorScheme.primary.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 24),
@@ -199,7 +199,7 @@ class _ErrorState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: theme.colorScheme.error.withOpacity(0.1),
+                color: theme.colorScheme.error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -267,8 +267,8 @@ class NoChurchSelectedState extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    theme.colorScheme.secondary.withOpacity(0.1),
-                    theme.colorScheme.secondary.withOpacity(0.05),
+                    theme.colorScheme.secondary.withValues(alpha: 0.1),
+                    theme.colorScheme.secondary.withValues(alpha: 0.05),
                   ],
                 ),
                 shape: BoxShape.circle,
@@ -276,7 +276,7 @@ class NoChurchSelectedState extends StatelessWidget {
               child: Icon(
                 Iconsax.building_4,
                 size: 48,
-                color: theme.colorScheme.secondary.withOpacity(0.6),
+                color: theme.colorScheme.secondary.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 24),

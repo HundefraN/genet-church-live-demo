@@ -21,6 +21,9 @@ import 'package:genet_church_portal/state/new_item_provider.dart';
 import 'package:genet_church_portal/state/providers.dart';
 import 'package:genet_church_portal/shared_widgets/page_header.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:genet_church_portal/core/settings/language_provider.dart';
+
+import '../../core/localization/app_localization.dart';
 
 class ReportServantsScreen extends HookConsumerWidget {
   const ReportServantsScreen({super.key});
@@ -34,6 +37,8 @@ class ReportServantsScreen extends HookConsumerWidget {
     final departmentsAsync = ref.watch(departmentsProvider);
     final newlyAddedItemId = ref.watch(newlyAddedItemIdProvider);
     final userRole = ref.watch(authStateProvider)?.roleEnum;
+    final locale = ref.watch(languageNotifierProvider);
+    final loc = AppLocalization(locale);
 
     // Filter states
     final searchQuery = useState('');
@@ -58,32 +63,29 @@ class ReportServantsScreen extends HookConsumerWidget {
           Container(
             margin: const EdgeInsets.only(bottom: 32),
             child: PageHeader(
-              title: 'Servant Records',
-              description:
-                  'Manage all servants within the currently selected church.',
+              title: loc.servantRecords,
+              description: loc.manageServantsDesc,
               action: userRole == UserRole.PASTOR
                   ? PrimaryButton(
-                      text: 'Add New Servant',
-                      icon: Iconsax.add,
-                      onPressed: () async {
-                        if (selectedChurchId == null) {
-                          context.showErrorNotification(
-                            title: 'Action Required',
-                            message:
-                                'Please select a church from the header to add a servant.',
-                          );
-                          return;
-                        }
-                        _showAddServantDialog(context, ref);
-                      },
-                    )
+                text: loc.addNewServant,
+                icon: Iconsax.add,
+                onPressed: () async {
+                  if (selectedChurchId == null) {
+                    context.showErrorNotification(
+                      title: loc.actionRequired,
+                      message: loc.selectChurchAddServant,
+                    );
+                    return;
+                  }
+                  _showAddServantDialog(context, ref, loc);
+                },
+              )
                   : null,
             ),
           ),
           if (selectedChurchId == null)
-            const NoChurchSelectedState(
-              message:
-                  'Please select a church from the header to manage servants.',
+            NoChurchSelectedState(
+              message: loc.selectChurchManageServants,
             )
           else
             _buildServantsList(
@@ -97,6 +99,7 @@ class ReportServantsScreen extends HookConsumerWidget {
               userRole,
               theme,
               appColors,
+              loc,
             ),
         ],
       ),
@@ -104,24 +107,25 @@ class ReportServantsScreen extends HookConsumerWidget {
   }
 
   Widget _buildServantsList(
-    BuildContext context,
-    WidgetRef ref,
-    AsyncValue<List<Servant>> servantsAsync,
-    AsyncValue<List<dynamic>> departmentsAsync,
-    ValueNotifier<String> searchQuery,
-    ValueNotifier<String?> selectedDepartmentId,
-    String? newlyAddedItemId,
-    UserRole? userRole,
-    ThemeData theme,
-    AppColors appColors,
-  ) {
+      BuildContext context,
+      WidgetRef ref,
+      AsyncValue<List<Servant>> servantsAsync,
+      AsyncValue<List<dynamic>> departmentsAsync,
+      ValueNotifier<String> searchQuery,
+      ValueNotifier<String?> selectedDepartmentId,
+      String? newlyAddedItemId,
+      UserRole? userRole,
+      ThemeData theme,
+      AppColors appColors,
+      AppLocalization loc,
+      ) {
     // Build department dropdown options
     final departments = departmentsAsync.valueOrNull ?? [];
     final departmentMap = {for (var d in departments) d.id: d.name};
 
     final filterDropdowns = <FilterDropdownConfig>[
       FilterDropdownConfig(
-        label: 'Department',
+        label: loc.department,
         icon: Iconsax.folder,
         options: departments
             .map((d) => FilterOption(label: d.name, value: d.id))
@@ -135,7 +139,7 @@ class ReportServantsScreen extends HookConsumerWidget {
       children: [
         // Advanced Filter Bar
         AdvancedFilterBar(
-          searchHint: 'Search by name or email...',
+          searchHint: loc.searchServantHint,
           searchValue: searchQuery.value,
           onSearchChanged: (val) => searchQuery.value = val,
           filterDropdowns: filterDropdowns,
@@ -153,8 +157,8 @@ class ReportServantsScreen extends HookConsumerWidget {
               // Search filter
               if (searchQuery.value.isNotEmpty) {
                 final query = searchQuery.value.toLowerCase();
-                final fullName = servant.user?.fullName?.toLowerCase() ?? '';
-                final email = servant.user?.email?.toLowerCase() ?? '';
+                final fullName = servant.user?.fullName.toLowerCase() ?? '';
+                final email = servant.user?.email.toLowerCase() ?? '';
                 if (!fullName.contains(query) && !email.contains(query)) {
                   return false;
                 }
@@ -175,19 +179,24 @@ class ReportServantsScreen extends HookConsumerWidget {
                     selectedDepartmentId.value != null,
                 userRole,
                 ref,
+                loc,
               );
             }
 
             return ModernDataGrid.responsive(
               context: context,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
+              mainAxisSpacing: MediaQuery.of(context).size.width < 600
+                  ? 12
+                  : 16,
+              crossAxisSpacing: MediaQuery.of(context).size.width < 600
+                  ? 12
+                  : 16,
               children: filteredServants.asMap().entries.map((entry) {
                 final index = entry.key;
                 final servant = entry.value;
                 final isNew = servant.id == newlyAddedItemId;
                 final departmentName =
-                    departmentMap[servant.departmentId] ?? 'Unassigned';
+                    departmentMap[servant.departmentId] ?? loc.noneUnassigned;
 
                 return ModernDataCard(
                   index: index,
@@ -209,34 +218,36 @@ class ReportServantsScreen extends HookConsumerWidget {
                   ],
                   actions: userRole == UserRole.PASTOR
                       ? [
-                          DataAction(
-                            label: 'ASSIGN',
-                            icon: Iconsax.building,
-                            color: theme.colorScheme.secondary,
-                            onPressed: () => _showAssignDepartmentDialog(
-                              context,
-                              ref,
-                              servant,
-                            ),
-                          ),
-                          DataAction(
-                            label: 'EDIT',
-                            icon: Iconsax.edit,
-                            color: theme.colorScheme.primary,
-                            onPressed: () =>
-                                _showEditServantDialog(context, ref, servant),
-                          ),
-                          DataAction(
-                            label: 'DELETE',
-                            icon: Iconsax.trash,
-                            isDestructive: true,
-                            onPressed: () => _showDeleteConfirmationDialog(
-                              context,
-                              ref,
-                              servant,
-                            ),
-                          ),
-                        ]
+                    DataAction(
+                      label: loc.assign,
+                      icon: Iconsax.building,
+                      color: theme.colorScheme.secondary,
+                      onPressed: () => _showAssignDepartmentDialog(
+                        context,
+                        ref,
+                        servant,
+                        loc,
+                      ),
+                    ),
+                    DataAction(
+                      label: loc.edit,
+                      icon: Iconsax.edit,
+                      color: theme.colorScheme.primary,
+                      onPressed: () =>
+                          _showEditServantDialog(context, ref, servant, loc),
+                    ),
+                    DataAction(
+                      label: loc.delete,
+                      icon: Iconsax.trash,
+                      isDestructive: true,
+                      onPressed: () => _showDeleteConfirmationDialog(
+                        context,
+                        ref,
+                        servant,
+                        loc,
+                      ),
+                    ),
+                  ]
                       : null,
                 );
               }).toList(),
@@ -255,11 +266,12 @@ class ReportServantsScreen extends HookConsumerWidget {
   }
 
   Widget _buildEmptyState(
-    BuildContext context,
-    bool hasFilters,
-    UserRole? userRole,
-    WidgetRef ref,
-  ) {
+      BuildContext context,
+      bool hasFilters,
+      UserRole? userRole,
+      WidgetRef ref,
+      AppLocalization loc,
+      ) {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
 
@@ -274,8 +286,8 @@ class ReportServantsScreen extends HookConsumerWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    theme.colorScheme.primary.withOpacity(0.1),
-                    theme.colorScheme.primary.withOpacity(0.05),
+                    theme.colorScheme.primary.withValues(alpha: 0.1),
+                    theme.colorScheme.primary.withValues(alpha: 0.05),
                   ],
                 ),
                 shape: BoxShape.circle,
@@ -283,14 +295,14 @@ class ReportServantsScreen extends HookConsumerWidget {
               child: Icon(
                 hasFilters ? Iconsax.search_zoom_out : Iconsax.people,
                 size: 48,
-                color: theme.colorScheme.primary.withOpacity(0.6),
+                color: theme.colorScheme.primary.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 24),
             Text(
               hasFilters
-                  ? 'No Servants Match Your Filters'
-                  : 'No Servants Found',
+                  ? loc.noServantsMatch
+                  : loc.noServantsFound,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: appColors.textPrimary,
@@ -300,10 +312,10 @@ class ReportServantsScreen extends HookConsumerWidget {
             const SizedBox(height: 12),
             Text(
               hasFilters
-                  ? 'Try adjusting your search or filter criteria.'
+                  ? loc.adjustSearchTerms
                   : userRole == UserRole.PASTOR
-                  ? 'Add your first servant to begin building your ministry team.'
-                  : 'There are no servants registered for this church yet.',
+                  ? loc.addFirstServantDesc
+                  : loc.noServantsYet,
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: appColors.textSecondary,
               ),
@@ -312,9 +324,9 @@ class ReportServantsScreen extends HookConsumerWidget {
             if (!hasFilters && userRole == UserRole.PASTOR) ...[
               const SizedBox(height: 24),
               PrimaryButton(
-                text: 'Add First Servant',
+                text: loc.addFirstServant,
                 icon: Iconsax.add,
-                onPressed: () => _showAddServantDialog(context, ref),
+                onPressed: () => _showAddServantDialog(context, ref, loc),
               ),
             ],
           ],
@@ -323,7 +335,7 @@ class ReportServantsScreen extends HookConsumerWidget {
     );
   }
 
-  void _showAddServantDialog(BuildContext context, WidgetRef ref) {
+  void _showAddServantDialog(BuildContext context, WidgetRef ref, AppLocalization loc) {
     final nameController = TextEditingController();
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
@@ -332,7 +344,7 @@ class ReportServantsScreen extends HookConsumerWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Add New Servant'),
+        title: Text(loc.addNewServant),
         content: Form(
           key: formKey,
           child: Column(
@@ -340,20 +352,21 @@ class ReportServantsScreen extends HookConsumerWidget {
             children: [
               ModernInput(
                 controller: nameController,
-                label: 'Full Name',
+                label: loc.fullName,
                 prefixIcon: Iconsax.user,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
+                validator: (v) => v!.isEmpty ? loc.required : null,
               ),
               const SizedBox(height: 20),
               EmailInput(
                 controller: emailController,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
+                label: loc.email,
+                validator: (v) => v!.isEmpty ? loc.required : null,
               ),
               const SizedBox(height: 20),
               PasswordInput(
                 controller: passwordController,
-                label: 'Temporary Password',
-                validator: (v) => v!.length < 6 ? 'Min 6 characters' : null,
+                label: loc.temporaryPassword,
+                validator: (v) => v!.length < 6 ? loc.min6Chars : null,
               ),
             ],
           ),
@@ -361,36 +374,36 @@ class ReportServantsScreen extends HookConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => context.pop(),
-            child: const Text('Cancel'),
+            child: Text(loc.cancel),
           ),
           PrimaryButton(
-            text: 'Add Servant',
+            text: loc.addServant,
             onPressedAsync: () async {
               if (formKey.currentState!.validate()) {
                 try {
                   final newServant = await ref
                       .read(servantsProvider.notifier)
                       .addServant(
-                        fullName: nameController.text,
-                        email: emailController.text,
-                        password: passwordController.text,
-                      );
+                    fullName: nameController.text,
+                    email: emailController.text,
+                    password: passwordController.text,
+                  );
                   ref
                       .read(newlyAddedItemIdProvider.notifier)
                       .set(newServant.id);
                   if (context.mounted) {
                     context.showSuccessNotification(
-                      title: 'Success',
+                      title: loc.success,
                       message:
-                          'Servant "${nameController.text}" added successfully.',
+                      loc.servantAddedSuccess.replaceAll('{name}', nameController.text),
                     );
                     context.pop();
                   }
                 } catch (e) {
                   if (context.mounted) {
                     context.showErrorNotification(
-                      title: 'Error',
-                      message: 'Failed to add servant. Please try again.',
+                      title: loc.error,
+                      message: loc.failedAddServant,
                     );
                   }
                 }
@@ -403,10 +416,11 @@ class ReportServantsScreen extends HookConsumerWidget {
   }
 
   void _showEditServantDialog(
-    BuildContext context,
-    WidgetRef ref,
-    Servant servant,
-  ) {
+      BuildContext context,
+      WidgetRef ref,
+      Servant servant,
+      AppLocalization loc,
+      ) {
     final nameController = TextEditingController(
       text: servant.user?.fullName ?? '',
     );
@@ -415,44 +429,44 @@ class ReportServantsScreen extends HookConsumerWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Edit Servant'),
+        title: Text(loc.editServant),
         content: Form(
           key: formKey,
           child: ModernInput(
             controller: nameController,
-            label: 'New Full Name',
+            label: loc.newFullName,
             prefixIcon: Iconsax.user,
-            validator: (v) => v!.trim().isEmpty ? 'Name is required' : null,
+            validator: (v) => v!.trim().isEmpty ? loc.required : null,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => context.pop(),
-            child: const Text('Cancel'),
+            child: Text(loc.cancel),
           ),
           PrimaryButton(
-            text: 'Save Changes',
+            text: loc.saveChanges,
             onPressedAsync: () async {
               if (formKey.currentState?.validate() ?? false) {
                 try {
                   await ref
                       .read(servantsProvider.notifier)
                       .updateServant(
-                        servantId: servant.id,
-                        fullName: nameController.text,
-                      );
+                    servantId: servant.id,
+                    fullName: nameController.text,
+                  );
                   if (context.mounted) {
                     context.showSuccessNotification(
-                      title: 'Success',
-                      message: 'Servant information has been updated.',
+                      title: loc.success,
+                      message: loc.servantUpdatedSuccess,
                     );
                     context.pop();
                   }
                 } catch (e) {
                   if (context.mounted) {
                     context.showErrorNotification(
-                      title: 'Error',
-                      message: 'Failed to update servant.',
+                      title: loc.error,
+                      message: loc.failedUpdateServant,
                     );
                   }
                 }
@@ -465,27 +479,28 @@ class ReportServantsScreen extends HookConsumerWidget {
   }
 
   void _showDeleteConfirmationDialog(
-    BuildContext context,
-    WidgetRef ref,
-    Servant servant,
-  ) {
+      BuildContext context,
+      WidgetRef ref,
+      Servant servant,
+      AppLocalization loc,
+      ) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Confirm Deletion'),
+        title: Text(loc.confirmDeletion),
         content: Text(
-          'Are you sure you want to delete servant "${servant.user?.fullName ?? ''}"?',
+          loc.confirmServantDeletion.replaceAll('{name}', servant.user?.fullName ?? ''),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: Text(loc.cancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('Delete'),
+            child: Text(loc.delete),
             onPressed: () async {
               Navigator.pop(dialogContext);
               try {
@@ -494,16 +509,16 @@ class ReportServantsScreen extends HookConsumerWidget {
                     .removeServant(servant.id);
                 if (context.mounted) {
                   context.showSuccessNotification(
-                    title: 'Deleted',
+                    title: loc.deleted,
                     message:
-                        'Servant "${servant.user?.fullName ?? ''}" has been removed.',
+                    loc.servantRemoved.replaceAll('{name}', servant.user?.fullName ?? ''),
                   );
                 }
               } catch (e) {
                 if (context.mounted) {
                   context.showErrorNotification(
-                    title: 'Error',
-                    message: 'Failed to remove servant.',
+                    title: loc.error,
+                    message: loc.failedRemoveServant,
                   );
                 }
               }
@@ -515,10 +530,11 @@ class ReportServantsScreen extends HookConsumerWidget {
   }
 
   void _showAssignDepartmentDialog(
-    BuildContext context,
-    WidgetRef ref,
-    Servant servant,
-  ) {
+      BuildContext context,
+      WidgetRef ref,
+      Servant servant,
+      AppLocalization loc,
+      ) {
     final departmentsAsync = ref.watch(departmentsProvider);
 
     showDialog(
@@ -529,53 +545,53 @@ class ReportServantsScreen extends HookConsumerWidget {
             final selectedDepartmentId = useState(servant.departmentId);
 
             return AlertDialog(
-              title: const Text('Assign Department'),
+              title: Text(loc.assignDepartment),
               content: departmentsAsync.when(
                 data: (departments) => ModernDropdown<String>(
-                  hintText: 'Select a Department',
+                  hintText: loc.selectDepartment,
                   icon: Iconsax.folder,
                   value: selectedDepartmentId.value,
                   items: departments
                       .map(
                         (d) =>
-                            DropdownMenuItem(value: d.id, child: Text(d.name)),
-                      )
+                        DropdownMenuItem(value: d.id, child: Text(d.name)),
+                  )
                       .toList(),
                   onChanged: (val) => selectedDepartmentId.value = val,
-                  validator: (v) => v == null ? 'Please select' : null,
+                  validator: (v) => v == null ? loc.required : null,
                 ),
                 loading: () =>
-                    const InlineShimmerLoader(width: 200, height: 48),
-                error: (e, s) => const Text('Could not load departments.'),
+                const InlineShimmerLoader(width: 200, height: 48),
+                error: (e, s) => Text(loc.couldNotLoadDepartments),
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
+                  child: Text(loc.cancel),
                 ),
                 PrimaryButton(
-                  text: 'Assign',
+                  text: loc.assign,
                   onPressedAsync: () async {
                     if (selectedDepartmentId.value == null) return;
                     try {
                       await ref
                           .read(servantsProvider.notifier)
                           .assignToDepartment(
-                            departmentId: selectedDepartmentId.value!,
-                            servantId: servant.id,
-                          );
+                        departmentId: selectedDepartmentId.value!,
+                        servantId: servant.id,
+                      );
                       if (context.mounted) {
                         context.showSuccessNotification(
-                          title: 'Success',
-                          message: 'Department assigned.',
+                          title: loc.success,
+                          message: loc.departmentAssigned,
                         );
                         Navigator.pop(context);
                       }
                     } catch (e) {
                       if (context.mounted) {
                         context.showErrorNotification(
-                          title: 'Error',
-                          message: 'Failed to assign department.',
+                          title: loc.error,
+                          message: loc.failedAssignDepartment,
                         );
                       }
                     }

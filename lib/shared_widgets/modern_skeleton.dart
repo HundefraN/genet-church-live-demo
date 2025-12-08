@@ -40,7 +40,7 @@ class ModernSkeleton extends StatelessWidget {
       onPlay: (controller) => controller.repeat(),
     ).shimmer(
       duration: 1500.ms,
-      color: appColors.shimmerHighlight.withOpacity(0.3),
+      color: appColors.shimmerHighlight.withValues(alpha: 0.3),
     );
   }
 }
@@ -77,7 +77,7 @@ class SkeletonCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: appColors.shadow.withOpacity(0.05),
+            color: appColors.shadow.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -427,7 +427,7 @@ class ModernLoadingIndicator extends StatelessWidget {
           child: CircularProgressIndicator(
             strokeWidth: 3,
             valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            backgroundColor: Colors.white.withOpacity(0.3),
+            backgroundColor: Colors.white.withValues(alpha: 0.3),
           ),
         ).animate(
           onPlay: (controller) => controller.repeat(),
@@ -469,7 +469,7 @@ class LoadingOverlay extends StatelessWidget {
         child,
         if (isLoading)
           Container(
-            color: appColors.scaffold.withOpacity(0.8),
+            color: appColors.scaffold.withValues(alpha: 0.8),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
               child: Center(
@@ -480,7 +480,7 @@ class LoadingOverlay extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: appColors.shadow.withOpacity(0.2),
+                        color: appColors.shadow.withValues(alpha: 0.2),
                         blurRadius: 32,
                         offset: const Offset(0, 16),
                       ),

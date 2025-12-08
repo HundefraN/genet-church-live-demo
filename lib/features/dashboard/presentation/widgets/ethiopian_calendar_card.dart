@@ -43,15 +43,15 @@ class EthiopianCalendarCard extends HookConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            appColors.surface.withOpacity(0.9),
+            appColors.surface.withValues(alpha: 0.9),
             appColors.surface,
           ],
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: appColors.border.withOpacity(0.5)),
+        border: Border.all(color: appColors.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: appColors.shadow.withOpacity(0.1),
+            color: appColors.shadow.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -91,7 +91,7 @@ class EthiopianCalendarCard extends HookConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.1),
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(

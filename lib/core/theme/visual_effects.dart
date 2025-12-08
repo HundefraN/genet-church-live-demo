@@ -15,19 +15,19 @@ class VisualEffects {
   }) {
     return [
       BoxShadow(
-        color: color.withOpacity(intensity),
+        color: color.withValues(alpha: intensity),
         blurRadius: blur,
         spreadRadius: spread,
         offset: Offset.zero,
       ),
       BoxShadow(
-        color: color.withOpacity(intensity * 0.5),
+        color: color.withValues(alpha: intensity * 0.5),
         blurRadius: blur * 1.5,
         spreadRadius: spread * 0.5,
         offset: Offset.zero,
       ),
       BoxShadow(
-        color: color.withOpacity(intensity * 0.25),
+        color: color.withValues(alpha: intensity * 0.25),
         blurRadius: blur * 2,
         spreadRadius: spread * 0.25,
         offset: Offset.zero,
@@ -65,7 +65,7 @@ class VisualEffects {
           customShadows ??
           [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 32,
               offset: const Offset(0, 16),
             ),
@@ -80,19 +80,19 @@ class VisualEffects {
   }) {
     return [
       BoxShadow(
-        color: shadowColor.withOpacity(0.15),
+        color: shadowColor.withValues(alpha: 0.15),
         blurRadius: elevation * 4,
         offset: Offset(0, elevation),
         spreadRadius: -elevation * 0.5,
       ),
       BoxShadow(
-        color: shadowColor.withOpacity(0.12),
+        color: shadowColor.withValues(alpha: 0.12),
         blurRadius: elevation * 2.5,
         offset: Offset(0, elevation * 0.6),
         spreadRadius: -elevation * 0.3,
       ),
       BoxShadow(
-        color: shadowColor.withOpacity(0.08),
+        color: shadowColor.withValues(alpha: 0.08),
         blurRadius: elevation * 1.5,
         offset: Offset(0, elevation * 0.3),
         spreadRadius: -elevation * 0.2,
@@ -108,17 +108,17 @@ class VisualEffects {
   }) {
     return [
       BoxShadow(
-        color: lightShadow.withOpacity(0.2),
+        color: lightShadow.withValues(alpha: 0.2),
         blurRadius: depth * 0.5,
         offset: Offset(-depth * 0.25, -depth * 0.25),
       ),
       BoxShadow(
-        color: darkShadow.withOpacity(0.25),
+        color: darkShadow.withValues(alpha: 0.25),
         blurRadius: depth,
         offset: Offset(depth * 0.5, depth * 0.5),
       ),
       BoxShadow(
-        color: darkShadow.withOpacity(0.15),
+        color: darkShadow.withValues(alpha: 0.15),
         blurRadius: depth * 1.5,
         offset: Offset(depth * 0.75, depth * 0.75),
       ),

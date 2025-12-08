@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:genet_church_portal/core/theme/app_colors.dart';
-import 'package:iconsax/iconsax.dart';
-import 'package:intl/intl.dart';
 
-class ModernDatePicker extends HookWidget {
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:genet_church_portal/core/utils/date_formatter.dart';
+import 'package:genet_church_portal/core/settings/language_provider.dart';
+
+class ModernDatePicker extends HookConsumerWidget {
   final String hintText;
   final IconData icon;
   final DateTime? selectedDate;
@@ -21,14 +23,15 @@ class ModernDatePicker extends HookWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
     final controller = useTextEditingController();
+    final currentLocale = ref.watch(languageNotifierProvider);
 
     useEffect(() {
       final newText = selectedDate != null
-          ? DateFormat.yMMMMd().format(selectedDate!)
+          ? AppDateFormatter.format(selectedDate!, ref)
           : '';
       if (controller.text != newText) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -38,7 +41,7 @@ class ModernDatePicker extends HookWidget {
         });
       }
       return null;
-    }, [selectedDate]);
+    }, [selectedDate, currentLocale]);
 
     return TextFormField(
       controller: controller,
@@ -49,6 +52,7 @@ class ModernDatePicker extends HookWidget {
           initialDate: selectedDate ?? DateTime.now(),
           firstDate: DateTime(1920),
           lastDate: DateTime.now(),
+          locale: currentLocale,
           builder: (context, child) {
             return Theme(
               data: theme.copyWith(

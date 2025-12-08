@@ -10,7 +10,7 @@ part 'search_providers.g.dart';
 final rawSearchQueryProvider = StateProvider<String>((ref) => '');
 
 @riverpod
-Future<String> debouncedSearchQuery(DebouncedSearchQueryRef ref) async {
+Future<String> debouncedSearchQuery(Ref ref) async {
   final query = ref.watch(rawSearchQueryProvider);
   await Future.delayed(const Duration(milliseconds: 400));
   if (query != ref.read(rawSearchQueryProvider)) {
@@ -20,7 +20,7 @@ Future<String> debouncedSearchQuery(DebouncedSearchQueryRef ref) async {
 }
 
 @riverpod
-Future<List<SearchCommand>> searchResults(SearchResultsRef ref) async {
+Future<List<SearchCommand>> searchResults(Ref ref) async {
   final query = ref.watch(debouncedSearchQueryProvider).valueOrNull ?? '';
   final user = ref.watch(authStateProvider);
   final currentRole = user?.roleEnum ?? UserRole.SERVANT;

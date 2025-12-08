@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:genet_church_portal/core/constants.dart';
+import 'package:genet_church_portal/core/settings/language_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:genet_church_portal/data/models/church_model.dart';
@@ -14,6 +15,8 @@ import 'package:genet_church_portal/shared_widgets/notification_system.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:iconsax/iconsax.dart';
 
+import '../../core/localization/app_localization.dart';
+
 class AddChurchScreen extends HookConsumerWidget {
   const AddChurchScreen({super.key});
 
@@ -23,6 +26,8 @@ class AddChurchScreen extends HookConsumerWidget {
     final locationLinkController = useTextEditingController();
     final establishmentDate = useState<DateTime?>(null);
     final formKey = useMemoized(() => GlobalKey<FormState>());
+    final currentLocale = ref.watch(languageNotifierProvider);
+    final l10n = AppLocalization(currentLocale);
 
     void clearForm() {
       nameController.clear();
@@ -33,8 +38,8 @@ class AddChurchScreen extends HookConsumerWidget {
     Future<void> addChurch() async {
       if (!(formKey.currentState?.validate() ?? false)) {
         context.showWarningNotification(
-          title: 'Invalid Form',
-          message: 'Please correct the errors in the form.',
+          title: l10n.invalidForm,
+          message: l10n.correctErrors,
         );
         return;
       }
@@ -54,16 +59,16 @@ class AddChurchScreen extends HookConsumerWidget {
         if (context.mounted) {
           clearForm();
           context.showSuccessNotification(
-            title: 'Success!',
-            message: 'Church added successfully to the database.',
+            title: l10n.success,
+            message: l10n.churchAdded,
           );
           context.go('/report-churchs');
         }
       } catch (e) {
         if (context.mounted) {
           context.showErrorNotification(
-            title: 'Error',
-            message: 'Failed to add church. Please try again.',
+            title: l10n.error,
+            message: l10n.failedAddChurch,
           );
         }
         rethrow;
@@ -75,11 +80,10 @@ class AddChurchScreen extends HookConsumerWidget {
       child: Column(
         children: [
           PageHeader(
-            title: 'New Church Details',
-            description:
-                'Add a new church branch to the database. It will be automatically assigned to the Addis Ababa Head Office.',
+            title: l10n.newChurchDetails,
+            description: l10n.newChurchDesc,
             action: PrimaryButton(
-              text: 'Save Church',
+              text: l10n.saveChurch,
               onPressedAsync: addChurch,
               icon: Iconsax.save_2,
             ),
@@ -91,11 +95,11 @@ class AddChurchScreen extends HookConsumerWidget {
               children: [
                 ModernInput(
                       controller: nameController,
-                      label: 'New Church Name',
+                      label: l10n.churchName,
                       prefixIcon: Iconsax.building,
                       validator: (value) =>
                           value == null || value.trim().isEmpty
-                          ? 'Church name cannot be empty'
+                          ? l10n.churchNameEmpty
                           : null,
                     )
                     .animate()
@@ -104,7 +108,7 @@ class AddChurchScreen extends HookConsumerWidget {
                 const SizedBox(height: 16),
                 ModernInput(
                       controller: locationLinkController,
-                      label: 'Google Maps Link (Optional)',
+                      label: l10n.googleMapsLink,
                       prefixIcon: Iconsax.map_1,
                     )
                     .animate()
@@ -112,7 +116,7 @@ class AddChurchScreen extends HookConsumerWidget {
                     .slideY(begin: 0.1, curve: Curves.easeOut),
                 const SizedBox(height: 16),
                 ModernDatePicker(
-                  hintText: 'Establishment Date (Optional)',
+                  hintText: l10n.establishmentDateOptional,
                   icon: Iconsax.calendar_1,
                   selectedDate: establishmentDate.value,
                   onDateSelected: (date) {
@@ -122,7 +126,7 @@ class AddChurchScreen extends HookConsumerWidget {
                 const SizedBox(height: 32),
                 Row(
                   children: [
-                    SecondaryButton(text: 'Clear Form', onPressed: clearForm),
+                    SecondaryButton(text: l10n.clearForm, onPressed: clearForm),
                   ],
                 ).animate().fadeIn(duration: 400.ms, delay: 300.ms),
               ],

@@ -8,7 +8,11 @@ import 'package:genet_church_portal/shared_widgets/modern_card.dart';
 import 'package:genet_church_portal/state/providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:genet_church_portal/core/utils/date_formatter.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../core/localization/app_localization.dart';
+
+import 'package:genet_church_portal/core/settings/language_provider.dart';
 
 class ActivityLogScreen extends ConsumerWidget {
   const ActivityLogScreen({super.key});
@@ -18,24 +22,24 @@ class ActivityLogScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
     final activitiesAsync = ref.watch(activityLogProvider);
+    final locale = ref.watch(languageNotifierProvider);
+    final loc = AppLocalization(locale);
 
     return activitiesAsync.when(
       data: (activities) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const PageHeader(
-              title: 'Activity Log',
-              description:
-                  'A chronological list of all major events and changes in the system.',
+            PageHeader(
+              title: loc.activityLog,
+              description: loc.activityLogDesc,
             ),
             const SizedBox(height: 24),
             if (activities.isEmpty)
               EmptyState(
                 icon: Iconsax.activity,
-                title: 'No Activities Yet',
-                subtitle:
-                    'Activity logs will appear here as actions are performed in the system.',
+                title: loc.noActivitiesYet,
+                subtitle: loc.noActivitiesDesc,
               ).animate().fadeIn(duration: 600.ms).scale(delay: 200.ms)
             else
               ListView.builder(
@@ -59,8 +63,12 @@ class ActivityLogScreen extends ConsumerWidget {
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
-                                    theme.colorScheme.primary.withOpacity(0.2),
-                                    theme.colorScheme.primary.withOpacity(0.1),
+                                    theme.colorScheme.primary.withValues(
+                                      alpha: 0.2,
+                                    ),
+                                    theme.colorScheme.primary.withValues(
+                                      alpha: 0.1,
+                                    ),
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(12),
@@ -91,7 +99,10 @@ class ActivityLogScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  DateFormat.MMMd().format(activity.timestamp),
+                                  AppDateFormatter.formatShort(
+                                    activity.timestamp,
+                                    ref,
+                                  ),
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: appColors.textSecondary,
                                     fontWeight: FontWeight.w600,
@@ -99,10 +110,12 @@ class ActivityLogScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  DateFormat.jm().format(activity.timestamp),
+                                  DateFormat.jm(
+                                    locale.languageCode,
+                                  ).format(activity.timestamp),
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: appColors.textSecondary.withOpacity(
-                                      0.7,
+                                    color: appColors.textSecondary.withValues(
+                                      alpha: 0.7,
                                     ),
                                     fontSize: 11,
                                   ),
@@ -123,25 +136,17 @@ class ActivityLogScreen extends ConsumerWidget {
       loading: () => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const PageHeader(
-            title: 'Activity Log',
-            description:
-                'A chronological list of all major events and changes in the system.',
-          ),
+          PageHeader(title: loc.activityLog, description: loc.activityLogDesc),
           const SizedBox(height: 24),
           const SkeletonList(itemCount: 5),
         ],
       ),
       error: (err, stack) => Column(
         children: [
-          const PageHeader(
-            title: 'Activity Log',
-            description:
-                'A chronological list of all major events and changes in the system.',
-          ),
+          PageHeader(title: loc.activityLog, description: loc.activityLogDesc),
           const SizedBox(height: 24),
           ErrorState(
-            title: 'Failed to Load Activities',
+            title: loc.failedLoadActivities,
             subtitle: err.toString(),
             onRetry: () => ref.refresh(activityLogProvider),
           ),

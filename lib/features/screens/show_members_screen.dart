@@ -18,6 +18,9 @@ import 'package:genet_church_portal/state/providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:genet_church_portal/core/settings/language_provider.dart';
+
+import '../../core/localization/app_localization.dart';
 
 class ShowMembersScreen extends HookConsumerWidget {
   const ShowMembersScreen({super.key});
@@ -28,6 +31,8 @@ class ShowMembersScreen extends HookConsumerWidget {
     final selectedChurchId = ref.watch(currentChurchProvider);
     final membersAsync = ref.watch(membersListProvider);
     final userRole = ref.watch(authStateProvider)?.roleEnum;
+    final locale = ref.watch(languageNotifierProvider);
+    final loc = AppLocalization(locale);
 
     // Filter states
     final searchQuery = useState('');
@@ -58,11 +63,11 @@ class ShowMembersScreen extends HookConsumerWidget {
     // Build gender filter dropdown
     final genderDropdowns = <FilterDropdownConfig>[
       FilterDropdownConfig(
-        label: 'Gender',
+        label: loc.gender,
         icon: Iconsax.user,
         options: [
-          const FilterOption(label: 'Male', value: 'MALE'),
-          const FilterOption(label: 'Female', value: 'FEMALE'),
+          FilterOption(label: loc.male, value: 'MALE'),
+          FilterOption(label: loc.female, value: 'FEMALE'),
         ],
         selectedValue: selectedGender.value,
         onChanged: (val) => selectedGender.value = val,
@@ -72,19 +77,19 @@ class ShowMembersScreen extends HookConsumerWidget {
     // Build status filter chips
     final statusChips = <FilterOption>[
       FilterOption(
-        label: 'New Believer',
+        label: loc.newBeliever,
         value: 'NEW_BELIEVER',
         icon: Iconsax.star,
         isSelected: selectedStatusFilters.value.contains('NEW_BELIEVER'),
       ),
       FilterOption(
-        label: 'Active',
+        label: loc.active,
         value: 'ACTIVE',
         icon: Iconsax.tick_circle,
         isSelected: selectedStatusFilters.value.contains('ACTIVE'),
       ),
       FilterOption(
-        label: 'Inactive',
+        label: loc.inactive,
         value: 'INACTIVE',
         icon: Iconsax.minus_cirlce,
         isSelected: selectedStatusFilters.value.contains('INACTIVE'),
@@ -98,12 +103,11 @@ class ShowMembersScreen extends HookConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           PageHeader(
-            title: 'Member Records',
-            description:
-                'A searchable and filterable list of all registered members in the church.',
+            title: loc.memberRecords,
+            description: loc.memberRecordsDesc,
             action: canManageMembers
                 ? PrimaryButton(
-                    text: 'Add New Member',
+                    text: loc.addNewMember,
                     icon: Iconsax.add,
                     onPressed: () => context.go('/add-members'),
                   )
@@ -111,16 +115,13 @@ class ShowMembersScreen extends HookConsumerWidget {
           ),
           const SizedBox(height: 24),
           if (selectedChurchId == null)
-            const NoChurchSelectedState(
-              message:
-                  'Please select a church from the header to view members.',
-            )
+            NoChurchSelectedState(message: loc.selectChurchHint)
           else
             Column(
               children: [
                 // Advanced Filter Bar
                 AdvancedFilterBar(
-                  searchHint: 'Search by name or phone number...',
+                  searchHint: loc.searchMemberHint,
                   searchValue: searchQuery.value,
                   onSearchChanged: (val) => searchQuery.value = val,
                   filterDropdowns: genderDropdowns,
@@ -222,6 +223,7 @@ class ShowMembersScreen extends HookConsumerWidget {
                                 DataChip(
                                   label: _formatStatus(
                                     member.memberStatus.name,
+                                    loc,
                                   ),
                                   icon: _getStatusIcon(
                                     member.memberStatus.name,
@@ -234,7 +236,7 @@ class ShowMembersScreen extends HookConsumerWidget {
                               ],
                               actions: [
                                 DataAction(
-                                  label: 'VIEW',
+                                  label: loc.view,
                                   icon: Iconsax.eye,
                                   color: theme.colorScheme.primary,
                                   onPressed: () {
@@ -245,7 +247,7 @@ class ShowMembersScreen extends HookConsumerWidget {
                                 ),
                                 if (canManageMembers)
                                   DataAction(
-                                    label: 'DELETE',
+                                    label: loc.delete,
                                     icon: Iconsax.trash,
                                     isDestructive: true,
                                     onPressed: () =>
@@ -297,72 +299,89 @@ class ShowMembersScreen extends HookConsumerWidget {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
 
-    return ModernCard(
-      child: Container(
-        padding: const EdgeInsets.all(64),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    theme.colorScheme.primary.withOpacity(0.1),
-                    theme.colorScheme.primary.withOpacity(0.05),
-                  ],
+    // Use Consumer to get locale
+    return Consumer(
+      builder: (context, ref, child) {
+        final locale = ref.watch(languageNotifierProvider);
+        final loc = AppLocalization(locale);
+
+        return ModernCard(
+          child: Container(
+            padding: const EdgeInsets.all(64),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.colorScheme.primary.withValues(alpha: 0.1),
+                        theme.colorScheme.primary.withValues(alpha: 0.05),
+                      ],
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    hasFilters ? Iconsax.search_zoom_out : Iconsax.people,
+                    size: 48,
+                    color: theme.colorScheme.primary.withValues(alpha: 0.6),
+                  ),
                 ),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                hasFilters ? Iconsax.search_zoom_out : Iconsax.people,
-                size: 48,
-                color: theme.colorScheme.primary.withOpacity(0.6),
-              ),
+                const SizedBox(height: 24),
+                Text(
+                  hasFilters ? loc.noMembersMatch : loc.noMembersFound,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: appColors.textPrimary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  hasFilters
+                      ? loc.adjustFilterCriteria
+                      : canManageMembers
+                      ? loc.addFirstMemberDesc
+                      : loc.noMembersRegistered,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: appColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (!hasFilters && canManageMembers) ...[
+                  const SizedBox(height: 24),
+                  PrimaryButton(
+                    text: loc.addFirstMember,
+                    icon: Iconsax.add,
+                    onPressed: () => GoRouter.of(context).go('/add-members'),
+                  ),
+                ],
+              ],
             ),
-            const SizedBox(height: 24),
-            Text(
-              hasFilters ? 'No Members Match Your Filters' : 'No Members Found',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: appColors.textPrimary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              hasFilters
-                  ? 'Try adjusting your search or filter criteria.'
-                  : canManageMembers
-                  ? 'Add your first member to get started.'
-                  : 'No members have been registered for this church yet.',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: appColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (!hasFilters && canManageMembers) ...[
-              const SizedBox(height: 24),
-              PrimaryButton(
-                text: 'Add First Member',
-                icon: Iconsax.add,
-                onPressed: () => GoRouter.of(context).go('/add-members'),
-              ),
-            ],
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
-  String _formatStatus(String status) {
-    return status
-        .replaceAll('_', ' ')
-        .split(' ')
-        .map((word) {
-          return word[0].toUpperCase() + word.substring(1).toLowerCase();
-        })
-        .join(' ');
+  String _formatStatus(String status, AppLocalization loc) {
+    switch (status) {
+      case 'NEW_BELIEVER':
+        return loc.newBeliever;
+      case 'ACTIVE':
+        return loc.active;
+      case 'INACTIVE':
+        return loc.inactive;
+      default:
+        return status
+            .replaceAll('_', ' ')
+            .split(' ')
+            .map((word) {
+              return word[0].toUpperCase() + word.substring(1).toLowerCase();
+            })
+            .join(' ');
+    }
   }
 
   IconData _getStatusIcon(String status) {
@@ -396,24 +415,26 @@ class ShowMembersScreen extends HookConsumerWidget {
     WidgetRef ref,
     Member member,
   ) {
+    final locale = ref.read(languageNotifierProvider);
+    final loc = AppLocalization(locale);
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Confirm Deletion'),
+          title: Text(loc.confirmDeletion),
           content: Text(
-            'Are you sure you want to delete member "${member.fullName}"? This action cannot be undone.',
+            loc.confirmMemberDeletion.replaceAll('{name}', member.fullName),
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(loc.cancel),
               onPressed: () => Navigator.of(dialogContext).pop(),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.error,
               ),
-              child: const Text('Delete'),
+              child: Text(loc.delete),
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
                 if (member.id == null) return;
@@ -423,15 +444,15 @@ class ShowMembersScreen extends HookConsumerWidget {
                       .removeMember(member.id!);
                   if (context.mounted) {
                     context.showSuccessNotification(
-                      title: 'Success',
-                      message: 'Member deleted successfully.',
+                      title: loc.success,
+                      message: loc.memberDeletedSuccess,
                     );
                   }
                 } catch (e) {
                   if (context.mounted) {
                     context.showErrorNotification(
-                      title: 'Error',
-                      message: 'Failed to delete member.',
+                      title: loc.error,
+                      message: loc.deleteMemberFailed,
                     );
                   }
                 }

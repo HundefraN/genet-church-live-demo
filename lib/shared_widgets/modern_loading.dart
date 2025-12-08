@@ -76,7 +76,7 @@ class _ModernLoadingState extends State<ModernLoading>
           width: size * 4,
           child: LinearProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(loadingColor),
-            backgroundColor: loadingColor.withOpacity(0.2),
+            backgroundColor: loadingColor.withValues(alpha: 0.2),
           ),
         );
         break;
@@ -123,7 +123,7 @@ class _ModernLoadingState extends State<ModernLoading>
                 width: size,
                 height: size,
                 decoration: BoxDecoration(
-                  color: loadingColor.withOpacity(0.8),
+                  color: loadingColor.withValues(alpha: 0.8),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -259,7 +259,7 @@ class LoadingOverlay extends StatelessWidget {
         child,
         if (isLoading)
           Container(
-            color: backgroundColor ?? appColors.scaffold.withOpacity(0.8),
+            color: backgroundColor ?? appColors.scaffold.withValues(alpha: 0.8),
             child: Center(
               child: Container(
                 padding: const EdgeInsets.all(24),
@@ -268,7 +268,7 @@ class LoadingOverlay extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: appColors.shadow.withOpacity(0.1),
+                      color: appColors.shadow.withValues(alpha: 0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -321,7 +321,7 @@ class EmptyState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: (iconColor ?? appColors.textSecondary).withOpacity(0.1),
+                color: (iconColor ?? appColors.textSecondary).withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -405,7 +405,7 @@ class ErrorState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: theme.colorScheme.error.withOpacity(0.1),
+                color: theme.colorScheme.error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(

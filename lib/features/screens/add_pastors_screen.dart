@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:genet_church_portal/core/settings/language_provider.dart';
 import 'package:genet_church_portal/shared_widgets/modern_card.dart';
 import 'package:genet_church_portal/shared_widgets/notification_system.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +11,8 @@ import 'package:genet_church_portal/shared_widgets/page_header.dart';
 import 'package:genet_church_portal/shared_widgets/modern_button.dart';
 import 'package:iconsax/iconsax.dart';
 
+import '../../core/localization/app_localization.dart';
+
 class AddPastorsScreen extends HookConsumerWidget {
   const AddPastorsScreen({super.key});
 
@@ -19,6 +22,8 @@ class AddPastorsScreen extends HookConsumerWidget {
     final emailController = useTextEditingController();
     final passwordController = useTextEditingController();
     final formKey = useMemoized(() => GlobalKey<FormState>());
+    final locale = ref.watch(languageNotifierProvider);
+    final l10n = AppLocalization(locale);
 
     void clearForm() {
       nameController.clear();
@@ -38,8 +43,8 @@ class AddPastorsScreen extends HookConsumerWidget {
               );
           if (context.mounted) {
             context.showSuccessNotification(
-              title: 'Success',
-              message: '${nameController.text} has been added as a pastor.',
+              title: l10n.success,
+              message: '${nameController.text} ${l10n.pastorAddedMessage}',
             );
             clearForm();
             context.go('/report-pastors');
@@ -47,9 +52,8 @@ class AddPastorsScreen extends HookConsumerWidget {
         } catch (e) {
           if (context.mounted) {
             context.showErrorNotification(
-              title: 'Error',
-              message:
-                  'Failed to add pastor. Please check the details and try again.',
+              title: l10n.error,
+              message: l10n.failedAddPastor,
             );
           }
           rethrow;
@@ -62,11 +66,10 @@ class AddPastorsScreen extends HookConsumerWidget {
       child: Column(
         children: [
           PageHeader(
-            title: 'New Pastor Details',
-            description:
-                'Enter the information for the new pastor. An invitation will be sent to their email to complete their profile.',
+            title: l10n.newPastorDetails,
+            description: l10n.newPastorDesc,
             action: PrimaryButton(
-              text: 'Add Pastor',
+              text: l10n.addPastor,
               onPressedAsync: addPastor,
             ),
           ),
@@ -77,23 +80,21 @@ class AddPastorsScreen extends HookConsumerWidget {
               children: [
                 ModernInput(
                   controller: nameController,
-                  label: 'Pastor Full Name',
+                  label: l10n.pastorFullName,
                   prefixIcon: Iconsax.user,
-                  validator: (value) =>
-                      value!.isEmpty ? 'Name cannot be empty' : null,
+                  validator: (value) => value!.isEmpty ? l10n.nameEmpty : null,
                 ),
                 const SizedBox(height: 16),
                 EmailInput(controller: emailController),
                 const SizedBox(height: 16),
                 PasswordInput(
                   controller: passwordController,
-                  label: 'Temporary Password',
-                  validator: (value) => value!.length < 6
-                      ? 'Password must be at least 6 characters'
-                      : null,
+                  label: l10n.temporaryPassword,
+                  validator: (value) =>
+                      value!.length < 6 ? l10n.passwordMin6 : null,
                 ),
                 const SizedBox(height: 32),
-                SecondaryButton(text: 'Clear Form', onPressed: clearForm),
+                SecondaryButton(text: l10n.clearForm, onPressed: clearForm),
               ],
             ),
           ),

@@ -132,16 +132,24 @@ class _AdvancedFilterBarState extends State<AdvancedFilterBar> {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
 
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isSmallScreen ? 12 : 20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [appColors.surface, appColors.surface.withOpacity(0.95)],
+          colors: [
+            appColors.surface,
+            appColors.surface.withValues(alpha: 0.95),
+          ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: appColors.border.withOpacity(0.3), width: 1),
+        border: Border.all(
+          color: appColors.border.withValues(alpha: 0.3),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,7 +168,7 @@ class _AdvancedFilterBarState extends State<AdvancedFilterBar> {
                 ),
               ),
               if (widget.showClearButton && _hasActiveFilters) ...[
-                const SizedBox(width: 12),
+                SizedBox(width: isSmallScreen ? 8 : 12),
                 _ClearAllButton(
                   onPressed: () {
                     _searchController.clear();
@@ -251,7 +259,10 @@ class _SearchFieldState extends State<_SearchField> {
       decoration: BoxDecoration(
         color: appColors.scaffold,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: appColors.border.withOpacity(0.5), width: 1),
+        border: Border.all(
+          color: appColors.border.withValues(alpha: 0.5),
+          width: 1,
+        ),
       ),
       child: TextField(
         controller: widget.controller,
@@ -320,7 +331,7 @@ class _FilterChipWidget extends StatelessWidget {
               ? LinearGradient(
                   colors: [
                     theme.colorScheme.primary,
-                    theme.colorScheme.primary.withOpacity(0.8),
+                    theme.colorScheme.primary.withValues(alpha: 0.8),
                   ],
                 )
               : null,
@@ -329,13 +340,13 @@ class _FilterChipWidget extends StatelessWidget {
           border: Border.all(
             color: isSelected
                 ? theme.colorScheme.primary
-                : appColors.border.withOpacity(0.5),
+                : appColors.border.withValues(alpha: 0.5),
             width: 1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: theme.colorScheme.primary.withOpacity(0.3),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -382,17 +393,22 @@ class _FilterDropdown extends StatelessWidget {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
 
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+
     return Container(
-      constraints: const BoxConstraints(minWidth: 160, maxWidth: 220),
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      constraints: BoxConstraints(
+        minWidth: isSmallScreen ? 120 : 160,
+        maxWidth: isSmallScreen ? 160 : 220,
+      ),
+      height: isSmallScreen ? 40 : 44,
+      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 8 : 12),
       decoration: BoxDecoration(
         color: appColors.scaffold,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: config.selectedValue != null
-              ? theme.colorScheme.primary.withOpacity(0.5)
-              : appColors.border.withOpacity(0.5),
+              ? theme.colorScheme.primary.withValues(alpha: 0.5)
+              : appColors.border.withValues(alpha: 0.5),
           width: 1,
         ),
       ),
@@ -490,10 +506,10 @@ class _ClearAllButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: theme.colorScheme.error.withOpacity(0.1),
+            color: theme.colorScheme.error.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: theme.colorScheme.error.withOpacity(0.3),
+              color: theme.colorScheme.error.withValues(alpha: 0.3),
               width: 1,
             ),
           ),

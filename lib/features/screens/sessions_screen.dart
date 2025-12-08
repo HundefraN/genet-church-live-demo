@@ -61,12 +61,12 @@ class SessionsScreen extends ConsumerWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    theme.colorScheme.primary.withOpacity(0.1),
-                    theme.colorScheme.secondary.withOpacity(0.05),
+                    theme.colorScheme.primary.withValues(alpha: 0.1),
+                    theme.colorScheme.secondary.withValues(alpha: 0.05),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: appColors.border.withOpacity(0.3)),
+                border: Border.all(color: appColors.border.withValues(alpha: 0.3)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -79,13 +79,13 @@ class SessionsScreen extends ConsumerWidget {
                           gradient: LinearGradient(
                             colors: [
                               theme.colorScheme.primary,
-                              theme.colorScheme.primary.withOpacity(0.8),
+                              theme.colorScheme.primary.withValues(alpha: 0.8),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(14),
                           boxShadow: [
                             BoxShadow(
-                              color: theme.colorScheme.primary.withOpacity(0.3),
+                              color: theme.colorScheme.primary.withValues(alpha: 0.3),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -255,15 +255,15 @@ class _SessionCardState extends State<_SessionCard> {
                           colors: _isHovered || session.isCurrent
                               ? gradientColors
                               : [
-                                  gradientColors[0].withOpacity(0.2),
-                                  gradientColors[1].withOpacity(0.1),
+                                  gradientColors[0].withValues(alpha: 0.2),
+                                  gradientColors[1].withValues(alpha: 0.1),
                                 ],
                         ),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: session.isCurrent || _isHovered
                             ? [
                                 BoxShadow(
-                                  color: gradientColors[0].withOpacity(0.3),
+                                  color: gradientColors[0].withValues(alpha: 0.3),
                                   blurRadius: 16,
                                   offset: const Offset(0, 6),
                                 ),
@@ -412,10 +412,10 @@ class _SessionCardState extends State<_SessionCard> {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: gradientColors[0].withOpacity(0.1),
+                          color: gradientColors[0].withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: gradientColors[0].withOpacity(0.3),
+                            color: gradientColors[0].withValues(alpha: 0.3),
                           ),
                         ),
                         child: Text(

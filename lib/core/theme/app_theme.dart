@@ -38,9 +38,9 @@ class AppTheme {
   static const Color _darkDestructiveRed = Color(0xFFF87171);
   static const Color _darkSuccessGreen = Color(0xFF34D399);
   static const Color _darkWarningOrange = Color(0xFFFBBF24);
-  static const Color _darkSurface = Color(0xFF1E293B);
-  static const Color _darkSurfaceElevated = Color(0xFF334155);
-  static const Color _darkScaffold = Color(0xFF0F172A);
+  static const Color _darkSurface = Color(0xFF121212);
+  static const Color _darkSurfaceElevated = Color(0xFF1E1E1E);
+  static const Color _darkScaffold = Color(0xFF000000);
   static const Color _darkBorder = Color(0xFF475569);
   static const Color _darkBorderSubtle = Color(0xFF334155);
   static const Color _darkTextPrimary = Color(0xFFF8FAFC);

@@ -7,7 +7,7 @@ part of 'search_providers.dart';
 // **************************************************************************
 
 String _$debouncedSearchQueryHash() =>
-    r'b99900120c947a13c8431f7999a6536651044a2e';
+    r'd99c7bb68f092c750e7afb48228c7d5fbc7e7c6c';
 
 /// See also [debouncedSearchQuery].
 @ProviderFor(debouncedSearchQuery)
@@ -24,7 +24,7 @@ final debouncedSearchQueryProvider = AutoDisposeFutureProvider<String>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DebouncedSearchQueryRef = AutoDisposeFutureProviderRef<String>;
-String _$searchResultsHash() => r'9bd9db6279a76d4844ccbb1b7dbce48c29e41d31';
+String _$searchResultsHash() => r'ad16220f0c4a4a5b6156fbe3a18e327a3eda460c';
 
 /// See also [searchResults].
 @ProviderFor(searchResults)

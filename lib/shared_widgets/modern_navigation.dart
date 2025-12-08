@@ -28,7 +28,7 @@ class ModernNavigation extends ConsumerStatefulWidget {
 class _ModernNavigationState extends ConsumerState<ModernNavigation>
     with TickerProviderStateMixin {
   late AnimationController _expandController;
-  late Animation<double> _expandAnimation;
+
   String? _expandedItem;
   String _currentPath = '/dashboard';
 
@@ -38,10 +38,6 @@ class _ModernNavigationState extends ConsumerState<ModernNavigation>
     _expandController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
-    );
-    _expandAnimation = CurvedAnimation(
-      parent: _expandController,
-      curve: Curves.easeInOut,
     );
   }
 
@@ -68,31 +64,29 @@ class _ModernNavigationState extends ConsumerState<ModernNavigation>
     final appColors = theme.extension<AppColors>()!;
     final user = ref.watch(authStateProvider);
     final currentLocation = GoRouterState.of(context).uri.path;
-    
+
     if (currentLocation != _currentPath) {
       _currentPath = currentLocation;
     }
 
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+
     return Container(
-      width: widget.isCollapsed ? 80 : 280,
+      width: widget.isCollapsed
+          ? (isSmallScreen ? 60 : 80)
+          : (isSmallScreen ? 220 : 280),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            appColors.surface,
-            appColors.surfaceElevated,
-          ],
+          colors: [appColors.surface, appColors.surfaceElevated],
         ),
         border: Border(
-          right: BorderSide(
-            color: appColors.borderSubtle,
-            width: 1,
-          ),
+          right: BorderSide(color: appColors.borderSubtle, width: 1),
         ),
         boxShadow: [
           BoxShadow(
-            color: appColors.shadow.withOpacity(0.08),
+            color: appColors.shadow.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(4, 0),
           ),
@@ -101,22 +95,17 @@ class _ModernNavigationState extends ConsumerState<ModernNavigation>
       child: Column(
         children: [
           _buildHeader(theme, appColors, user),
-          Expanded(
-            child: _buildMenuItems(theme, appColors, user),
-          ),
+          Expanded(child: _buildMenuItems(theme, appColors, user)),
           _buildFooter(theme, appColors),
         ],
       ),
-    ).animate().slideX(
-      begin: -1,
-      duration: 400.ms,
-      curve: Curves.easeOutCubic,
-    );
+    ).animate().slideX(begin: -1, duration: 400.ms, curve: Curves.easeOutCubic);
   }
 
   Widget _buildHeader(ThemeData theme, AppColors appColors, UserModel? user) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
       child: Column(
         children: [
           if (!widget.isCollapsed) ...[
@@ -127,17 +116,13 @@ class _ModernNavigationState extends ConsumerState<ModernNavigation>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.colorScheme.primary.withOpacity(0.3),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
                 ],
               ),
-              child: Icon(
-                Iconsax.building_4,
-                color: Colors.white,
-                size: 32,
-              ),
+              child: Icon(Iconsax.building_4, color: Colors.white, size: 32),
             ).animate().scale(delay: 200.ms, duration: 300.ms),
             const SizedBox(height: 16),
             Text(
@@ -160,16 +145,11 @@ class _ModernNavigationState extends ConsumerState<ModernNavigation>
                 gradient: appColors.primaryGradient,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(
-                Iconsax.building_4,
-                color: Colors.white,
-                size: 24,
-              ),
+              child: Icon(Iconsax.building_4, color: Colors.white, size: 24),
             ),
           ],
           const SizedBox(height: 24),
-          if (widget.onToggle != null)
-            _buildToggleButton(theme, appColors),
+          if (widget.onToggle != null) _buildToggleButton(theme, appColors),
         ],
       ),
     );
@@ -183,13 +163,10 @@ class _ModernNavigationState extends ConsumerState<ModernNavigation>
         decoration: BoxDecoration(
           color: appColors.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: appColors.border,
-            width: 1,
-          ),
+          border: Border.all(color: appColors.border, width: 1),
           boxShadow: [
             BoxShadow(
-              color: appColors.shadow.withOpacity(0.05),
+              color: appColors.shadow.withValues(alpha: 0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -204,14 +181,19 @@ class _ModernNavigationState extends ConsumerState<ModernNavigation>
     );
   }
 
-  Widget _buildMenuItems(ThemeData theme, AppColors appColors, UserModel? user) {
+  Widget _buildMenuItems(
+    ThemeData theme,
+    AppColors appColors,
+    UserModel? user,
+  ) {
     final filteredItems = widget.menuItems.where((item) {
-      return item.roles.isEmpty || 
-             (user != null && item.roles.contains(user.roleEnum));
+      return item.roles.isEmpty ||
+          (user != null && item.roles.contains(user.roleEnum));
     }).toList();
 
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 8 : 16),
       itemCount: filteredItems.length,
       itemBuilder: (context, index) {
         final item = filteredItems[index];
@@ -220,7 +202,12 @@ class _ModernNavigationState extends ConsumerState<ModernNavigation>
     );
   }
 
-  Widget _buildMenuItem(AppMenuItem item, ThemeData theme, AppColors appColors, int index) {
+  Widget _buildMenuItem(
+    AppMenuItem item,
+    ThemeData theme,
+    AppColors appColors,
+    int index,
+  ) {
     final hasChildren = item.children?.isNotEmpty ?? false;
     final isExpanded = _expandedItem == item.title;
     final isActive = _isItemActive(item);
@@ -231,15 +218,19 @@ class _ModernNavigationState extends ConsumerState<ModernNavigation>
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
             gradient: isActive ? appColors.primaryGradient : null,
-            color: isActive ? null : (isExpanded ? appColors.surfaceElevated : null),
+            color: isActive
+                ? null
+                : (isExpanded ? appColors.surfaceElevated : null),
             borderRadius: BorderRadius.circular(16),
-            boxShadow: isActive ? [
-              BoxShadow(
-                color: theme.colorScheme.primary.withOpacity(0.3),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ] : null,
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
           ),
           child: Material(
             color: Colors.transparent,
@@ -247,20 +238,23 @@ class _ModernNavigationState extends ConsumerState<ModernNavigation>
               onTap: () => _handleMenuTap(item),
               borderRadius: BorderRadius.circular(16),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: isActive 
-                            ? Colors.white.withOpacity(0.2)
+                        color: isActive
+                            ? Colors.white.withValues(alpha: 0.2)
                             : appColors.surface,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
                         item.icon,
-                        color: isActive 
+                        color: isActive
                             ? Colors.white
                             : appColors.textSecondary,
                         size: 20,
@@ -272,17 +266,21 @@ class _ModernNavigationState extends ConsumerState<ModernNavigation>
                         child: Text(
                           item.title,
                           style: theme.textTheme.titleSmall?.copyWith(
-                            color: isActive 
+                            color: isActive
                                 ? Colors.white
                                 : appColors.textPrimary,
-                            fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                            fontWeight: isActive
+                                ? FontWeight.w600
+                                : FontWeight.w500,
                           ),
                         ),
                       ),
                       if (hasChildren)
                         Icon(
-                          isExpanded ? Iconsax.arrow_up_2 : Iconsax.arrow_down_1,
-                          color: isActive 
+                          isExpanded
+                              ? Iconsax.arrow_up_2
+                              : Iconsax.arrow_down_1,
+                          color: isActive
                               ? Colors.white
                               : appColors.textSecondary,
                           size: 16,
@@ -307,7 +305,7 @@ class _ModernNavigationState extends ConsumerState<ModernNavigation>
 
   Widget _buildSubMenu(AppMenuItem item, ThemeData theme, AppColors appColors) {
     final isExpanded = _expandedItem == item.title;
-    
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
@@ -319,58 +317,64 @@ class _ModernNavigationState extends ConsumerState<ModernNavigation>
           decoration: BoxDecoration(
             color: appColors.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: appColors.borderSubtle,
-              width: 1,
-            ),
+            border: Border.all(color: appColors.borderSubtle, width: 1),
           ),
           child: Column(
-            children: item.children?.entries.map((entry) {
-              final isActive = _currentPath == entry.value;
-              return Container(
-                margin: const EdgeInsets.only(bottom: 4),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => context.go(entry.value),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isActive ? appColors.accent.withOpacity(0.1) : null,
+            children:
+                item.children?.entries.map((entry) {
+                  final isActive = _currentPath == entry.value;
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 4),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => context.go(entry.value),
                         borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: isActive 
-                                  ? appColors.accent
-                                  : appColors.textTertiary,
-                              shape: BoxShape.circle,
-                            ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              entry.key,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: isActive 
-                                    ? appColors.accent
-                                    : appColors.textSecondary,
-                                fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? appColors.accent.withValues(alpha: 0.1)
+                                : null,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: isActive
+                                      ? appColors.accent
+                                      : appColors.textTertiary,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  entry.key,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: isActive
+                                        ? appColors.accent
+                                        : appColors.textSecondary,
+                                    fontWeight: isActive
+                                        ? FontWeight.w500
+                                        : FontWeight.w400,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              );
-            }).toList() ?? [],
+                  );
+                }).toList() ??
+                [],
           ),
         ),
       ),
@@ -379,7 +383,7 @@ class _ModernNavigationState extends ConsumerState<ModernNavigation>
 
   Widget _buildFooter(ThemeData theme, AppColors appColors) {
     final user = ref.watch(authStateProvider);
-    
+
     if (widget.isCollapsed) {
       return Container(
         padding: const EdgeInsets.all(16),
@@ -389,31 +393,22 @@ class _ModernNavigationState extends ConsumerState<ModernNavigation>
             color: appColors.surface,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            Iconsax.user,
-            color: appColors.textSecondary,
-            size: 20,
-          ),
+          child: Icon(Iconsax.user, color: appColors.textSecondary, size: 20),
         ),
       );
     }
 
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              appColors.surface,
-              appColors.surfaceElevated,
-            ],
+            colors: [appColors.surface, appColors.surfaceElevated],
           ),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: appColors.borderSubtle,
-            width: 1,
-          ),
+          border: Border.all(color: appColors.borderSubtle, width: 1),
         ),
         child: Row(
           children: [
@@ -423,11 +418,7 @@ class _ModernNavigationState extends ConsumerState<ModernNavigation>
                 gradient: appColors.accentGradient,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
-                Iconsax.user,
-                color: Colors.white,
-                size: 16,
-              ),
+              child: Icon(Iconsax.user, color: Colors.white, size: 16),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -443,7 +434,8 @@ class _ModernNavigationState extends ConsumerState<ModernNavigation>
                     ),
                   ),
                   Text(
-                    user?.roleEnum.name.toLowerCase().replaceAll('_', ' ') ?? 'Role',
+                    user?.roleEnum.name.toLowerCase().replaceAll('_', ' ') ??
+                        'Role',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: appColors.textTertiary,
                     ),

@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genet_church_portal/data/models/church_model.dart';
@@ -34,9 +32,9 @@ class ApiRepository {
   }
 
   Future<PastorDashboardStats> getPastorDashboardStats(
-      String churchId, {
-        String timeframe = 'all',
-      }) async {
+    String churchId, {
+    String timeframe = 'all',
+  }) async {
     final response = await _dio.get(
       '/dashboard/pastor',
       queryParameters: {'churchId': churchId, 'timeframe': timeframe},
@@ -56,10 +54,10 @@ class ApiRepository {
   }
 
   Future<PaginatedResult<Member>> getMembers(
-      String churchId, {
-        int page = 1,
-        int limit = 20,
-      }) async {
+    String churchId, {
+    int page = 1,
+    int limit = 20,
+  }) async {
     try {
       final response = await _dio.get(
         '/church-members',
@@ -266,10 +264,10 @@ class ApiRepository {
   }
 
   Future<PaginatedResult<Servant>> getServants(
-      String churchId, {
-        int page = 1,
-        int limit = 100,
-      }) async {
+    String churchId, {
+    int page = 1,
+    int limit = 100,
+  }) async {
     final response = await _dio.get(
       '/servants',
       queryParameters: {'churchId': churchId, 'page': page, 'limit': limit},
@@ -326,7 +324,7 @@ class ApiRepository {
     final sessionsList = (allSessionsResponse.data as List)
         .map(
           (json) => Session.fromJson(json, currentSessionId: currentSessionId),
-    )
+        )
         .toList();
 
     sessionsList.sort((a, b) => b.createdAt.compareTo(a.createdAt));

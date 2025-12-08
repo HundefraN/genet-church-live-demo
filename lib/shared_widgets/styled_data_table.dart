@@ -18,19 +18,25 @@ class StyledDataTable extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [appColors.surface, appColors.surface.withOpacity(0.98)],
+          colors: [
+            appColors.surface,
+            appColors.surface.withValues(alpha: 0.98),
+          ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: appColors.border.withOpacity(0.2), width: 1),
+        border: Border.all(
+          color: appColors.border.withValues(alpha: 0.2),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: appColors.shadow.withOpacity(0.06),
+            color: appColors.shadow.withValues(alpha: 0.06),
             blurRadius: 32,
             offset: const Offset(0, 12),
             spreadRadius: -4,
           ),
           BoxShadow(
-            color: appColors.shadow.withOpacity(0.03),
+            color: appColors.shadow.withValues(alpha: 0.03),
             blurRadius: 16,
             offset: const Offset(0, 4),
             spreadRadius: -2,
@@ -56,7 +62,8 @@ class StyledDataTable extends StatelessWidget {
                 constraints: BoxConstraints(minWidth: constraints.maxWidth),
                 child: DataTable(
                   headingRowHeight: 64,
-                  dataRowHeight: 72,
+                  dataRowMinHeight: 72,
+                  dataRowMaxHeight: 72,
                   horizontalMargin: 28,
                   columnSpacing: 40,
                   decoration: BoxDecoration(
@@ -64,8 +71,8 @@ class StyledDataTable extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        appColors.scaffold.withOpacity(0.6),
-                        appColors.scaffold.withOpacity(0.8),
+                        appColors.scaffold.withValues(alpha: 0.6),
+                        appColors.scaffold.withValues(alpha: 0.8),
                       ],
                     ),
                   ),
@@ -95,14 +102,18 @@ class StyledDataTable extends StatelessWidget {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  theme.colorScheme.primary.withOpacity(0.08),
-                                  theme.colorScheme.primary.withOpacity(0.04),
+                                  theme.colorScheme.primary.withValues(
+                                    alpha: 0.08,
+                                  ),
+                                  theme.colorScheme.primary.withValues(
+                                    alpha: 0.04,
+                                  ),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: theme.colorScheme.primary.withOpacity(
-                                  0.1,
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.1,
                                 ),
                               ),
                             ),
@@ -120,12 +131,12 @@ class StyledDataTable extends StatelessWidget {
                             Set<WidgetState> states,
                           ) {
                             if (states.contains(WidgetState.hovered)) {
-                              return theme.colorScheme.primary.withOpacity(
-                                0.04,
+                              return theme.colorScheme.primary.withValues(
+                                alpha: 0.04,
                               );
                             }
                             if (entry.key % 2 != 0) {
-                              return appColors.scaffold.withOpacity(0.3);
+                              return appColors.scaffold.withValues(alpha: 0.3);
                             }
                             return Colors.transparent;
                           }),

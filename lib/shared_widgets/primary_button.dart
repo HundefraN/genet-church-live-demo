@@ -109,7 +109,7 @@
 //                   gradient: appColors.primaryGradient,
 //                   boxShadow: [
 //                     BoxShadow(
-//                       color: theme.colorScheme.primary.withOpacity(0.4),
+//                       color: theme.colorScheme.primary.withValues(alpha: 0.4),
 //                       blurRadius: _elevationAnimation.value,
 //                       offset: Offset(0, _elevationAnimation.value / 2),
 //                     ),
@@ -131,7 +131,7 @@
 //                                   gradient: LinearGradient(
 //                                     colors: [
 //                                       Colors.transparent,
-//                                       Colors.white.withOpacity(0.2),
+//                                       Colors.white.withValues(alpha: 0.2),
 //                                       Colors.transparent,
 //                                     ],
 //                                     stops: const [0.0, 0.5, 1.0],
