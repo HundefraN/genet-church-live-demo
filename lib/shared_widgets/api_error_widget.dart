@@ -5,7 +5,8 @@ import 'package:iconsax/iconsax.dart';
 
 class ApiErrorWidget extends StatelessWidget {
   final Object error;
-  const ApiErrorWidget({super.key, required this.error});
+  final VoidCallback? onRetry;
+  const ApiErrorWidget({super.key, required this.error, this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +37,7 @@ class ApiErrorWidget extends StatelessWidget {
     }
 
     return Center(
-      heightFactor: 5,
+      heightFactor: 1.5,
       child: Container(
         padding: const EdgeInsets.all(24),
         constraints: const BoxConstraints(maxWidth: 400),
@@ -59,6 +60,22 @@ class ApiErrorWidget extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(color: appColors.textSecondary),
             ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Iconsax.refresh, size: 18),
+                label: const Text('Try Again'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.error,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
