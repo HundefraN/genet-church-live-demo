@@ -18,9 +18,11 @@
 
   <title>Genet Church Portal</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <style>
     body { background-color: #0d1117; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; }
-    #loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; animation: fade-in 1.5s ease-in-out; transition: opacity 0.5s ease-out; }
+    #loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease-out; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background-color: #0d1117; }
     .logo-glass-container { width: 140px; height: 140px; background: rgba(22, 27, 34, 0.6); border-radius: 28px; border: 1px solid rgba(48, 54, 61, 0.8); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; animation: pulse 2.5s infinite ease-in-out; }
     #loading-logo { width: 80px; height: 80px; }
     #loading-text { color: #c9d1d9; margin-top: 24px; font-size: 18px; font-weight: 300; letter-spacing: 1.5px; min-height: 27px; }
@@ -47,6 +49,16 @@
 </div>
 
 <script>
+  function hideLoadingIndicator() {
+    var loading = document.getElementById('loading-container');
+    if (loading) {
+      loading.style.opacity = '0';
+      setTimeout(function() {
+        loading.remove();
+      }, 500);
+    }
+  }
+
   var scriptLoaded = false;
   function loadMainDartJs() {
       if (scriptLoaded) {

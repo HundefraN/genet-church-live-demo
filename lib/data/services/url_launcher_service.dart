@@ -1,9 +1,15 @@
-import 'dart:html' as html;
+import 'package:url_launcher/url_launcher.dart';
 
 class UrlLauncherService {
-  void openInNewTab(String url) {
-    // Uses the dart:html package to open a new browser tab.
-    // This is the most reliable method for Flutter Web.
-    html.window.open(url, '_blank');
+  Future<void> openInNewTab(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(
+        uri,
+        webOnlyWindowName: '_blank',
+      );
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 }

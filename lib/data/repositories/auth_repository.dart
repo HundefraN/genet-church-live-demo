@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:genet_church_portal/data/models/login_response.dart';
 import 'package:genet_church_portal/data/models/user_model.dart';
 import 'package:genet_church_portal/data/services/api_service.dart';
@@ -9,7 +8,7 @@ import 'package:genet_church_portal/state/church_selection_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final authRepositoryProvider = Provider((ref) {
-  return AuthRepository(ref.watch(dioProvider), const FlutterSecureStorage());
+  return AuthRepository(ref.watch(dioProvider));
 });
 
 final isLoggingOutProvider = StateProvider<bool>((ref) => false);
@@ -62,9 +61,8 @@ class AuthStateNotifier extends StateNotifier<UserModel?> {
 
 class AuthRepository {
   final Dio _dio;
-  final FlutterSecureStorage _storage;
 
-  AuthRepository(this._dio, this._storage);
+  AuthRepository(this._dio);
 
   Future<UserModel> login(
     String email,
@@ -78,17 +76,11 @@ class AuthRepository {
       );
 
       final loginResponse = LoginResponse.fromJson(response.data);
-
-      await _storage.write(
-        key: 'accessToken',
-        value: loginResponse.accessToken,
-      );
-      await _storage.write(
-        key: 'refreshToken',
-        value: loginResponse.refreshToken,
-      );
-
       final prefs = await SharedPreferences.getInstance();
+
+      await prefs.setString('accessToken', loginResponse.accessToken);
+      await prefs.setString('refreshToken', loginResponse.refreshToken);
+
       await prefs.setBool('rememberMe', rememberMe);
       if (rememberMe) {
         await prefs.setString('email', email);
@@ -96,9 +88,9 @@ class AuthRepository {
         await prefs.remove('email');
       }
 
-      await _storage.write(
-        key: 'user',
-        value: jsonEncode(loginResponse.user.toJson()),
+      await prefs.setString(
+        'user',
+        jsonEncode(loginResponse.user.toJson()),
       );
 
       return loginResponse.user;
@@ -111,21 +103,30 @@ class AuthRepository {
     try {
       await _dio.post('/auth/logout');
     } finally {
-      await _storage.deleteAll();
       final prefs = await SharedPreferences.getInstance();
-      if (prefs.getBool('rememberMe') == false) {
-        await prefs.remove('email');
+      // Keep rememberMe and email if set
+      final rememberMe = prefs.getBool('rememberMe') ?? false;
+      final email = prefs.getString('email');
+      
+      await prefs.clear();
+      
+      if (rememberMe) {
+        await prefs.setBool('rememberMe', true);
+        if (email != null) {
+          await prefs.setString('email', email);
+        }
       }
-      await prefs.remove('rememberMe');
     }
   }
 
   Future<String?> getAccessToken() async {
-    return await _storage.read(key: 'accessToken');
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('accessToken');
   }
 
   Future<UserModel?> getCurrentUser() async {
-    final userJson = await _storage.read(key: 'user');
+    final prefs = await SharedPreferences.getInstance();
+    final userJson = prefs.getString('user');
     if (userJson != null) {
       return UserModel.fromJson(jsonDecode(userJson));
     }
@@ -134,7 +135,8 @@ class AuthRepository {
 
   Future<UserModel> fetchAndStoreUserDetails() async {
     final user = await me();
-    await _storage.write(key: 'user', value: jsonEncode(user.toJson()));
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user', jsonEncode(user.toJson()));
     return user;
   }
 

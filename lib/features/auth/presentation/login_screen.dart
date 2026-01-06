@@ -170,7 +170,12 @@ class _LoginDesktopView extends ConsumerWidget {
           flex: 4,
           child: Container(
             color: appColors.scaffold,
-            child: const _LoginForm()
+            child: const SingleChildScrollView(
+              physics: BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
+              child: _LoginForm(),
+            )
                 .animate()
                 .fadeIn(duration: 1000.ms)
                 .slideX(begin: 0.1),
@@ -181,47 +186,77 @@ class _LoginDesktopView extends ConsumerWidget {
   }
 
   Widget _buildModernLogo() {
-    return Container(
-      width: 100,
-      height: 100,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        color: Colors.white.withValues(alpha: 0.15),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.3),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.2),
-            blurRadius: 40,
-            spreadRadius: 5,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(26),
-        child: Container(
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 100,
+          height: 100,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withValues(alpha: 0.2),
-                Colors.white.withValues(alpha: 0.1),
-              ],
+            borderRadius: BorderRadius.circular(28),
+            color: Colors.white.withValues(alpha: 0.15),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.3),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.white.withValues(alpha: 0.2),
+                blurRadius: 40,
+                spreadRadius: 5,
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(26),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.2),
+                    Colors.white.withValues(alpha: 0.1),
+                  ],
+                ),
+              ),
+              child: Center(
+                child: Image.asset('assets/images/logo.png', height: 50, width: 50),
+              ),
             ),
           ),
-          child: Center(
-            child: Image.asset('assets/images/logo.png', height: 50, width: 50),
-          ),
         ),
-      ),
+        const SizedBox(width: 24),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Ethiopian Guenet',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 32,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
+            ),
+            Text(
+              'Church',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: 24,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 4,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -269,7 +304,7 @@ class _VerseDisplay extends StatelessWidget {
     this.bookFontSize = 72,
     this.chapterVerseFontSize = 32,
     this.textFontSize = 18,
-    this.boxMaxWidth = 500,
+    this.boxMaxWidth,
     this.boxPadding = const EdgeInsets.all(32),
     this.gapHeight = 30,
   });
@@ -279,85 +314,94 @@ class _VerseDisplay extends StatelessWidget {
     final parts = reference.split(RegExp(r'\s(?=\d)'));
     final book = parts.length > 1 ? parts[0] : reference;
     final chapterVerse = parts.length > 1 ? parts[1] : '';
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallMobile = screenWidth < 380;
+
+    // Scale font sizes based on screen width
+    final double responsiveBookSize = isSmallMobile ? bookFontSize * 0.8 : bookFontSize;
+    final double responsiveChapterSize = isSmallMobile ? chapterVerseFontSize * 0.8 : chapterVerseFontSize;
+    final double responsiveTextSize = isSmallMobile ? textFontSize * 0.9 : textFontSize;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: max(8.0, bookFontSize * 0.2),
-          runSpacing: 8.0,
-          children: [
-            Text(
-              book,
-              style: TextStyle(
-                fontSize: bookFontSize,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                height: 1.0,
-                letterSpacing: -2,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-            ),
-            if (chapterVerse.isNotEmpty)
-              Padding(
-                padding: EdgeInsets.only(top: bookFontSize * 0.1),
-                child: Text(
-                  chapterVerse,
-                  style: TextStyle(
-                    fontSize: chapterVerseFontSize,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white.withValues(alpha: 0.9),
-                    height: 1.0,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: max(8.0, responsiveBookSize * 0.2),
+            runSpacing: 8.0,
+            children: [
+              Text(
+                book,
+                style: TextStyle(
+                  fontSize: responsiveBookSize,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  height: 1.0,
+                  letterSpacing: -1.5,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
                 ),
               ),
-          ],
+              if (chapterVerse.isNotEmpty)
+                Padding(
+                  padding: EdgeInsets.only(top: responsiveBookSize * 0.1),
+                  child: Text(
+                    chapterVerse,
+                    style: TextStyle(
+                      fontSize: responsiveChapterSize,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white.withValues(alpha: 0.95),
+                      height: 1.0,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
         SizedBox(height: gapHeight),
         Container(
-          constraints: BoxConstraints(
-            maxWidth: boxMaxWidth ?? MediaQuery.of(context).size.width,
-          ),
+          width: boxMaxWidth ?? screenWidth,
           padding: boxPadding,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(32),
-            color: Colors.white.withValues(alpha: 0.1),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+            borderRadius: BorderRadius.circular(24),
+            color: Colors.white.withValues(alpha: 0.12),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.25),
+              width: 1,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 40,
-                offset: const Offset(0, 20),
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 30,
+                offset: const Offset(0, 15),
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(32),
-            child: Text(
-              '"$text"',
-              style: TextStyle(
-                fontSize: textFontSize,
-                color: Colors.white.withValues(alpha: 0.95),
-                height: 1.6,
-                fontWeight: FontWeight.w400,
-                fontStyle: FontStyle.italic,
-                letterSpacing: 0.3,
-              ),
+          child: Text(
+            '"$text"',
+            style: TextStyle(
+              fontSize: responsiveTextSize,
+              color: Colors.white.withValues(alpha: 0.98),
+              height: 1.5,
+              fontWeight: FontWeight.w400,
+              fontStyle: FontStyle.italic,
+              letterSpacing: 0.2,
             ),
           ),
         ),
@@ -381,129 +425,188 @@ class _LoginSmallScreenView extends ConsumerWidget {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width >= 600;
 
-    final double headerHeight = max(size.height * 0.45, 380.0);
-    final double logoSize = isTablet ? 70.0 : 50.0;
-    final double logoIconSize = logoSize * 0.5;
-
-    return SingleChildScrollView(
-      child: Column(
+    return Scaffold(
+      backgroundColor: appColors.scaffold,
+      body: Stack(
         children: [
+          // Fixed Background (remains as base)
           Container(
-            height: headerHeight,
-            width: double.infinity,
-            clipBehavior: Clip.hardEdge,
+            height: size.height,
+            width: size.width,
             decoration: BoxDecoration(gradient: appColors.primaryGradient),
-            child: Stack(
-              children: [
-                AnimatedBuilder(
-                  animation: backgroundController,
-                  builder: (context, child) {
-                    return CustomPaint(
-                      painter: _UltraModernBackgroundPainter(
-                        backgroundController.value,
-                        theme.colorScheme.primary,
-                      ),
-                      size: Size.infinite,
-                    );
-                  },
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isTablet ? 32.0 : 20.0,
+            child: AnimatedBuilder(
+              animation: backgroundController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _UltraModernBackgroundPainter(
+                    backgroundController.value,
+                    theme.colorScheme.primary,
                   ),
-                  child: SafeArea(
-                    bottom: false,
+                  size: Size.infinite,
+                );
+              },
+            ),
+          ),
+
+          // Scrollable Content with Stretch effect
+          CustomScrollView(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+            slivers: [
+              SliverAppBar(
+                expandedHeight: isTablet ? 450 : 380,
+                backgroundColor: Colors.transparent,
+                stretch: true,
+                pinned: false,
+                flexibleSpace: FlexibleSpaceBar(
+                  stretchModes: const [
+                    StretchMode.zoomBackground,
+                    StretchMode.blurBackground,
+                    StretchMode.fadeTitle,
+                  ],
+                  background: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isTablet ? 40.0 : 24.0,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: isTablet ? 24 : 16),
-                        Container(
-                          width: logoSize,
-                          height: logoSize,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            color: Colors.white.withValues(alpha: 0.15),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
-                            ),
+                        const SizedBox(height: 60), // Space for status bar
+                        _buildLogo(isTablet).animate().fadeIn().scale(),
+                        const SizedBox(height: 32),
+                        verseAsync.when(
+                          data: (verse) => _VerseDisplay(
+                            reference: verse.reference,
+                            text: verse.text,
+                            bookFontSize: isTablet ? 48 : 36,
+                            chapterVerseFontSize: isTablet ? 28 : 22,
+                            textFontSize: isTablet ? 16 : 14,
+                            boxPadding: EdgeInsets.all(isTablet ? 24 : 18),
+                            gapHeight: isTablet ? 24 : 16,
                           ),
-                          child: Center(
-                            child: Image.asset(
-                              'assets/images/logo.png',
-                              height: logoIconSize,
-                            ),
-                          ),
-                        ).animate().fadeIn().scale(),
-                        SizedBox(height: isTablet ? 24 : 16),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            physics: const BouncingScrollPhysics(),
+                          loading: () => const Center(
                             child: Padding(
-                              padding: const EdgeInsets.only(bottom: 24.0),
-                              child: verseAsync
-                                  .when(
-                                    data: (verse) => _VerseDisplay(
-                                      reference: verse.reference,
-                                      text: verse.text,
-                                      bookFontSize: isTablet ? 42 : 32,
-                                      chapterVerseFontSize: isTablet ? 24 : 20,
-                                      textFontSize: isTablet ? 15 : 13.5,
-                                      boxPadding: EdgeInsets.all(
-                                        isTablet ? 20 : 16,
-                                      ),
-                                      boxMaxWidth: size.width * 0.85,
-                                      gapHeight: isTablet ? 20 : 12,
-                                    ),
-                                    loading: () => const Center(
-                                      child: SizedBox(
-                                        height: 40,
-                                        width: 40,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                                    ),
-                                    error: (e, s) => _VerseDisplay(
-                                      reference: 'Ethiopian Genet Church',
-                                      text: loc.welcomeToMinistry,
-                                      bookFontSize: isTablet ? 42 : 32,
-                                      chapterVerseFontSize: 0,
-                                      textFontSize: isTablet ? 15 : 14,
-                                      boxPadding: EdgeInsets.all(
-                                        isTablet ? 20 : 16,
-                                      ),
-                                      boxMaxWidth: size.width * 0.85,
-                                      gapHeight: 10,
-                                    ),
-                                  )
-                                  .animate()
-                                  .fadeIn(delay: 300.ms)
-                                  .slideY(begin: 0.1),
+                              padding: EdgeInsets.symmetric(vertical: 40),
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
                             ),
                           ),
-                        ),
+                          error: (e, s) => _VerseDisplay(
+                            reference: 'John 15:16',
+                            text: 'You did not choose me, but I chose you and appointed you that you should go and bear fruit and that your fruit should abide...',
+                            bookFontSize: isTablet ? 48 : 36,
+                            chapterVerseFontSize: isTablet ? 28 : 22,
+                            textFontSize: isTablet ? 16 : 14,
+                            boxPadding: EdgeInsets.all(isTablet ? 24 : 18),
+                            gapHeight: 16,
+                          ),
+                        ).animate().fadeIn(delay: 300.ms).slideX(begin: -0.05),
                       ],
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
-          Container(
-            color: appColors.scaffold,
-            constraints: BoxConstraints(minHeight: size.height * 0.55),
-            padding: EdgeInsets.symmetric(
-              vertical: isTablet ? 40 : 24,
-              horizontal: 16,
-            ),
-            child: const _LoginForm()
-                .animate()
-                .fadeIn(delay: 500.ms)
-                .slideY(begin: 0.1),
+              ),
+
+              // Bottom Section - Login Form Card
+              SliverToBoxAdapter(
+                child: Container(
+                  width: double.infinity,
+                  constraints: BoxConstraints(
+                    minHeight: size.height * 0.6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: appColors.scaffold,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(40),
+                      topRight: Radius.circular(40),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 30,
+                        offset: const Offset(0, -10),
+                      ),
+                    ],
+                  ),
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    40,
+                    20,
+                    MediaQuery.of(context).viewInsets.bottom + 40,
+                  ),
+                  child: const _LoginForm()
+                      .animate()
+                      .fadeIn(delay: 500.ms)
+                      .slideY(begin: 0.1),
+                ),
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLogo(bool isTablet) {
+    final logoSize = isTablet ? 80.0 : 64.0;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: logoSize,
+          height: logoSize,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: Colors.white.withValues(alpha: 0.15),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.3),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Image.asset(
+              'assets/images/logo.png',
+              height: logoSize * 0.55,
+              width: logoSize * 0.55,
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Ethiopian Guenet',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: isTablet ? 24 : 18,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
+            ),
+            Text(
+              'Church',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: isTablet ? 18 : 14,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 2,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -612,18 +715,19 @@ class _LoginForm extends HookConsumerWidget {
                   loc.welcomeBack,
                   style: theme.textTheme.headlineLarge?.copyWith(
                     color: appColors.textPrimary,
-                    fontSize: isSmall ? 28 : 36,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -1,
+                    fontSize: isSmall ? 30 : 36,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1.2,
                   ),
                 ),
-                SizedBox(height: isSmall ? 8 : 12),
+                SizedBox(height: isSmall ? 10 : 12),
                 Text(
                   loc.signInPrompt,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    color: appColors.textSecondary,
+                    color: appColors.textSecondary.withValues(alpha: 0.8),
                     fontSize: isSmall ? 15 : 16,
+                    height: 1.5,
                   ),
                 ),
                 SizedBox(height: isSmall ? 32 : 48),
@@ -667,6 +771,10 @@ class _LoginForm extends HookConsumerWidget {
                               onChanged: (val) =>
                                   rememberMe.value = val ?? false,
                               activeColor: theme.colorScheme.primary,
+                              side: BorderSide(
+                                color: appColors.textSecondary.withValues(alpha: 0.5),
+                                width: 1.5,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(6),
                               ),

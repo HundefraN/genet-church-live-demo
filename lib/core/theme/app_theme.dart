@@ -5,7 +5,7 @@ import 'package:genet_church_portal/core/theme/app_colors.dart';
 
 class AppTheme {
   // Modern Light Theme Colors - Enhanced for 2025
-  static const Color _lightPrimaryBlue = Color(0xFF2563EB);
+  static const Color _lightPrimaryBlue = Color(0xFF7ACDEE);
   static const Color _lightAccentTeal = Color(0xFF06B6D4);
   static const Color _lightAccentPurple = Color(0xFF8B5CF6);
   static const Color _lightDestructiveRed = Color(0xFFEF4444);
@@ -31,32 +31,32 @@ class AppTheme {
   static const Color _lightGlowPurple = Color(0xFFA855F7);
   static const Color _lightGlowTeal = Color(0xFF14B8A6);
 
-  // Modern Dark Theme Colors - Enhanced for 2025
-  static const Color _darkPrimaryBlue = Color(0xFF3B82F6);
-  static const Color _darkAccentTeal = Color(0xFF22D3EE);
-  static const Color _darkAccentPurple = Color(0xFFA855F7);
-  static const Color _darkDestructiveRed = Color(0xFFF87171);
+  // Modern Dark Theme Colors - Super Nice & Realistic for 2026
+  static const Color _darkPrimaryBlue = Color(0xFF7ACDEE);
+  static const Color _darkAccentTeal = Color(0xFF2DD4BF);
+  static const Color _darkAccentPurple = Color(0xFF818CF8);
+  static const Color _darkDestructiveRed = Color(0xFFFB7185);
   static const Color _darkSuccessGreen = Color(0xFF34D399);
   static const Color _darkWarningOrange = Color(0xFFFBBF24);
-  static const Color _darkSurface = Color(0xFF121212);
-  static const Color _darkSurfaceElevated = Color(0xFF1E1E1E);
-  static const Color _darkScaffold = Color(0xFF000000);
-  static const Color _darkBorder = Color(0xFF475569);
-  static const Color _darkBorderSubtle = Color(0xFF334155);
+  static const Color _darkSurface = Color(0xFF0F172A);
+  static const Color _darkSurfaceElevated = Color(0xFF1E293B);
+  static const Color _darkScaffold = Color(0xFF030712);
+  static const Color _darkBorder = Color(0xFF334155);
+  static const Color _darkBorderSubtle = Color(0xFF1E293B);
   static const Color _darkTextPrimary = Color(0xFFF8FAFC);
-  static const Color _darkTextSecondary = Color(0xFFCBD5E1);
-  static const Color _darkTextTertiary = Color(0xFF94A3B8);
+  static const Color _darkTextSecondary = Color(0xFF94A3B8);
+  static const Color _darkTextTertiary = Color(0xFF64748B);
 
-  // Ultra-modern additions for Dark Theme
-  static const Color _darkNeonBlue = Color(0xFF00F0FF);
-  static const Color _darkNeonPurple = Color(0xFFDA70D6);
-  static const Color _darkNeonPink = Color(0xFFFF1493);
-  static const Color _darkHoloPurple = Color(0xFFB47AEA);
-  static const Color _darkHoloBlue = Color(0xFF7B2CBF);
-  static const Color _darkHoloPink = Color(0xFFFEC6FF);
-  static const Color _darkGlowBlue = Color(0xFF38BDF8);
-  static const Color _darkGlowPurple = Color(0xFFC084FC);
-  static const Color _darkGlowTeal = Color(0xFF2DD4BF);
+  // Ultra-modern additions for Dark Theme - Enhanced
+  static const Color _darkNeonBlue = Color(0xFF38BDF8);
+  static const Color _darkNeonPurple = Color(0xFF818CF8);
+  static const Color _darkNeonPink = Color(0xFFF472B6);
+  static const Color _darkHoloPurple = Color(0xFFC084FC);
+  static const Color _darkHoloBlue = Color(0xFF6366F1);
+  static const Color _darkHoloPink = Color(0xFFFB7185);
+  static const Color _darkGlowBlue = Color(0xFF7ACDEE);
+  static const Color _darkGlowPurple = Color(0xFF7C3AED);
+  static const Color _darkGlowTeal = Color(0xFF0D9488);
 
   static const _appColorsLight = AppColors(
     surface: _lightSurfaceWhite,
@@ -137,14 +137,14 @@ class AppTheme {
       end: Alignment.bottomRight,
     ),
     accentGradient: LinearGradient(
-      colors: [_darkAccentTeal, _darkAccentPurple],
+      colors: [_darkAccentTeal, _darkPrimaryBlue],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
     ),
-    shadow: Color(0x40000000),
-    glass: Color(0x1AFFFFFF),
-    shimmerBase: Color(0xFF334155),
-    shimmerHighlight: Color(0xFF475569),
+    shadow: Color(0x60000000),
+    glass: Color(0x26FFFFFF),
+    shimmerBase: Color(0xFF1E293B),
+    shimmerHighlight: Color(0xFF334155),
     textPrimary: _darkTextPrimary,
     textSecondary: _darkTextSecondary,
     textTertiary: _darkTextTertiary,
@@ -178,8 +178,8 @@ class AppTheme {
     glowPrimary: _darkGlowBlue,
     glowSecondary: _darkGlowTeal,
     glowAccent: _darkGlowPurple,
-    deepShadow: Color(0x50000000),
-    floatingShadow: Color(0x30000000),
+    deepShadow: Color(0x80000000),
+    floatingShadow: Color(0x50000000),
   );
 
   static final ThemeData lightTheme = ThemeData(
@@ -410,7 +410,7 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: _darkScaffold,
+      fillColor: _darkSurface,
       hintStyle: const TextStyle(color: _darkTextSecondary),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

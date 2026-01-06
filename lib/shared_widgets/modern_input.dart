@@ -150,7 +150,7 @@ class _ModernInputState extends State<ModernInput> {
         ? primaryColor
         : isDark
         ? appColors.border.withValues(alpha: 0.5)
-        : appColors.border.withValues(alpha: 0.3);
+        : appColors.textSecondary.withValues(alpha: 0.4);
 
     Widget? prefixWidget;
     if (widget.prefixIcon != null || widget.prefix != null) {
@@ -194,11 +194,11 @@ class _ModernInputState extends State<ModernInput> {
 
     final defaultFillColor = isDark
         ? appColors.surfaceElevated.withValues(alpha: 0.5)
-        : appColors.surface.withValues(alpha: 0.5);
+        : appColors.surface;
 
     final focusedFillColor = isDark
         ? appColors.surfaceElevated.withValues(alpha: 0.8)
-        : appColors.surface.withValues(alpha: 0.8);
+        : appColors.surface;
 
     switch (widget.variant) {
       case InputVariant.filled:
@@ -222,7 +222,7 @@ class _ModernInputState extends State<ModernInput> {
             borderSide: BorderSide(
               color: isDark
                   ? appColors.border.withValues(alpha: 0.4)
-                  : appColors.border.withValues(alpha: 0.2),
+                  : appColors.textSecondary.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -277,7 +277,7 @@ class _ModernInputState extends State<ModernInput> {
             borderSide: BorderSide(
               color: isDark
                   ? appColors.border.withValues(alpha: 0.5)
-                  : appColors.border.withValues(alpha: 0.3),
+                  : appColors.textSecondary.withValues(alpha: 0.3),
               width: 1.5,
             ),
           ),
@@ -320,7 +320,7 @@ class _ModernInputState extends State<ModernInput> {
             borderSide: BorderSide(
               color: isDark
                   ? appColors.border.withValues(alpha: 0.6)
-                  : appColors.border.withValues(alpha: 0.5),
+                  : appColors.textSecondary.withValues(alpha: 0.4),
               width: 1,
             ),
           ),

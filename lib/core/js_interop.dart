@@ -1,7 +1,4 @@
-@JS()
-library;
-
-import 'package:js/js.dart';
+import 'dart:js_interop';
 
 @JS('hideLoadingIndicator')
 external void hideLoadingIndicator();

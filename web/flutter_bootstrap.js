@@ -13,8 +13,7 @@ window.addEventListener('load', function(ev) {
     engineInitializer: async function(engineInitializer) {
       loadingText.innerText = "Initializing Engine...";
       const appRunner = await engineInitializer.initializeEngine({
-        renderer: "canvaskit",
-        canvasKitVariant: "skparagraph",
+        // Let Flutter choose the best renderer (skwasm for Wasm, CanvasKit otherwise)
       });
       loadingText.innerText = "Running App...";
       appRunner.runApp();

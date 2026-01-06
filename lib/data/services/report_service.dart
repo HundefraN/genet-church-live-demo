@@ -1,9 +1,10 @@
 import 'dart:convert';
-import 'dart:html' as html;
+import 'package:web/web.dart' as web;
 import 'package:csv/csv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genet_church_portal/state/providers.dart';
 import 'package:intl/intl.dart';
+import 'dart:js_interop';
 
 enum ReportType { pastors, churches, members }
 
@@ -100,11 +101,13 @@ class ReportService {
 
   void _triggerDownload(String csvData, String fileName) {
     final bytes = utf8.encode(csvData);
-    final blob = html.Blob([bytes]);
-    final url = html.Url.createObjectUrlFromBlob(blob);
-    html.AnchorElement(href: url)
-      ..setAttribute("download", fileName)
-      ..click();
-    html.Url.revokeObjectUrl(url);
+    final blob = web.Blob([bytes.toJS].toJS);
+    final url = web.URL.createObjectURL(blob);
+    final anchor = web.document.createElement('a') as web.HTMLAnchorElement
+      ..href = url
+      ..download = fileName;
+    
+    anchor.click();
+    web.URL.revokeObjectURL(url);
   }
 }

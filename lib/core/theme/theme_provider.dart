@@ -9,12 +9,12 @@ class AppThemeNotifier extends _$AppThemeNotifier {
   @override
   ThemeMode build() {
     _loadThemeFromPrefs();
-    return ThemeMode.system;
+    return ThemeMode.light;
   }
 
   Future<void> _loadThemeFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    final themeIndex = prefs.getInt('themeMode') ?? ThemeMode.system.index;
+    final themeIndex = prefs.getInt('themeMode') ?? ThemeMode.light.index;
     state = ThemeMode.values[themeIndex];
   }
 

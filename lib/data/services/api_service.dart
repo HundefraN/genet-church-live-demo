@@ -1,10 +1,7 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:genet_church_portal/core/constants.dart';
-import 'package:genet_church_portal/data/models/user_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
@@ -22,8 +19,8 @@ final dioProvider = Provider<Dio>((ref) {
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) async {
-        const storage = FlutterSecureStorage();
-        final token = await storage.read(key: 'accessToken');
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('accessToken');
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }
@@ -31,8 +28,8 @@ final dioProvider = Provider<Dio>((ref) {
       },
       onError: (DioException e, handler) async {
         if (e.response?.statusCode == 401) {
-          const storage = FlutterSecureStorage();
-          final refreshToken = await storage.read(key: 'refreshToken');
+          final prefs = await SharedPreferences.getInstance();
+          final refreshToken = prefs.getString('refreshToken');
           if (refreshToken != null) {
             try {
               final refreshDio = Dio(
@@ -43,43 +40,18 @@ final dioProvider = Provider<Dio>((ref) {
                 data: {'refreshToken': refreshToken},
               );
 
-              if (refreshResponse.statusCode == 200) {
-                final newAccessToken = refreshResponse.data['accessToken'];
-                final newRefreshToken = refreshResponse.data['refreshToken'];
-                final userJson = refreshResponse.data['user'];
+              final newAccessToken = refreshResponse.data['accessToken'];
+              final newRefreshToken = refreshResponse.data['refreshToken'];
 
-                await storage.write(key: 'accessToken', value: newAccessToken);
-                if (newRefreshToken != null) {
-                  await storage.write(
-                    key: 'refreshToken',
-                    value: newRefreshToken,
-                  );
-                }
+              await prefs.setString('accessToken', newAccessToken);
+              await prefs.setString('refreshToken', newRefreshToken);
 
-                if (userJson != null) {
-                  final user = UserModel.fromJson(userJson);
-                  await storage.write(
-                    key: 'user',
-                    value: jsonEncode(user.toJson()),
-                  );
-                }
+              e.requestOptions.headers['Authorization'] =
+                  'Bearer $newAccessToken';
 
-                e.requestOptions.headers['Authorization'] =
-                    'Bearer $newAccessToken';
-
-                final clonedRequest = await dio.request(
-                  e.requestOptions.path,
-                  options: Options(
-                    method: e.requestOptions.method,
-                    headers: e.requestOptions.headers,
-                  ),
-                  data: e.requestOptions.data,
-                  queryParameters: e.requestOptions.queryParameters,
-                );
-                return handler.resolve(clonedRequest);
-              }
+              return handler.resolve(await dio.fetch(e.requestOptions));
             } catch (refreshError) {
-              await storage.deleteAll();
+              await prefs.clear();
             }
           }
         }
