@@ -5,7 +5,7 @@ set -e
 
 echo "Building Flutter web app..."
 # Added --no-wasm-dry-run to suppress the harmless WebAssembly compatibility warnings.
-flutter build web --release --base-href "/genet-church-live-demo/" --no-tree-shake-icons --no-wasm-dry-run
+flutter build web --release --base-href "/gdev-frontend/" --no-tree-shake-icons --no-wasm-dry-run
 
 echo "Navigating to build directory..."
 cd build/web
@@ -16,7 +16,7 @@ git add -A
 git commit -m "Deploy to GitHub Pages: $(date)"
 
 echo "Deploying to gh-pages branch..."
-git push -f https://github.com/HundefraN/genet-church-live-demo.git main:gh-pages
+git push -f https://github.com/Genet-Church/gdev-frontend.git main:gh-pages
 
 cd -
 rm -rf build/web/.git
