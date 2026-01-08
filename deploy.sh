@@ -3,22 +3,37 @@
 
 set -e
 
-echo "Building Flutter web app..."
-# Added --no-wasm-dry-run to suppress the harmless WebAssembly compatibility warnings.
-flutter build web --release --base-href "/gdev-frontend/" --no-tree-shake-icons --no-wasm-dry-run
+deploy_to_repo() {
+    REPO_URL=$1
+    BASE_HREF=$2
+    REPO_NAME=$3
 
-echo "Navigating to build directory..."
-cd build/web
+    echo "--------------------------------------------------"
+    echo "Building and Deploying to $REPO_NAME..."
+    echo "Base Href: $BASE_HREF"
+    echo "--------------------------------------------------"
 
-# Initialize git repository if not already present (though we rm -rf it at the end)
-git init
-git add -A
-git commit -m "Deploy to GitHub Pages: $(date)"
+    # Build the app
+    flutter build web --release --base-href "$BASE_HREF" --no-tree-shake-icons --no-wasm-dry-run
 
-echo "Deploying to gh-pages branch..."
-git push -f https://github.com/Genet-Church/gdev-frontend.git main:gh-pages
+    # Navigate to build directory
+    cd build/web
 
-cd -
-rm -rf build/web/.git
+    # Initialize git and push
+    git init
+    git add -A
+    git commit -m "Deploy to GitHub Pages ($REPO_NAME): $(date)"
+    git push -f "$REPO_URL" main:gh-pages
 
-echo "Deployment complete!"
+    # Clean up
+    cd -
+    rm -rf build/web/.git
+}
+
+# 1. Deploy to Genet-Church/gdev-frontend
+deploy_to_repo "https://github.com/Genet-Church/gdev-frontend.git" "/gdev-frontend/" "Genet-Church"
+
+# 2. Deploy to HundefraN/genet-church-live-demo
+deploy_to_repo "https://github.com/HundefraN/genet-church-live-demo.git" "/genet-church-live-demo/" "HundefraN"
+
+echo "Double deployment complete!"
