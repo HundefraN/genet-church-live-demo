@@ -70,6 +70,8 @@ class _LoginDesktopView extends ConsumerWidget {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
     final verseAsync = ref.watch(bibleVerseProvider);
+    final locale = ref.watch(languageNotifierProvider);
+    final loc = AppLocalization(locale);
 
     return Row(
       children: [
@@ -114,7 +116,7 @@ class _LoginDesktopView extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildModernLogo()
+                      _buildModernLogo(loc)
                           .animate()
                           .fadeIn(duration: 800.ms)
                           .slideY(begin: 0.2),
@@ -185,7 +187,7 @@ class _LoginDesktopView extends ConsumerWidget {
     );
   }
 
-  Widget _buildModernLogo() {
+  Widget _buildModernLogo(AppLocalization loc) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -237,7 +239,7 @@ class _LoginDesktopView extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Ethiopian Guenet',
+              loc.ethiopianGuenet,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 32,
@@ -246,7 +248,7 @@ class _LoginDesktopView extends ConsumerWidget {
               ),
             ),
             Text(
-              'Church',
+              loc.churchLabel,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.8),
                 fontSize: 24,
@@ -473,7 +475,7 @@ class _LoginSmallScreenView extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 60), // Space for status bar
-                        _buildLogo(isTablet).animate().fadeIn().scale(),
+                        _buildLogo(isTablet, loc).animate().fadeIn().scale(),
                         const SizedBox(height: 32),
                         verseAsync.when(
                           data: (verse) => _VerseDisplay(
@@ -550,7 +552,7 @@ class _LoginSmallScreenView extends ConsumerWidget {
     );
   }
 
-  Widget _buildLogo(bool isTablet) {
+  Widget _buildLogo(bool isTablet, AppLocalization loc) {
     final logoSize = isTablet ? 80.0 : 64.0;
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -587,7 +589,7 @@ class _LoginSmallScreenView extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Ethiopian Guenet',
+              loc.ethiopianGuenet,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: isTablet ? 24 : 18,
@@ -596,7 +598,7 @@ class _LoginSmallScreenView extends ConsumerWidget {
               ),
             ),
             Text(
-              'Church',
+              loc.churchLabel,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.8),
                 fontSize: isTablet ? 18 : 14,

@@ -6,11 +6,11 @@
 set -e
 
 # 2. Build the Flutter web app for release.
-echo "Building Flutter web app with CanvasKit renderer..."
+echo "Building Flutter web app..."
 
 # We use --no-wasm-dry-run to suppress the WebAssembly compatibility warnings,
 # as our project intentionally uses packages that rely on JS-interop.
-flutter build web --web-renderer canvaskit --release --base-href "/genet-church-live-demo/" --no-tree-shake-icons --no-wasm-dry-run
+flutter build web --release --base-href "/genet-church-live-demo/" --no-tree-shake-icons --no-wasm-dry-run
 
 # 3. Navigate into the build output directory.
 cd build/web
