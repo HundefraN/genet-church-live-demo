@@ -1,15 +1,16 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:genet_church_portal/core/settings/date_format_provider.dart';
-import 'package:genet_church_portal/data/models/dashboard_model.dart';
-import 'package:genet_church_portal/data/models/pastor_dashboard_model.dart';
+import 'package:gdev_frontend/core/settings/date_format_provider.dart';
+import 'package:gdev_frontend/data/models/dashboard_model.dart';
+import 'package:gdev_frontend/data/models/pastor_dashboard_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:genet_church_portal/core/theme/app_colors.dart';
-import 'package:genet_church_portal/features/dashboard/presentation/widgets/clock_painter.dart';
+import 'package:gdev_frontend/core/theme/app_colors.dart';
+import 'package:gdev_frontend/features/dashboard/presentation/widgets/clock_painter.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:genet_church_portal/state/providers.dart';
-import 'package:genet_church_portal/core/settings/language_provider.dart';
+import 'package:gdev_frontend/state/providers.dart';
+import 'package:gdev_frontend/core/settings/language_provider.dart';
 
 import 'package:abushakir/abushakir.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -181,6 +182,15 @@ class _AnalyticsCardContent extends HookConsumerWidget {
                 ],
               ),
             ),
+
+            const SizedBox(height: 32),
+
+            // Member Analytics Section
+            if (stats.distributions != null)
+              _MemberAnalyticsSection(
+                distributions: stats.distributions!,
+                isSmallScreen: isSmallScreen,
+              ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
 
             const SizedBox(height: 32),
 
@@ -757,5 +767,257 @@ class _AnalyticsCardShimmer extends StatelessWidget {
         borderRadius: BorderRadius.circular(32),
       ),
     ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 2.seconds);
+  }
+}
+
+class _MemberAnalyticsSection extends ConsumerWidget {
+  final DashboardDistributions distributions;
+  final bool isSmallScreen;
+
+  const _MemberAnalyticsSection({
+    required this.distributions,
+    required this.isSmallScreen,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
+    final locale = ref.watch(languageNotifierProvider);
+    final loc = AppLocalization(locale);
+
+    return Container(
+      padding: EdgeInsets.all(isSmallScreen ? 16 : 32),
+      decoration: BoxDecoration(
+        color: appColors.surface,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: appColors.border.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: appColors.shadow.withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Iconsax.chart_21,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Text(
+                loc.memberAnalytics,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: appColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          if (isSmallScreen)
+            Column(
+              children: [
+                _DistributionChart(
+                  title: loc.membershipStatus,
+                  data: distributions.membersByStatus,
+                  colors: [
+                    Colors.blue,
+                    Colors.green,
+                    Colors.orange,
+                    Colors.red,
+                    Colors.purple,
+                  ],
+                ),
+                const SizedBox(height: 32),
+                _DistributionChart(
+                  title: loc.baptismStatus,
+                  data: distributions.membersByBaptismStatus,
+                  colors: [Colors.cyan, Colors.indigo, Colors.teal],
+                ),
+                const SizedBox(height: 32),
+                _DistributionChart(
+                  title: loc.genderDistribution,
+                  data: distributions.membersByGender,
+                  colors: [Colors.pink, Colors.blue, Colors.grey],
+                ),
+              ],
+            )
+          else
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _DistributionChart(
+                    title: loc.membershipStatus,
+                    data: distributions.membersByStatus,
+                    colors: [
+                      Colors.blue,
+                      Colors.green,
+                      Colors.orange,
+                      Colors.red,
+                      Colors.purple,
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 24),
+                Expanded(
+                  child: _DistributionChart(
+                    title: loc.baptismStatus,
+                    data: distributions.membersByBaptismStatus,
+                    colors: [Colors.cyan, Colors.indigo, Colors.teal],
+                  ),
+                ),
+                const SizedBox(width: 24),
+                Expanded(
+                  child: _DistributionChart(
+                    title: loc.genderDistribution,
+                    data: distributions.membersByGender,
+                    colors: [Colors.pink, Colors.blue, Colors.grey],
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DistributionChart extends StatelessWidget {
+  final String title;
+  final Map<String, int> data;
+  final List<Color> colors;
+
+  const _DistributionChart({
+    required this.title,
+    required this.data,
+    required this.colors,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
+    final total = data.values.fold(0, (sum, val) => sum + val);
+
+    if (total == 0) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: appColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            height: 200,
+            decoration: BoxDecoration(
+              color: appColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: appColors.border.withValues(alpha: 0.3)),
+            ),
+            child: Center(
+              child: Text(
+                'No data available',
+                style: TextStyle(color: appColors.textSecondary),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    final List<PieChartSectionData> sections = [];
+    int colorIndex = 0;
+    data.forEach((key, value) {
+      if (value > 0) {
+        sections.add(
+          PieChartSectionData(
+            color: colors[colorIndex % colors.length],
+            value: value.toDouble(),
+            title: '${(value / total * 100).toStringAsFixed(0)}%',
+            radius: 50,
+            titleStyle: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        );
+        colorIndex++;
+      }
+    });
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: appColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 24),
+        SizedBox(
+          height: 200,
+          child: PieChart(
+            PieChartData(
+              sectionsSpace: 2,
+              centerSpaceRadius: 40,
+              sections: sections,
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Wrap(
+          spacing: 16,
+          runSpacing: 8,
+          children: List.generate(data.length, (index) {
+            final key = data.keys.elementAt(index);
+            final value = data.values.elementAt(index);
+            if (value == 0) return const SizedBox.shrink();
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: colors[index % colors.length],
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '$key ($value)',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: appColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            );
+          }),
+        ),
+      ],
+    );
   }
 }

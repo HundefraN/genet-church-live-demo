@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:genet_church_portal/core/theme/app_colors.dart';
+import 'package:gdev_frontend/core/theme/app_colors.dart';
 import 'package:iconsax/iconsax.dart';
 
 enum InputVariant { filled, outlined, underlined }

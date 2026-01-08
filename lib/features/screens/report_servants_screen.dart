@@ -1,29 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:genet_church_portal/shared_widgets/advanced_filter_bar.dart';
-import 'package:genet_church_portal/shared_widgets/card_shimmer_loader.dart';
-import 'package:genet_church_portal/shared_widgets/modern_button.dart';
-import 'package:genet_church_portal/shared_widgets/modern_card.dart';
-import 'package:genet_church_portal/shared_widgets/modern_data_card.dart';
-import 'package:genet_church_portal/shared_widgets/modern_dropdown.dart';
-import 'package:genet_church_portal/shared_widgets/modern_input.dart';
-import 'package:genet_church_portal/shared_widgets/modern_report_list.dart';
-import 'package:genet_church_portal/shared_widgets/notification_system.dart';
+import 'package:gdev_frontend/shared_widgets/advanced_filter_bar.dart';
+import 'package:gdev_frontend/shared_widgets/card_shimmer_loader.dart';
+import 'package:gdev_frontend/shared_widgets/modern_button.dart';
+import 'package:gdev_frontend/shared_widgets/modern_card.dart';
+import 'package:gdev_frontend/shared_widgets/modern_data_card.dart';
+import 'package:gdev_frontend/shared_widgets/modern_dropdown.dart';
+import 'package:gdev_frontend/shared_widgets/modern_input.dart';
+import 'package:gdev_frontend/shared_widgets/modern_report_list.dart';
+import 'package:gdev_frontend/shared_widgets/notification_system.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:genet_church_portal/core/theme/app_colors.dart';
-import 'package:genet_church_portal/data/models/servant_model.dart';
-import 'package:genet_church_portal/data/models/user_model.dart';
-import 'package:genet_church_portal/data/repositories/auth_repository.dart';
-import 'package:genet_church_portal/state/church_selection_provider.dart';
-import 'package:genet_church_portal/shared_widgets/api_error_widget.dart';
-import 'package:genet_church_portal/state/new_item_provider.dart';
-import 'package:genet_church_portal/state/providers.dart';
-import 'package:genet_church_portal/shared_widgets/page_header.dart';
+import 'package:gdev_frontend/core/theme/app_colors.dart';
+import 'package:gdev_frontend/data/models/servant_model.dart';
+import 'package:gdev_frontend/data/models/user_model.dart';
+import 'package:gdev_frontend/data/repositories/auth_repository.dart';
+import 'package:gdev_frontend/state/church_selection_provider.dart';
+import 'package:gdev_frontend/shared_widgets/api_error_widget.dart';
+import 'package:gdev_frontend/state/new_item_provider.dart';
+import 'package:gdev_frontend/state/providers.dart';
+import 'package:gdev_frontend/shared_widgets/page_header.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:genet_church_portal/core/settings/language_provider.dart';
+import 'package:gdev_frontend/core/settings/language_provider.dart';
 
 import '../../core/localization/app_localization.dart';
+import '../../core/utils/password_validator.dart';
 
 class ReportServantsScreen extends HookConsumerWidget {
   const ReportServantsScreen({super.key});
@@ -366,7 +367,7 @@ class ReportServantsScreen extends HookConsumerWidget {
               PasswordInput(
                 controller: passwordController,
                 label: loc.temporaryPassword,
-                validator: (v) => v!.length < 6 ? loc.min6Chars : null,
+                validator: PasswordValidator.validate,
               ),
             ],
           ),

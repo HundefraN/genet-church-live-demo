@@ -1,16 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/data/models/activity_log_model.dart';
-import 'package:genet_church_portal/data/models/church_model.dart';
-import 'package:genet_church_portal/data/models/dashboard_base_model.dart';
-import 'package:genet_church_portal/data/models/department_model.dart';
-import 'package:genet_church_portal/data/models/member_model.dart';
-import 'package:genet_church_portal/data/models/pastor_model.dart';
-import 'package:genet_church_portal/data/models/servant_model.dart';
-import 'package:genet_church_portal/data/models/user_model.dart';
-import 'package:genet_church_portal/data/models/paginated_response.dart';
-import 'package:genet_church_portal/data/repositories/api_repository.dart';
-import 'package:genet_church_portal/data/repositories/auth_repository.dart';
-import 'package:genet_church_portal/state/church_selection_provider.dart';
+import 'package:gdev_frontend/data/models/activity_log_model.dart';
+import 'package:gdev_frontend/data/models/church_model.dart';
+import 'package:gdev_frontend/data/models/dashboard_base_model.dart';
+import 'package:gdev_frontend/data/models/department_model.dart';
+import 'package:gdev_frontend/data/models/member_model.dart';
+import 'package:gdev_frontend/data/models/pastor_model.dart';
+import 'package:gdev_frontend/data/models/servant_model.dart';
+import 'package:gdev_frontend/data/models/user_model.dart';
+import 'package:gdev_frontend/data/models/paginated_response.dart';
+import 'package:gdev_frontend/data/repositories/api_repository.dart';
+import 'package:gdev_frontend/data/repositories/auth_repository.dart';
+import 'package:gdev_frontend/state/church_selection_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'providers.g.dart';
@@ -33,13 +33,12 @@ final dashboardStatsProvider = FutureProvider.autoDispose<DashboardStatsBase?>((
     case UserRole.SUPER_ADMIN:
       return await api.getSuperAdminDashboardStats(timeframe: timeframe);
     case UserRole.PASTOR:
-      final churchId = ref.read(currentChurchProvider);
+    case UserRole.SERVANT:
+      final churchId = ref.watch(currentChurchProvider);
       if (churchId == null) {
         return null;
       }
       return await api.getPastorDashboardStats(churchId, timeframe: timeframe);
-    default:
-      return null;
   }
 });
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:genet_church_portal/core/theme/app_colors.dart';
-import 'package:genet_church_portal/shared_widgets/advanced_filter_bar.dart';
-import 'package:genet_church_portal/shared_widgets/card_shimmer_loader.dart';
-import 'package:genet_church_portal/shared_widgets/modern_card.dart';
-import 'package:genet_church_portal/shared_widgets/modern_data_card.dart';
+import 'package:gdev_frontend/core/theme/app_colors.dart';
+import 'package:gdev_frontend/shared_widgets/advanced_filter_bar.dart';
+import 'package:gdev_frontend/shared_widgets/card_shimmer_loader.dart';
+import 'package:gdev_frontend/shared_widgets/modern_card.dart';
+import 'package:gdev_frontend/shared_widgets/modern_data_card.dart';
 import 'package:iconsax/iconsax.dart';
 
 /// Configuration for a modern report list

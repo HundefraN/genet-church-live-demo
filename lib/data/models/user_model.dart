@@ -21,6 +21,7 @@ class UserModel {
   final bool isActive;
   final String createdAt;
   final Map<String, dynamic>? pastorDetails;
+  final Map<String, dynamic>? servantDetails;
 
   UserModel({
     required this.id,
@@ -30,6 +31,7 @@ class UserModel {
     required this.isActive,
     required this.createdAt,
     this.pastorDetails,
+    this.servantDetails,
   });
 
   UserRole get roleEnum => mapRoleFromString(role);
@@ -43,6 +45,7 @@ class UserModel {
       isActive: json['isActive'] as bool? ?? false,
       createdAt: json['createdAt'] as String? ?? '',
       pastorDetails: json['Pastor'] as Map<String, dynamic>?,
+      servantDetails: json['Servant'] as Map<String, dynamic>?,
     );
   }
 
@@ -55,6 +58,7 @@ class UserModel {
       'isActive': isActive,
       'createdAt': createdAt,
       if (pastorDetails != null) 'Pastor': pastorDetails,
+      if (servantDetails != null) 'Servant': servantDetails,
     };
   }
 }

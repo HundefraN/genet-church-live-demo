@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:genet_church_portal/shared_widgets/modern_loading.dart';
+import 'package:gdev_frontend/shared_widgets/modern_loading.dart';
 
 typedef LibraryLoader = Future<void> Function();
 

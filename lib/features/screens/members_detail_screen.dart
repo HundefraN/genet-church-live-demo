@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/core/theme/app_colors.dart';
-import 'package:genet_church_portal/data/models/member_model.dart';
-import 'package:genet_church_portal/shared_widgets/api_error_widget.dart';
-import 'package:genet_church_portal/shared_widgets/modern_card.dart';
-import 'package:genet_church_portal/shared_widgets/modern_loading.dart';
-import 'package:genet_church_portal/state/providers.dart';
+import 'package:gdev_frontend/core/theme/app_colors.dart';
+import 'package:gdev_frontend/data/models/member_model.dart';
+import 'package:gdev_frontend/shared_widgets/api_error_widget.dart';
+import 'package:gdev_frontend/shared_widgets/modern_card.dart';
+import 'package:gdev_frontend/shared_widgets/modern_loading.dart';
+import 'package:gdev_frontend/state/providers.dart';
 import 'package:iconsax/iconsax.dart';
 
-import 'package:genet_church_portal/core/utils/date_formatter.dart';
-import 'package:genet_church_portal/core/settings/language_provider.dart';
+import 'package:gdev_frontend/core/utils/date_formatter.dart';
+import 'package:gdev_frontend/core/settings/language_provider.dart';
 
 import '../../core/localization/app_localization.dart';
 

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:web/web.dart' as web;
 import 'package:csv/csv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/state/providers.dart';
+import 'package:gdev_frontend/state/providers.dart';
 import 'package:intl/intl.dart';
 import 'dart:js_interop';
 

@@ -24,13 +24,13 @@ enum BaptismStatus { BAPTIZED, NOT_BAPTIZED, PENDING }
 // Backend expects strict values: NONE, PRIMARY, SECONDARY, UNIVERSITY, POSTGRADUATE
 enum EducationLevel { NONE, PRIMARY, SECONDARY, UNIVERSITY, POSTGRADUATE }
 
-enum JobStatus { EMPLOYED, UNEMPLOYED, STUDENT, OTHER }
+enum JobStatus { EMPLOYED, UNEMPLOYED, SELF_EMPLOYED, STUDENT, RETIRED }
 
 enum MarriageStatus { SINGLE, MARRIED, DIVORCED, WIDOWED }
 
-enum IncomeRange { LOW, MEDIUM, HIGH }
+enum IncomeRange { LOW, MEDIUM, HIGH, VERY_HIGH }
 
-enum MemberStatus { ACTIVE, INACTIVE, TRANSFERRED, DEAD, UNKNOWN }
+enum MemberStatus { ACTIVE, INACTIVE, TRANSFER, DEAD, UNKNOWN }
 
 class Address {
   final String city;
@@ -55,12 +55,13 @@ class Address {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = {};
-    if (city.isNotEmpty) data['city'] = city;
-    if (subCity.isNotEmpty) data['subCity'] = subCity;
-    if (woreda.isNotEmpty) data['woreda'] = woreda;
-    if (placeName.isNotEmpty) data['placeName'] = placeName;
-    return data;
+    // Backend requires all address fields to be non-empty strings
+    return {
+      'city': city.isNotEmpty ? city : 'N/A',
+      'subCity': subCity.isNotEmpty ? subCity : 'N/A',
+      'woreda': woreda.isNotEmpty ? woreda : 'N/A',
+      'placeName': placeName.isNotEmpty ? placeName : 'N/A',
+    };
   }
 }
 
@@ -147,7 +148,7 @@ class Member {
       jobStatus: _parseEnum(
         JobStatus.values,
         json['jobStatus'],
-        JobStatus.OTHER,
+        JobStatus.UNEMPLOYED,
       ),
       workLocation: json['workLocation'] as String?,
       marriageStatus: _parseEnum(
@@ -182,9 +183,9 @@ class Member {
     final Map<String, dynamic> data = {
       'fullName': fullName,
       'birthDate': _cleanDate(birthDate),
-      // FIX: Only send fields if they are NOT empty strings
-      if (birthPlace.isNotEmpty) 'birthPlace': birthPlace,
-      if (motherTongue.isNotEmpty) 'motherTongue': motherTongue,
+      // Backend requires these fields to be non-empty strings
+      'birthPlace': birthPlace.isNotEmpty ? birthPlace : 'N/A',
+      'motherTongue': motherTongue.isNotEmpty ? motherTongue : 'N/A',
       'gender': gender.name,
       'phoneNumber': phoneNumber,
       'baptismStatus': baptismStatus.name,
@@ -216,9 +217,8 @@ class Member {
     if (workLocation != null && workLocation!.isNotEmpty) {
       data['workLocation'] = workLocation;
     }
-    if (statusChangedAt != null && statusChangedAt!.isNotEmpty) {
-      data['statusChangedAt'] = _cleanDate(statusChangedAt!);
-    }
+    // Note: statusChangedAt is not sent on member creation
+    // It's set by the backend when member status changes
 
     return data;
   }

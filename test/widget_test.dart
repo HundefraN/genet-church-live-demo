@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/app.dart';
+import 'package:gdev_frontend/app.dart';
 
 void main() {
   testWidgets('App smoke test', (WidgetTester tester) async {

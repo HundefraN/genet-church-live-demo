@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:genet_church_portal/data/models/user_model.dart';
-import 'package:genet_church_portal/data/repositories/auth_repository.dart';
-import 'package:genet_church_portal/data/services/api_service.dart';
-import 'package:genet_church_portal/shared_widgets/deferred_loader.dart';
-import 'package:genet_church_portal/shared_widgets/main_layout.dart';
+import 'package:gdev_frontend/data/models/user_model.dart';
+import 'package:gdev_frontend/data/repositories/auth_repository.dart';
+import 'package:gdev_frontend/shared_widgets/deferred_loader.dart';
+import 'package:gdev_frontend/shared_widgets/main_layout.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'features/auth/presentation/login_screen.dart' deferred as login_screen;
@@ -26,10 +25,6 @@ import 'features/screens/members_detail_screen.dart' deferred as members_detail_
 import 'features/screens/sessions_screen.dart' deferred as sessions_screen;
 
 part 'app_router.g.dart';
-
-final routerAuthRepositoryProvider = Provider(
-  (ref) => AuthRepository(ref.watch(dioProvider)),
-);
 
 final Map<String, List<String>> _routeBreadcrumbs = {
   '/dashboard': ['App', 'Dashboard'],
@@ -63,52 +58,55 @@ const _pastorOnlyRoutes = [];
 const _pastorAndServantRoutes = ['/add-members'];
 
 @riverpod
-GoRouter appRouter(Ref ref) {
-  final rootNavigatorKey = GlobalKey<NavigatorState>();
-  final shellNavigatorKey = GlobalKey<NavigatorState>();
+class AppRouter extends _$AppRouter {
+  @override
+  GoRouter build() {
+    final rootNavigatorKey = GlobalKey<NavigatorState>();
+    final shellNavigatorKey = GlobalKey<NavigatorState>();
 
-  return GoRouter(
-    initialLocation: '/login',
-    navigatorKey: rootNavigatorKey,
-    redirect: (BuildContext context, GoRouterState state) async {
-      final authRepository = ref.read(routerAuthRepositoryProvider);
-      final userFromRepo = await authRepository.getCurrentUser();
-      final userFromState = ref.read(authStateProvider);
+    return GoRouter(
+      initialLocation: '/login',
+      navigatorKey: rootNavigatorKey,
+      redirect: (BuildContext context, GoRouterState state) async {
+        final authRepository = ref.read(authRepositoryProvider);
+        final userFromRepo = await authRepository.getCurrentUser();
+        final userFromState = ref.read(authStateProvider);
 
-      final user = userFromState ?? userFromRepo;
-      final isLoggedIn = user != null;
-      final isLoggingIn = state.matchedLocation == '/login';
+        final user = userFromState ?? userFromRepo;
+        final isLoggedIn = user != null;
+        final isLoggingIn = state.matchedLocation == '/login';
 
-      if (userFromState == null && userFromRepo != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ref.read(authStateProvider.notifier).updateUser(userFromRepo);
-        });
-      }
-
-      if (!isLoggedIn && !isLoggingIn) return '/login';
-      if (isLoggedIn && isLoggingIn) return '/dashboard';
-
-      if (isLoggedIn) {
-        final role = user.roleEnum;
-        final path = state.matchedLocation;
-
-        if (role != UserRole.SUPER_ADMIN &&
-            _superAdminOnlyRoutes.any((route) => path.startsWith(route))) {
-          return '/dashboard';
+        if (userFromState == null && userFromRepo != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ref.read(authStateProvider.notifier).updateUser(userFromRepo);
+          });
         }
-        if (role != UserRole.PASTOR &&
-            _pastorOnlyRoutes.any((route) => path.startsWith(route))) {
-          return '/dashboard';
-        }
-        if (role == UserRole.SUPER_ADMIN &&
-            _pastorAndServantRoutes.any((route) => path.startsWith(route))) {
-          return '/dashboard';
-        }
-      }
 
-      return null;
-    },
-    routes: [
+        if (!isLoggedIn && !isLoggingIn) return '/login';
+        if (isLoggedIn && isLoggingIn) return '/dashboard';
+
+        if (isLoggedIn) {
+          final role = user.roleEnum;
+          final path = state.matchedLocation;
+
+          if (role != UserRole.SUPER_ADMIN &&
+              _superAdminOnlyRoutes.any((route) => path.startsWith(route))) {
+            return '/dashboard';
+          }
+          if (role != UserRole.PASTOR &&
+              _pastorOnlyRoutes.any((role) => path.startsWith(role))) {
+            return '/dashboard';
+          }
+          if (role == UserRole.SUPER_ADMIN &&
+              _pastorAndServantRoutes.any((route) => path.startsWith(route))) {
+            return '/dashboard';
+          }
+        }
+
+        return null;
+      },
+      refreshListenable: _RouterRefreshListenable(ref),
+      routes: [
       GoRoute(
         path: '/login',
         builder: (context, state) => DeferredLoader(
@@ -236,4 +234,21 @@ GoRouter appRouter(Ref ref) {
       ),
     ],
   );
+}
+}
+
+class _RouterRefreshListenable extends ChangeNotifier {
+  _RouterRefreshListenable(Ref ref) {
+    _subscription = ref.listen(authStateProvider, (_, __) {
+      notifyListeners();
+    });
+  }
+
+  late final ProviderSubscription<UserModel?> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.close();
+    super.dispose();
+  }
 }

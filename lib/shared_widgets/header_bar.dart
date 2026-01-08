@@ -1,19 +1,19 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:genet_church_portal/core/theme/app_colors.dart';
-import 'package:genet_church_portal/core/theme/theme_provider.dart';
-import 'package:genet_church_portal/data/models/search_command_model.dart';
-import 'package:genet_church_portal/data/models/user_model.dart';
-import 'package:genet_church_portal/data/repositories/auth_repository.dart';
-import 'package:genet_church_portal/state/church_selection_provider.dart';
-import 'package:genet_church_portal/state/providers.dart';
-import 'package:genet_church_portal/state/search_providers.dart';
+import 'package:gdev_frontend/core/theme/app_colors.dart';
+import 'package:gdev_frontend/core/theme/theme_provider.dart';
+import 'package:gdev_frontend/data/models/search_command_model.dart';
+import 'package:gdev_frontend/data/models/user_model.dart';
+import 'package:gdev_frontend/data/repositories/auth_repository.dart';
+import 'package:gdev_frontend/state/church_selection_provider.dart';
+import 'package:gdev_frontend/state/providers.dart';
+import 'package:gdev_frontend/state/search_providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'dart:ui';
-import 'package:genet_church_portal/core/settings/language_provider.dart';
+import 'package:gdev_frontend/core/settings/language_provider.dart';
 
 import '../core/localization/app_localization.dart';
 

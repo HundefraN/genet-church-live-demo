@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/data/models/search_command_model.dart';
-import 'package:genet_church_portal/data/models/user_model.dart';
+import 'package:gdev_frontend/data/models/search_command_model.dart';
+import 'package:gdev_frontend/data/models/user_model.dart';
 import 'package:iconsax/iconsax.dart';
 
 final searchServiceProvider = Provider((ref) {

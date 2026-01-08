@@ -1,4 +1,4 @@
-name: genet_church_portal
+name: gdev_frontend
 description: "EGC database front end"
 
 publish_to: 'none'
@@ -34,6 +34,8 @@ dependencies:
   abushakir: ^1.0.0
   web: ^1.1.1
   url_launcher: ^6.3.2
+  flutter_secure_storage: ^10.0.0
+  flutter_native_splash: ^2.4.0
 
 dev_dependencies:
   flutter_test:
@@ -42,7 +44,6 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   build_runner: ^2.4.9
   riverpod_generator: ^2.4.0
-  flutter_native_splash: ^2.4.0
 
 flutter_native_splash:
   color: "#ffffff"

@@ -1,14 +1,15 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/data/models/login_response.dart';
-import 'package:genet_church_portal/data/models/user_model.dart';
-import 'package:genet_church_portal/data/services/api_service.dart';
-import 'package:genet_church_portal/state/church_selection_provider.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:gdev_frontend/data/models/login_response.dart';
+import 'package:gdev_frontend/data/models/user_model.dart';
+import 'package:gdev_frontend/data/services/api_service.dart';
+import 'package:gdev_frontend/state/church_selection_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final authRepositoryProvider = Provider((ref) {
-  return AuthRepository(ref.watch(dioProvider));
+  return AuthRepository(ref.watch(dioProvider), const FlutterSecureStorage());
 });
 
 final isLoggingOutProvider = StateProvider<bool>((ref) => false);
@@ -61,8 +62,9 @@ class AuthStateNotifier extends StateNotifier<UserModel?> {
 
 class AuthRepository {
   final Dio _dio;
+  final FlutterSecureStorage _storage;
 
-  AuthRepository(this._dio);
+  AuthRepository(this._dio, this._storage);
 
   Future<UserModel> login(
     String email,
@@ -76,11 +78,17 @@ class AuthRepository {
       );
 
       final loginResponse = LoginResponse.fromJson(response.data);
+
+      await _storage.write(
+        key: 'accessToken',
+        value: loginResponse.accessToken,
+      );
+      await _storage.write(
+        key: 'refreshToken',
+        value: loginResponse.refreshToken,
+      );
+
       final prefs = await SharedPreferences.getInstance();
-
-      await prefs.setString('accessToken', loginResponse.accessToken);
-      await prefs.setString('refreshToken', loginResponse.refreshToken);
-
       await prefs.setBool('rememberMe', rememberMe);
       if (rememberMe) {
         await prefs.setString('email', email);
@@ -88,9 +96,9 @@ class AuthRepository {
         await prefs.remove('email');
       }
 
-      await prefs.setString(
-        'user',
-        jsonEncode(loginResponse.user.toJson()),
+      await _storage.write(
+        key: 'user',
+        value: jsonEncode(loginResponse.user.toJson()),
       );
 
       return loginResponse.user;
@@ -103,30 +111,21 @@ class AuthRepository {
     try {
       await _dio.post('/auth/logout');
     } finally {
+      await _storage.deleteAll();
       final prefs = await SharedPreferences.getInstance();
-      // Keep rememberMe and email if set
-      final rememberMe = prefs.getBool('rememberMe') ?? false;
-      final email = prefs.getString('email');
-      
-      await prefs.clear();
-      
-      if (rememberMe) {
-        await prefs.setBool('rememberMe', true);
-        if (email != null) {
-          await prefs.setString('email', email);
-        }
+      if (prefs.getBool('rememberMe') == false) {
+        await prefs.remove('email');
       }
+      await prefs.remove('rememberMe');
     }
   }
 
   Future<String?> getAccessToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('accessToken');
+    return await _storage.read(key: 'accessToken');
   }
 
   Future<UserModel?> getCurrentUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString('user');
+    final userJson = await _storage.read(key: 'user');
     if (userJson != null) {
       return UserModel.fromJson(jsonDecode(userJson));
     }
@@ -135,8 +134,7 @@ class AuthRepository {
 
   Future<UserModel> fetchAndStoreUserDetails() async {
     final user = await me();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user', jsonEncode(user.toJson()));
+    await _storage.write(key: 'user', value: jsonEncode(user.toJson()));
     return user;
   }
 
@@ -144,6 +142,20 @@ class AuthRepository {
     try {
       final response = await _dio.get('/auth/me');
       return UserModel.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> changePassword(String currentPassword, String newPassword) async {
+    try {
+      await _dio.post(
+        '/auth/change-password',
+        data: {
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        },
+      );
     } catch (e) {
       rethrow;
     }

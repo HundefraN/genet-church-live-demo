@@ -109,6 +109,9 @@ class AppLocalization {
       'total_pastors': 'Total Pastors',
       'total_members': 'Total Members',
       'total_servants': 'Total Servants',
+      'member_analytics': 'Member Analytics',
+      'membership_status': 'Membership Status',
+      'gender_distribution': 'Gender Distribution',
       'churches_assigned': 'Churches Assigned',
       'your_members': 'Your Members',
       'your_servants': 'Your Servants',
@@ -432,6 +435,9 @@ class AppLocalization {
       'no_celebration': 'ምንም በዓል የለም',
       'could_not_load_analytics': 'ትንታኔዎችን መጫን አልተቻለም',
       'total_churches': 'ጠቅላላ ቤተክርስቲያናት',
+      'member_analytics': 'የአባላት ትንታኔ',
+      'membership_status': 'የአባልነት ሁኔታ',
+      'gender_distribution': 'የጾታ ስርጭት',
       'total_pastors': 'ጠቅላላ ፓስተሮች',
       'total_members': 'ጠቅላላ አባላት',
       'total_servants': 'ጠቅላላ አገልጋዮች',
@@ -1180,6 +1186,12 @@ class AppLocalization {
       _localizedValues[locale.languageCode]!['income_range']!;
   String get baptismStatus =>
       _localizedValues[locale.languageCode]!['baptism_status']!;
+  String get memberAnalytics =>
+      _localizedValues[locale.languageCode]!['member_analytics']!;
+  String get membershipStatus =>
+      _localizedValues[locale.languageCode]!['membership_status']!;
+  String get genderDistribution =>
+      _localizedValues[locale.languageCode]!['gender_distribution']!;
   String get bornAgainDate =>
       _localizedValues[locale.languageCode]!['born_again_date']!;
   String get baptismDate =>

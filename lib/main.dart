@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/app.dart';
-import 'package:genet_church_portal/core/js_interop.dart';
+import 'package:gdev_frontend/app.dart';
+import 'package:gdev_frontend/core/js_interop.dart';
 
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 

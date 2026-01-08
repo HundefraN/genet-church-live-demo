@@ -1,4 +1,4 @@
-package com.example.genet_church_portal
+package com.example.gdev_frontend
 
 import io.flutter.embedding.android.FlutterActivity
 

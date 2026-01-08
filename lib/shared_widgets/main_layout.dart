@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:genet_church_portal/shared_widgets/side_menu.dart';
-import 'package:genet_church_portal/shared_widgets/command_palette.dart';
+import 'package:gdev_frontend/shared_widgets/side_menu.dart';
+import 'package:gdev_frontend/shared_widgets/command_palette.dart';
 import 'header_bar.dart';
 
 class MainLayout extends HookWidget {

@@ -3,17 +3,17 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:genet_church_portal/core/theme/app_colors.dart';
-import 'package:genet_church_portal/shared_widgets/modern_input.dart';
-import 'package:genet_church_portal/shared_widgets/responsive_layout.dart';
-import 'package:genet_church_portal/shared_widgets/notification_system.dart';
+import 'package:gdev_frontend/core/theme/app_colors.dart';
+import 'package:gdev_frontend/shared_widgets/modern_input.dart';
+import 'package:gdev_frontend/shared_widgets/responsive_layout.dart';
+import 'package:gdev_frontend/shared_widgets/notification_system.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:genet_church_portal/data/repositories/auth_repository.dart';
+import 'package:gdev_frontend/data/repositories/auth_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/localization/app_localization.dart';
-import 'package:genet_church_portal/core/settings/language_provider.dart';
+import 'package:gdev_frontend/core/settings/language_provider.dart';
 
 
 class BibleVerse {

@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/data/models/search_command_model.dart';
-import 'package:genet_church_portal/data/models/user_model.dart';
-import 'package:genet_church_portal/data/repositories/auth_repository.dart';
-import 'package:genet_church_portal/data/services/search_service.dart';
+import 'package:gdev_frontend/data/models/search_command_model.dart';
+import 'package:gdev_frontend/data/models/user_model.dart';
+import 'package:gdev_frontend/data/repositories/auth_repository.dart';
+import 'package:gdev_frontend/data/services/search_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'search_providers.g.dart';

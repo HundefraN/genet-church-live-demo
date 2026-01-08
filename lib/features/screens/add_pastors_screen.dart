@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:genet_church_portal/core/settings/language_provider.dart';
-import 'package:genet_church_portal/shared_widgets/modern_card.dart';
-import 'package:genet_church_portal/shared_widgets/notification_system.dart';
+import 'package:gdev_frontend/core/settings/language_provider.dart';
+import 'package:gdev_frontend/shared_widgets/modern_card.dart';
+import 'package:gdev_frontend/shared_widgets/notification_system.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:genet_church_portal/state/providers.dart';
-import 'package:genet_church_portal/shared_widgets/modern_input.dart';
-import 'package:genet_church_portal/shared_widgets/page_header.dart';
-import 'package:genet_church_portal/shared_widgets/modern_button.dart';
+import 'package:gdev_frontend/state/providers.dart';
+import 'package:gdev_frontend/shared_widgets/modern_input.dart';
+import 'package:gdev_frontend/shared_widgets/page_header.dart';
+import 'package:gdev_frontend/shared_widgets/modern_button.dart';
 import 'package:iconsax/iconsax.dart';
 
 import '../../core/localization/app_localization.dart';
+import '../../core/utils/password_validator.dart';
 
 class AddPastorsScreen extends HookConsumerWidget {
   const AddPastorsScreen({super.key});
@@ -90,8 +91,7 @@ class AddPastorsScreen extends HookConsumerWidget {
                 PasswordInput(
                   controller: passwordController,
                   label: l10n.temporaryPassword,
-                  validator: (value) =>
-                      value!.length < 6 ? l10n.passwordMin6 : null,
+                  validator: PasswordValidator.validate,
                 ),
                 const SizedBox(height: 32),
                 SecondaryButton(text: l10n.clearForm, onPressed: clearForm),

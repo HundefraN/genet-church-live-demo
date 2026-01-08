@@ -1,14 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/data/models/church_model.dart';
-import 'package:genet_church_portal/data/models/dashboard_model.dart';
-import 'package:genet_church_portal/data/models/department_model.dart';
-import 'package:genet_church_portal/data/models/member_model.dart';
-import 'package:genet_church_portal/data/models/paginated_response.dart';
-import 'package:genet_church_portal/data/models/pastor_model.dart';
-import 'package:genet_church_portal/data/models/servant_model.dart';
-import 'package:genet_church_portal/data/models/user_model.dart';
-import 'package:genet_church_portal/data/services/api_service.dart';
+import 'package:gdev_frontend/data/models/church_model.dart';
+import 'package:gdev_frontend/data/models/dashboard_model.dart';
+import 'package:gdev_frontend/data/models/department_model.dart';
+import 'package:gdev_frontend/data/models/member_model.dart';
+import 'package:gdev_frontend/data/models/paginated_response.dart';
+import 'package:gdev_frontend/data/models/pastor_model.dart';
+import 'package:gdev_frontend/data/models/servant_model.dart';
+import 'package:gdev_frontend/data/models/user_model.dart';
+import 'package:gdev_frontend/data/services/api_service.dart';
 import '../models/pastor_dashboard_model.dart';
 import '../models/session_model.dart';
 

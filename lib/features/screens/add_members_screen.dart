@@ -1,21 +1,22 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:genet_church_portal/core/theme/app_colors.dart';
-import 'package:genet_church_portal/data/models/member_model.dart';
-import 'package:genet_church_portal/state/church_selection_provider.dart';
-import 'package:genet_church_portal/state/providers.dart';
-import 'package:genet_church_portal/shared_widgets/modern_card.dart';
-import 'package:genet_church_portal/shared_widgets/modern_dropdown.dart';
-import 'package:genet_church_portal/shared_widgets/modern_input.dart';
-import 'package:genet_church_portal/shared_widgets/notification_system.dart';
+import 'package:gdev_frontend/core/theme/app_colors.dart';
+import 'package:gdev_frontend/data/models/member_model.dart';
+import 'package:gdev_frontend/state/church_selection_provider.dart';
+import 'package:gdev_frontend/state/providers.dart';
+import 'package:gdev_frontend/shared_widgets/modern_card.dart';
+import 'package:gdev_frontend/shared_widgets/modern_dropdown.dart';
+import 'package:gdev_frontend/shared_widgets/modern_input.dart';
+import 'package:gdev_frontend/shared_widgets/notification_system.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/localization/app_localization.dart';
 import '../../shared_widgets/modern_date_picker.dart';
-import 'package:genet_church_portal/core/settings/language_provider.dart';
+import 'package:gdev_frontend/core/settings/language_provider.dart';
 
 class MemberFormData {
   final String fullName;
@@ -108,7 +109,6 @@ class AddMembersScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
-    final pageController = usePageController();
     final currentPage = useState(0);
     final locale = ref.watch(languageNotifierProvider);
     final l10n = AppLocalization(locale);
@@ -146,18 +146,8 @@ class AddMembersScreen extends HookConsumerWidget {
     ];
 
     void navigateToPage(int page) {
-      pageController.animateToPage(
-        page,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeOutCubic,
-      );
+      currentPage.value = page;
     }
-
-    pageController.addListener(() {
-      if (pageController.page?.round() != currentPage.value) {
-        currentPage.value = pageController.page!.round();
-      }
-    });
 
     Future<void> addMember() async {
       bool allFormsValid = true;
@@ -177,8 +167,10 @@ class AddMembersScreen extends HookConsumerWidget {
 
       if (!allFormsValid) return;
 
+      // Get church ID from provider
       final selectedChurchId = ref.read(currentChurchProvider);
-      if (selectedChurchId == null) {
+      
+      if (selectedChurchId == null || selectedChurchId.isEmpty) {
         context.showWarningNotification(
           title: l10n.churchRequired,
           message: l10n.selectChurchBeforeAdding,
@@ -216,12 +208,13 @@ class AddMembersScreen extends HookConsumerWidget {
         bornAgainDate: formData.bornAgainDate!.toUtc().toIso8601String(),
         baptizedAt: formData.baptizedAt?.toUtc().toIso8601String(),
         memberStatus: MemberStatus.ACTIVE,
-        statusChangedAt: DateTime.now().toUtc().toIso8601String(),
         deleted: false,
       );
 
       try {
-        await ref.read(membersProvider.notifier).addMember(member: newMember);
+        await ref.read(membersProvider.notifier).addMember(
+          member: newMember,
+        );
         if (context.mounted) {
           context.showSuccessNotification(
             title: l10n.success,
@@ -324,19 +317,14 @@ class AddMembersScreen extends HookConsumerWidget {
                         padding: const EdgeInsets.all(24),
                         child: Column(
                           children: [
-                            SizedBox(
-                              height: 420,
-                              child: PageView.builder(
-                                controller: pageController,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: wizardSteps.length,
-                                itemBuilder: (context, index) {
-                                  return Form(
-                                    key: wizardSteps[index].formKey,
-                                    child: wizardSteps[index].child,
-                                  );
-                                },
-                              ),
+                            IndexedStack(
+                              index: currentPage.value,
+                              children: wizardSteps.map((step) {
+                                return Form(
+                                  key: step.formKey,
+                                  child: step.child,
+                                );
+                              }).toList(),
                             ),
                             const SizedBox(height: 24),
 
@@ -973,8 +961,8 @@ class _PersonalFormState extends ConsumerState<_PersonalForm>
     final formData = ref.watch(addMemberFormProvider);
     final formNotifier = ref.read(addMemberFormProvider.notifier);
 
-    return ListView(
-      physics: const BouncingScrollPhysics(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _formRow([
           ModernInput(
@@ -983,18 +971,21 @@ class _PersonalFormState extends ConsumerState<_PersonalForm>
             prefixIcon: Iconsax.user_octagon,
             onChanged: (v) =>
                 formNotifier.update((s) => s.copyWith(fullName: v)),
-            validator: (v) => v?.isEmpty ?? true ? widget.loc.required : null,
+            validator: (v) => v?.trim().isEmpty ?? true ? widget.loc.required : null,
           ),
           ModernInput(
             controller: _phoneNumberController,
             label: widget.loc.phoneNumber,
             prefixIcon: Iconsax.call,
             keyboardType: TextInputType.phone,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
+            ],
             onChanged: (v) =>
                 formNotifier.update((s) => s.copyWith(phoneNumber: v)),
             validator: (v) {
-              if (v?.isEmpty ?? true) return widget.loc.required;
-              if (!RegExp(r'^\d+$').hasMatch(v!)) {
+              if (v?.trim().isEmpty ?? true) return widget.loc.required;
+              if (!RegExp(r'^\+?\d+$').hasMatch(v!)) {
                 return widget.loc.phoneNumbersOnly;
               }
               return null;
@@ -1021,7 +1012,7 @@ class _PersonalFormState extends ConsumerState<_PersonalForm>
             prefixIcon: Iconsax.location,
             onChanged: (v) =>
                 formNotifier.update((s) => s.copyWith(birthPlace: v)),
-            validator: (v) => v?.isEmpty ?? true ? widget.loc.required : null,
+            validator: (v) => v?.trim().isEmpty ?? true ? widget.loc.required : null,
           ),
         ]),
         const SizedBox(height: 24),
@@ -1032,7 +1023,7 @@ class _PersonalFormState extends ConsumerState<_PersonalForm>
             prefixIcon: Iconsax.translate,
             onChanged: (v) =>
                 formNotifier.update((s) => s.copyWith(motherTongue: v)),
-            validator: (v) => v?.isEmpty ?? true ? widget.loc.required : null,
+            validator: (v) => v?.trim().isEmpty ?? true ? widget.loc.required : null,
           ),
           ModernDropdown<Gender>(
             hintText: widget.loc.gender,
@@ -1098,8 +1089,8 @@ class __AddressFormState extends ConsumerState<_AddressForm>
     super.build(context);
     final formNotifier = ref.read(addMemberFormProvider.notifier);
 
-    return ListView(
-      physics: const BouncingScrollPhysics(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _formRow([
           ModernInput(
@@ -1108,7 +1099,7 @@ class __AddressFormState extends ConsumerState<_AddressForm>
             prefixIcon: Iconsax.buildings,
             onChanged: (v) =>
                 formNotifier.update((s) => s.copyWith(city: v)),
-            validator: (v) => v?.isEmpty ?? true ? widget.loc.required : null,
+            validator: (v) => v?.trim().isEmpty ?? true ? widget.loc.required : null,
           ),
           ModernInput(
             controller: _subCityController,
@@ -1116,7 +1107,7 @@ class __AddressFormState extends ConsumerState<_AddressForm>
             prefixIcon: Iconsax.building_3,
             onChanged: (v) =>
                 formNotifier.update((s) => s.copyWith(subCity: v)),
-            validator: (v) => v?.isEmpty ?? true ? widget.loc.required : null,
+            validator: (v) => v?.trim().isEmpty ?? true ? widget.loc.required : null,
           ),
         ])
             .animate()
@@ -1130,7 +1121,7 @@ class __AddressFormState extends ConsumerState<_AddressForm>
             prefixIcon: Iconsax.routing,
             onChanged: (v) =>
                 formNotifier.update((s) => s.copyWith(woreda: v)),
-            validator: (v) => v?.isEmpty ?? true ? widget.loc.required : null,
+            validator: (v) => v?.trim().isEmpty ?? true ? widget.loc.required : null,
           ),
           ModernInput(
             controller: _placeNameController,
@@ -1138,7 +1129,7 @@ class __AddressFormState extends ConsumerState<_AddressForm>
             prefixIcon: Iconsax.location_tick,
             onChanged: (v) =>
                 formNotifier.update((s) => s.copyWith(placeName: v)),
-            validator: (v) => v?.isEmpty ?? true ? widget.loc.required : null,
+            validator: (v) => v?.trim().isEmpty ?? true ? widget.loc.required : null,
           ),
         ])
             .animate()
@@ -1169,8 +1160,8 @@ class _AdditionalInfoFormState extends ConsumerState<_AdditionalInfoForm>
     final formData = ref.watch(addMemberFormProvider);
     final formNotifier = ref.read(addMemberFormProvider.notifier);
 
-    return ListView(
-      physics: const BouncingScrollPhysics(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _formRow([
           ModernDropdown<EducationLevel>(

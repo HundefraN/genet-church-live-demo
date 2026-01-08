@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/core/theme/app_colors.dart';
-import 'package:genet_church_portal/data/models/search_command_model.dart';
-import 'package:genet_church_portal/data/services/search_service.dart';
+import 'package:gdev_frontend/core/theme/app_colors.dart';
+import 'package:gdev_frontend/data/models/search_command_model.dart';
+import 'package:gdev_frontend/data/services/search_service.dart';
 import 'package:iconsax/iconsax.dart';
 
 class SearchOverlay extends ConsumerWidget {

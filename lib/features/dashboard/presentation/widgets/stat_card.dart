@@ -2,14 +2,14 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/core/theme/app_colors.dart';
-import 'package:genet_church_portal/data/models/dashboard_model.dart';
-import 'package:genet_church_portal/data/models/pastor_dashboard_model.dart';
-import 'package:genet_church_portal/state/providers.dart';
+import 'package:gdev_frontend/core/theme/app_colors.dart';
+import 'package:gdev_frontend/data/models/dashboard_model.dart';
+import 'package:gdev_frontend/data/models/pastor_dashboard_model.dart';
+import 'package:gdev_frontend/state/providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../../core/localization/app_localization.dart';
-import 'package:genet_church_portal/core/settings/language_provider.dart';
+import 'package:gdev_frontend/core/settings/language_provider.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ChurchesStatCard extends ConsumerWidget {

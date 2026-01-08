@@ -1,10 +1,13 @@
 import 'dashboard_base_model.dart';
-import 'dashboard_model.dart';
 
 class PastorDashboardStats extends DashboardStatsBase {
+  @override
   final String timeframe;
+  @override
   final DashboardTotals? totals;
+  @override
   final DashboardNewInTimeframe? newInTimeframe;
+  @override
   final DashboardDistributions? distributions;
 
   PastorDashboardStats({
@@ -17,7 +20,6 @@ class PastorDashboardStats extends DashboardStatsBase {
   factory PastorDashboardStats.fromJson(Map<String, dynamic> json) {
     return PastorDashboardStats(
       timeframe: json['timeframe'] as String? ?? 'all',
-      // FIX: Map directly from root JSON to support flat structure
       totals: json['totals'] != null
           ? DashboardTotals.fromJson(json['totals'])
           : null,

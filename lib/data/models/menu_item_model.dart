@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:genet_church_portal/data/models/user_model.dart';
+import 'package:gdev_frontend/data/models/user_model.dart';
 
 class AppMenuItem {
   final String title;

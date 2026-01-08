@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:genet_church_portal/core/theme/app_colors.dart';
+import 'package:gdev_frontend/core/theme/app_colors.dart';
 
 class TableShimmerLoader extends StatelessWidget {
   final int rowCount;

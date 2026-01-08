@@ -1,9 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/core/constants.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:gdev_frontend/core/constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final dioProvider = Provider<Dio>((ref) {
+  const storage = FlutterSecureStorage();
   final dio = Dio(
     BaseOptions(
       baseUrl: AppConstants.baseUrl,
@@ -19,8 +21,7 @@ final dioProvider = Provider<Dio>((ref) {
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) async {
-        final prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString('accessToken');
+        final token = await storage.read(key: 'accessToken');
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }
@@ -28,8 +29,7 @@ final dioProvider = Provider<Dio>((ref) {
       },
       onError: (DioException e, handler) async {
         if (e.response?.statusCode == 401) {
-          final prefs = await SharedPreferences.getInstance();
-          final refreshToken = prefs.getString('refreshToken');
+          final refreshToken = await storage.read(key: 'refreshToken');
           if (refreshToken != null) {
             try {
               final refreshDio = Dio(
@@ -43,15 +43,15 @@ final dioProvider = Provider<Dio>((ref) {
               final newAccessToken = refreshResponse.data['accessToken'];
               final newRefreshToken = refreshResponse.data['refreshToken'];
 
-              await prefs.setString('accessToken', newAccessToken);
-              await prefs.setString('refreshToken', newRefreshToken);
+              await storage.write(key: 'accessToken', value: newAccessToken);
+              await storage.write(key: 'refreshToken', value: newRefreshToken);
 
               e.requestOptions.headers['Authorization'] =
                   'Bearer $newAccessToken';
 
               return handler.resolve(await dio.fetch(e.requestOptions));
             } catch (refreshError) {
-              await prefs.clear();
+              await storage.deleteAll();
             }
           }
         }

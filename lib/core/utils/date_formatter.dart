@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/core/settings/date_format_provider.dart';
+import 'package:gdev_frontend/core/settings/date_format_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:abushakir/abushakir.dart';
 

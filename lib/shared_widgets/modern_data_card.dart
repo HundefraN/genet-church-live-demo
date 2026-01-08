@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:genet_church_portal/core/theme/app_colors.dart';
+import 'package:gdev_frontend/core/theme/app_colors.dart';
 import 'package:iconsax/iconsax.dart';
 
 /// A data action button for ModernDataCard
@@ -144,19 +144,19 @@ class _ModernDataCardState extends State<ModernDataCard>
                 boxShadow: [
                   BoxShadow(
                     color: widget.isNew
-                        ? theme.colorScheme.primary.withOpacity(
-                            0.2 * _glowAnimation.value,
+                        ? theme.colorScheme.primary.withValues(
+                            alpha: 0.2 * _glowAnimation.value,
                           )
-                        : appColors.shadow.withOpacity(
-                            _isHovered ? 0.15 : 0.08,
+                        : appColors.shadow.withValues(
+                            alpha: _isHovered ? 0.15 : 0.08,
                           ),
                     blurRadius: _isHovered ? 20 : 12,
                     offset: Offset(0, _isHovered ? 8 : 4),
                   ),
                   if (widget.isNew)
                     BoxShadow(
-                      color: theme.colorScheme.primary.withOpacity(
-                        0.15 * _glowAnimation.value,
+                      color: theme.colorScheme.primary.withValues(
+                        alpha: 0.15 * _glowAnimation.value,
                       ),
                       blurRadius: 30,
                       spreadRadius: 2,

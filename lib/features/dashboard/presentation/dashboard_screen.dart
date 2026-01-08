@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:genet_church_portal/core/theme/app_colors.dart';
-import 'package:genet_church_portal/data/models/user_model.dart';
-import 'package:genet_church_portal/data/repositories/auth_repository.dart';
-import 'package:genet_church_portal/features/dashboard/presentation/widgets/analytics_card.dart';
-import 'package:genet_church_portal/features/dashboard/presentation/widgets/departments_overview_card.dart';
-import 'package:genet_church_portal/features/dashboard/presentation/widgets/recent_activity_card.dart';
-import 'package:genet_church_portal/features/dashboard/presentation/widgets/stat_card.dart';
-import 'package:genet_church_portal/shared_widgets/responsive_layout.dart';
-import 'package:genet_church_portal/state/providers.dart';
+import 'package:gdev_frontend/core/theme/app_colors.dart';
+import 'package:gdev_frontend/data/models/user_model.dart';
+import 'package:gdev_frontend/data/repositories/auth_repository.dart';
+import 'package:gdev_frontend/features/dashboard/presentation/widgets/analytics_card.dart';
+import 'package:gdev_frontend/features/dashboard/presentation/widgets/departments_overview_card.dart';
+import 'package:gdev_frontend/features/dashboard/presentation/widgets/recent_activity_card.dart';
+import 'package:gdev_frontend/features/dashboard/presentation/widgets/stat_card.dart';
+import 'package:gdev_frontend/shared_widgets/responsive_layout.dart';
+import 'package:gdev_frontend/state/providers.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../core/localization/app_localization.dart';
-import 'package:genet_church_portal/core/settings/language_provider.dart';
+import 'package:gdev_frontend/core/settings/language_provider.dart';
 
 class DashboardScreen extends HookConsumerWidget {
   const DashboardScreen({super.key});
@@ -44,7 +44,8 @@ class DashboardScreen extends HookConsumerWidget {
         alignment: WrapAlignment.spaceEvenly,
         children: [ChurchesStatCard(), PastorsStatCard(), MembersStatCard()],
       );
-    } else if (user.roleEnum == UserRole.PASTOR) {
+    } else if (user.roleEnum == UserRole.PASTOR ||
+        user.roleEnum == UserRole.SERVANT) {
       statCards = const Wrap(
         spacing: 24,
         runSpacing: 24,

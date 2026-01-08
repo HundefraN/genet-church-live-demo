@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:genet_church_portal/core/theme/app_colors.dart';
+import 'package:gdev_frontend/core/theme/app_colors.dart';
 
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:genet_church_portal/core/utils/date_formatter.dart';
-import 'package:genet_church_portal/core/settings/language_provider.dart';
+import 'package:gdev_frontend/core/utils/date_formatter.dart';
+import 'package:gdev_frontend/core/settings/language_provider.dart';
 
 class ModernDatePicker extends HookConsumerWidget {
   final String hintText;

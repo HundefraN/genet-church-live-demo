@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:genet_church_portal/core/theme/app_colors.dart';
-import 'package:genet_church_portal/core/theme/visual_effects.dart';
+import 'package:gdev_frontend/core/theme/app_colors.dart';
+import 'package:gdev_frontend/core/theme/visual_effects.dart';
 
 /// Glowing Badge with neon effect and pulse animation
 class GlowingBadge extends StatefulWidget {

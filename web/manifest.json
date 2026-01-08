@@ -1,6 +1,6 @@
 {
-    "name": "Genet Church Portal",
-    "short_name": "Genet Church",
+    "name": "gdev-frontend",
+    "short_name": "gdev-frontend",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#4292C1",

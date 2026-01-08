@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:genet_church_portal/core/constants.dart';
-import 'package:genet_church_portal/core/settings/language_provider.dart';
+import 'package:gdev_frontend/core/constants.dart';
+import 'package:gdev_frontend/core/settings/language_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:genet_church_portal/data/models/church_model.dart';
-import 'package:genet_church_portal/state/providers.dart';
-import 'package:genet_church_portal/shared_widgets/modern_card.dart';
-import 'package:genet_church_portal/shared_widgets/modern_date_picker.dart';
-import 'package:genet_church_portal/shared_widgets/modern_input.dart';
-import 'package:genet_church_portal/shared_widgets/page_header.dart';
-import 'package:genet_church_portal/shared_widgets/modern_button.dart';
-import 'package:genet_church_portal/shared_widgets/notification_system.dart';
+import 'package:gdev_frontend/data/models/church_model.dart';
+import 'package:gdev_frontend/state/providers.dart';
+import 'package:gdev_frontend/shared_widgets/modern_card.dart';
+import 'package:gdev_frontend/shared_widgets/modern_date_picker.dart';
+import 'package:gdev_frontend/shared_widgets/modern_input.dart';
+import 'package:gdev_frontend/shared_widgets/page_header.dart';
+import 'package:gdev_frontend/shared_widgets/modern_button.dart';
+import 'package:gdev_frontend/shared_widgets/notification_system.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:iconsax/iconsax.dart';
 

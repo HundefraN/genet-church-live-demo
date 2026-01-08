@@ -1,15 +1,18 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genet_church_portal/core/theme/app_colors.dart';
-import 'package:genet_church_portal/core/theme/visual_effects.dart';
-import 'package:genet_church_portal/data/repositories/auth_repository.dart';
-import 'package:genet_church_portal/shared_widgets/modern_button.dart';
-import 'package:genet_church_portal/shared_widgets/modern_card.dart';
-import 'package:genet_church_portal/shared_widgets/modern_input.dart';
-import 'package:genet_church_portal/shared_widgets/notification_system.dart';
-import 'package:genet_church_portal/state/providers.dart';
+import 'package:gdev_frontend/core/theme/app_colors.dart';
+import 'package:gdev_frontend/core/theme/visual_effects.dart';
+import 'package:gdev_frontend/data/models/user_model.dart';
+import 'package:gdev_frontend/data/repositories/auth_repository.dart';
+import 'package:gdev_frontend/shared_widgets/modern_button.dart';
+import 'package:gdev_frontend/shared_widgets/modern_card.dart';
+import 'package:gdev_frontend/shared_widgets/modern_input.dart';
+import 'package:gdev_frontend/shared_widgets/notification_system.dart';
+import 'package:gdev_frontend/state/church_selection_provider.dart';
 import 'package:iconsax/iconsax.dart';
+import 'dart:ui';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -19,89 +22,241 @@ class ProfileScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final appColors = theme.extension<AppColors>()!;
     final user = ref.watch(authStateProvider);
-    final pastor = ref.watch(currentPastorProvider);
-    final churchesAsync = ref.watch(churchesProvider);
 
     if (user == null) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final userInitial = user.fullName.isNotEmpty
-        ? user.fullName[0].toUpperCase()
-        : '?';
-
-    String? churchName;
-    final churches = churchesAsync.valueOrNull;
-    final churchIdToUse = pastor.value?.churchId;
-    if (churchIdToUse != null && churches != null) {
-      churchName = churches
-          .where((c) => c.id == churchIdToUse)
-          .map((c) => c.name)
-          .cast<String?>()
-          .firstWhere(
-            (name) => name != null && name.isNotEmpty,
-            orElse: () => null,
-          );
-    }
+    final userInitial =
+        user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : '?';
+    
+    // We can potentially fetch church name if needed, but for now we'll just show the role
+    // or use the churchId from currentChurchProvider
 
     void showEditProfileDialog() {
-      final nameController = TextEditingController(text: user.fullName);
-      final emailController = TextEditingController(text: user.email);
+      context.showInfoNotification(
+        title: 'Coming Soon',
+        message: 'Edit profile feature is being developed.',
+      );
+    }
+
+    void showChangePasswordDialog() {
+      final currentPasswordController = TextEditingController();
+      final newPasswordController = TextEditingController();
+      final confirmPasswordController = TextEditingController();
+      final formKey = GlobalKey<FormState>();
 
       showDialog(
         context: context,
+        barrierDismissible: true,
         builder: (dialogContext) {
+          final dialogSize = MediaQuery.of(dialogContext).size;
+          final isMobile = dialogSize.width < 600;
+
           return Dialog(
             backgroundColor: Colors.transparent,
-            child: ModernCard(
-              variant: CardVariant.glass,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Edit Profile',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: appColors.textPrimary,
+            elevation: 0,
+            insetPadding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 16 : dialogSize.width * 0.2,
+              vertical: 24,
+            ),
+            child: SingleChildScrollView(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                  child: ModernCard(
+                    variant: CardVariant.glass,
+                    padding: EdgeInsets.zero,
+                    backgroundColor: appColors.surface.withValues(alpha: 0.9),
+                    borderRadius: 24,
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                      width: 1.5,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Header with gradient
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                theme.colorScheme.primary.withValues(alpha: 0.15),
+                                theme.colorScheme.secondary.withValues(alpha: 0.05),
+                              ],
+                            ),
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(24),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Icon(
+                                  Iconsax.key,
+                                  color: theme.colorScheme.primary,
+                                  size: 28,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Change Password',
+                                      style: theme.textTheme.headlineSmall?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                        color: appColors.textPrimary,
+                                        letterSpacing: -0.5,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Update your account security',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () => Navigator.pop(dialogContext),
+                                icon: Icon(
+                                  Iconsax.close_circle,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider(height: 1, thickness: 0.5),
+                        Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Form(
+                            key: formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                PasswordInput(
+                                  controller: currentPasswordController,
+                                  label: 'Current Password',
+                                  hintText: 'Enter your current password',
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Current password is required';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+                                PasswordInput(
+                                  controller: newPasswordController,
+                                  label: 'New Password',
+                                  hintText: 'Enter at least 6 characters',
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'New password is required';
+                                    }
+                                    if (value.length < 6) {
+                                      return 'Password must be at least 6 characters';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+                                PasswordInput(
+                                  controller: confirmPasswordController,
+                                  label: 'Confirm New Password',
+                                  hintText: 'Repeat your new password',
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please confirm your new password';
+                                    }
+                                    if (value != newPasswordController.text) {
+                                      return 'Passwords do not match';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 32),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: GhostButton(
+                                        text: 'Cancel',
+                                        onPressed: () => Navigator.pop(dialogContext),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: ModernButton(
+                                        text: 'Update',
+                                        variant: ButtonVariant.primary,
+                                        onPressedAsync: () async {
+                                          if (formKey.currentState?.validate() ?? false) {
+                                            try {
+                                              final authRepo = ref.read(authRepositoryProvider);
+                                              await authRepo.changePassword(
+                                                currentPasswordController.text,
+                                                newPasswordController.text,
+                                              );
+                                              if (dialogContext.mounted) {
+                                                Navigator.pop(dialogContext);
+                                              }
+                                              if (context.mounted) {
+                                                context.showSuccessNotification(
+                                                  title: 'Success!',
+                                                  message: 'Your password has been updated.',
+                                                );
+                                              }
+                                            } catch (e) {
+                                              if (context.mounted) {
+                                                String errorMessage =
+                                                    'Failed to change password. Please try again.';
+                                                if (e is DioException) {
+                                                  if (e.response?.statusCode == 404) {
+                                                    errorMessage = 'Endpoint not found. Please contact support.';
+                                                  } else {
+                                                    final errorData = e.response?.data;
+                                                    if (errorData is Map &&
+                                                        errorData['message'] != null) {
+                                                      errorMessage = errorData['message'];
+                                                    } else if (errorData is String) {
+                                                      errorMessage = errorData;
+                                                    }
+                                                  }
+                                                }
+                                                context.showErrorNotification(
+                                                  title: 'Error',
+                                                  message: errorMessage,
+                                                );
+                                              }
+                                            }
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  ModernInput(
-                    controller: nameController,
-                    label: 'Full Name',
-                    prefixIcon: Iconsax.user,
-                  ),
-                  const SizedBox(height: 16),
-                  EmailInput(
-                    controller: emailController,
-                    label: 'Email Address',
-                  ),
-                  const SizedBox(height: 32),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      OutlineButton(
-                        text: 'Cancel',
-                        onPressed: () => Navigator.pop(dialogContext),
-                        size: ButtonSize.medium,
-                      ),
-                      const SizedBox(width: 12),
-                      ModernButton(
-                        text: 'Save',
-                        onPressed: () {
-                          Navigator.pop(dialogContext);
-                          context.showSuccessNotification(
-                            title: 'Profile Updated',
-                            message:
-                                'Your profile has been updated successfully.',
-                          );
-                        },
-                        size: ButtonSize.medium,
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
           );
@@ -266,20 +421,6 @@ class ProfileScreen extends ConsumerWidget {
                               Color(0xFF764ba2),
                             ],
                           ),
-                          if (churchName != null) ...[
-                            Divider(
-                              color: appColors.border.withValues(alpha: 0.3),
-                            ),
-                            _ProfileInfoRow(
-                              icon: Iconsax.building_4,
-                              label: 'Assigned Church',
-                              value: churchName,
-                              gradientColors: const [
-                                Color(0xFF11998e),
-                                Color(0xFF38ef7d),
-                              ],
-                            ),
-                          ],
                           Divider(
                             color: appColors.border.withValues(alpha: 0.3),
                           ),
@@ -306,13 +447,7 @@ class ProfileScreen extends ConsumerWidget {
                       Expanded(
                         child: OutlineButton(
                           text: 'Change Password',
-                          onPressed: () {
-                            context.showInfoNotification(
-                              title: 'Coming Soon',
-                              message:
-                                  'Password change feature is currently being developed.',
-                            );
-                          },
+                          onPressed: showChangePasswordDialog,
                           icon: Iconsax.key,
                         ),
                       ),
@@ -360,90 +495,65 @@ class _ProfileInfoRowState extends State<_ProfileInfoRow> {
 
   @override
   Widget build(BuildContext context) {
-    final appColors = Theme.of(context).extension<AppColors>()!;
+    final theme = Theme.of(context);
+    final appColors = theme.extension<AppColors>()!;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        duration: 300.ms,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
           color: _isHovered
-              ? widget.gradientColors[0].withValues(alpha: 0.05)
+              ? theme.colorScheme.primary.withValues(alpha: 0.05)
               : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
           children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+            Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: _isHovered
-                      ? widget.gradientColors
-                      : [
-                          widget.gradientColors[0].withValues(alpha: 0.2),
-                          widget.gradientColors[1].withValues(alpha: 0.1),
-                        ],
+                  colors: widget.gradientColors,
                 ),
                 borderRadius: BorderRadius.circular(14),
-                boxShadow: _isHovered
-                    ? [
-                        BoxShadow(
-                          color: widget.gradientColors[0].withValues(
-                            alpha: 0.3,
-                          ),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ]
-                    : null,
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.gradientColors.first.withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: Icon(
-                widget.icon,
-                color: _isHovered ? Colors.white : widget.gradientColors[0],
-                size: 20,
-              ),
+              child: Icon(widget.icon, color: Colors.white, size: 22),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 20),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     widget.label,
-                    style: TextStyle(
+                    style: theme.textTheme.labelMedium?.copyWith(
                       color: appColors.textSecondary,
-                      fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      letterSpacing: 0.3,
+                      letterSpacing: 0.5,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     widget.value,
-                    style: TextStyle(
-                      color: _isHovered
-                          ? widget.gradientColors[0]
-                          : appColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: appColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
-              ),
-            ),
-            AnimatedOpacity(
-              duration: const Duration(milliseconds: 200),
-              opacity: _isHovered ? 1.0 : 0.0,
-              child: Icon(
-                Iconsax.arrow_right_3,
-                size: 18,
-                color: widget.gradientColors[0],
               ),
             ),
           ],
